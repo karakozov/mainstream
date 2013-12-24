@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "AdcFreq: %f\n", AdcFreq);
 
         acdsp brd;
-/*
+
         brd.setSi57xFreq(AdcFreq);
 
         fprintf(stderr, "Init FPGA\n");
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
         brd.resetDmaFifo(fpgaNum, DmaChan);
 
         IPC_closeFile(isviFile);
-*/
+
 
     } catch(...) {
 

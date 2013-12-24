@@ -32,7 +32,7 @@ Fpga::Fpga(unsigned id) : m_fpgaID(id)
 
 Fpga::~Fpga()
 {
-    m_trdID.clear();
+    m_trd.clear();
     deleteDmaCannels();
     closeFpgaDevice();
 }
@@ -214,12 +214,24 @@ void Fpga::scanFpgaTetrades()
         unsigned trd_ID = FpgaRegPeekInd(i, 0x100);
         if(trd_ID != 0xff && trd_ID != 0x0) {
             fprintf(stderr, "TRD %d: - ID 0x%x\n", i, trd_ID);
-            m_trdID.push_back(trd_ID);
+            m_trd.push_back(trd_ID);
         }
     }
 }
 
 //-----------------------------------------------------------------------------
+
+int Fpga::trd_number(unsigned trdID)
+{
+    for(unsigned i=0; i<m_trd.size(); i++) {
+
+        unsigned fpga_trd_ID = m_trd.at(i);
+        if(fpga_trd_ID == trdID) {
+            return i;
+        }
+    }
+    return -1;
+}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

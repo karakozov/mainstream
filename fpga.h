@@ -7,8 +7,8 @@
 
 #include "utypes.h"
 #include "ddwambpex.h"
-#include "dbglog.h"
 #include "ctrlstrm.h"
+#include "memory.h"
 
 #include <vector>
 #include <string>
@@ -33,6 +33,7 @@ public:
     virtual ~Fpga();
 
     void initFpga();
+    int trd_number(unsigned trdID);
 
     void FpgaRegPokeInd(S32 trdNo, S32 rgnum, U32 val);
     U32 FpgaRegPeekInd(S32 trdNo, S32 rgnum);
