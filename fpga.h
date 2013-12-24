@@ -17,10 +17,12 @@
 //-----------------------------------------------------------------------------
 
 #define DMA_CHANNEL_NUM  4
+#define TRD_NUM          8
 
 //-----------------------------------------------------------------------------
 
 class Stream;
+class Memory;
 
 //-----------------------------------------------------------------------------
 
@@ -64,12 +66,15 @@ public:
 private:
     IPC_handle m_fpgaDev;
     unsigned m_fpgaID;
+    std::vector<unsigned> m_trd;
     std::vector<Stream*> m_strm;
+    class Memory *m_mem;
 
     void openFpgaDevice();
     void closeFpgaDevice();
     void createDmaChannels();
     void deleteDmaCannels();
+    void scanFpgaTetrades();
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
     Stream* stream(U32 DmaChan);
 };

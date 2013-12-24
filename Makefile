@@ -22,12 +22,15 @@ INC := $(addprefix -I, $(DIRS))
 CC = $(CSTOOL_PREFIX)g++
 LD = $(CSTOOL_PREFIX)g++
 
-ARCH := c674x
-TARGET := c66x
+#ARCH := c674x
+TARGET := -march=c674x
 
-CFLAGS =  -march=$(ARCH) -D$(OS) -D__LINUX__ -g -Wall $(INC)
+#ARCH := -march=c674x
+#TARGET := 
+
+CFLAGS = $(TARGET) -D$(OS) -D__LINUX__ -g -Wall $(INC)
 #LFLAGS = -Wl,-rpath $(LIBPATH) -L"$(LIBPATH)"
-LFLAGS = -march=$(ARCH)
+LFLAGS = $(TARGET)
 
 $(TARGET_NAME): $(patsubst %.cpp,%.o, $(wildcard *.cpp))
 #	$(LD) -o $(TARGET_NAME) $^ $(LFLAGS)

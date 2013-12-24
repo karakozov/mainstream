@@ -25,12 +25,14 @@ Fpga::Fpga(unsigned id) : m_fpgaID(id)
     m_strm.clear();
     openFpgaDevice();
     createDmaChannels();
+    scanFpgaTetrades();
 }
 
 //-----------------------------------------------------------------------------
 
 Fpga::~Fpga()
 {
+    m_trdID.clear();
     deleteDmaCannels();
     closeFpgaDevice();
 }
@@ -40,14 +42,14 @@ Fpga::~Fpga()
 void Fpga::initFpga()
 {
     //Set RST and FIFO_RST in MODE0 in all tetrades
-    for( int trd=0; trd<8; trd++ ) {
+    for( int trd=0; trd<TRD_NUM; trd++ ) {
         FpgaRegPokeInd(trd, 0, 0x3);
     }
 
     delay(10);
 
     //zero all other registers
-    for( int trd=0; trd<8; trd++ ) {
+    for( int trd=0; trd<TRD_NUM; trd++ ) {
         for( int ii=1; ii<32; ii++ ) {
             FpgaRegPokeInd(trd, ii, 0);
         }
@@ -56,7 +58,7 @@ void Fpga::initFpga()
     delay(10);
 
     //Clear RST and FIFO_RST in MODE0 in all tetrades
-    for( int trd=0; trd<8; trd++ ) {
+    for( int trd=0; trd<TRD_NUM; trd++ ) {
         FpgaRegPokeInd(trd, 0, 0);
     }
 
@@ -146,6 +148,7 @@ void Fpga::openFpgaDevice(void)
     char name[256];
     m_fpgaDev = IPC_openDevice(name, AmbDeviceName, m_fpgaID);
     if(!m_fpgaDev) {
+        fprintf(stderr, "Open FPGA%d\n", m_fpgaID);
         throw;
     }
     fprintf(stderr, "Open FPGA%d\n", m_fpgaID);
@@ -201,6 +204,22 @@ Stream* Fpga::stream(U32 DmaChan)
     }
     return m_strm.at(DmaChan);
 }
+
+//-----------------------------------------------------------------------------
+
+void Fpga::scanFpgaTetrades()
+{
+    for(unsigned i=0; i<TRD_NUM; i++) {
+
+        unsigned trd_ID = FpgaRegPeekInd(i, 0x100);
+        if(trd_ID != 0xff && trd_ID != 0x0) {
+            fprintf(stderr, "TRD %d: - ID 0x%x\n", i, trd_ID);
+            m_trdID.push_back(trd_ID);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
