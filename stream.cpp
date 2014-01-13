@@ -85,7 +85,7 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
     m_Descr->BlockSize = sSCA->blkSize;
     m_Descr->pStub = NULL;
 
-    for(u32 iBlk = 0; iBlk < sSCA->blkNum; iBlk++) {
+    for(U32 iBlk = 0; iBlk < sSCA->blkNum; iBlk++) {
         m_Descr->pBlock[iBlk] = NULL;
     }
 
@@ -94,7 +94,7 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
         throw;
     }
 
-    for(u32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
+    for(U32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
 
         void *MappedAddress = m_map.mapPhysicalAddress(m_Descr->pBlock[iBlk], m_Descr->BlockSize);
         if(!MappedAddress) {
@@ -133,11 +133,11 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
 //-----------------------------------------------------------------------------
 
 int Stream::allocateDmaMemory(void** pBuf,
-                              u32 blkSize,
-                              u32 blkNum,
-                              u32 isSysMem,
-                              u32 dir,
-                              u32 addr,
+                              U32 blkSize,
+                              U32 blkNum,
+                              U32 isSysMem,
+                              U32 dir,
+                              U32 addr,
                               BRDstrm_Stub **pStub )
 {
     m_DescrSize = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(void*);
@@ -151,7 +151,7 @@ int Stream::allocateDmaMemory(void** pBuf,
     m_Descr->BlockSize = blkSize;
     m_Descr->pStub = NULL;
 
-    for(u32 iBlk = 0; iBlk < blkNum; iBlk++) {
+    for(U32 iBlk = 0; iBlk < blkNum; iBlk++) {
         m_Descr->pBlock[iBlk] = NULL;
     }
 
@@ -160,7 +160,7 @@ int Stream::allocateDmaMemory(void** pBuf,
         throw;
     }
 
-    for(u32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
+    for(U32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
 
         void *MappedAddress = m_map.mapPhysicalAddress(m_Descr->pBlock[iBlk], m_Descr->BlockSize);
         if(!MappedAddress) {
@@ -255,7 +255,7 @@ int  Stream::stopDma()
 
 //-----------------------------------------------------------------------------
 
-int  Stream::stateDma(u32 msTimeout, int& state, u32& blkNum)
+int  Stream::stateDma(U32 msTimeout, int& state, U32& blkNum)
 {
     AMB_STATE_DMA_CHANNEL StateDescrip;
     StateDescrip.DmaChanNum = m_DmaChan;
@@ -274,7 +274,7 @@ int  Stream::stateDma(u32 msTimeout, int& state, u32& blkNum)
 
 //-----------------------------------------------------------------------------
 
-int Stream::waitDmaBuffer(u32 msTimeout)
+int Stream::waitDmaBuffer(U32 msTimeout)
 {
     AMB_STATE_DMA_CHANNEL StateDescrip;
     StateDescrip.DmaChanNum = m_DmaChan;
@@ -284,7 +284,6 @@ int Stream::waitDmaBuffer(u32 msTimeout)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_WAIT_DMA_BUFFER,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)))
         {
-            //dbg_msg(m_logErr,"\n");
             dbg_msg(m_logErr,"%s(): Error wait buffer DMA\n", __FUNCTION__ );
             return -1;
         }
@@ -295,7 +294,7 @@ int Stream::waitDmaBuffer(u32 msTimeout)
 
 //-----------------------------------------------------------------------------
 
-int Stream::waitDmaBlock(u32 msTimeout)
+int Stream::waitDmaBlock(U32 msTimeout)
 {
     AMB_STATE_DMA_CHANNEL StateDescrip;
     StateDescrip.DmaChanNum = m_DmaChan;
@@ -336,7 +335,7 @@ int Stream::resetDmaFifo()
 
 //-----------------------------------------------------------------------------
 
-int Stream::setDmaSource(u32 addr)
+int Stream::setDmaSource(U32 addr)
 {
     AMB_SET_DMA_CHANNEL SetDescrip;
     SetDescrip.DmaChanNum = m_DmaChan;
@@ -356,7 +355,27 @@ int Stream::setDmaSource(u32 addr)
 
 //-----------------------------------------------------------------------------
 
-int Stream::setDmaDirection(u32 direction)
+int Stream::setDmaRequestFlag(U32 flag)
+{
+    AMB_SET_DMA_CHANNEL SetDescrip;
+    SetDescrip.DmaChanNum = m_DmaChan;
+    SetDescrip.Param = flag;
+
+    if(m_Descr)
+    {
+        if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_DRQ_MEMIO, &SetDescrip, sizeof(SetDescrip), 0, 0))
+        {
+            dbg_msg(m_logErr,"%s(): Error set source for DMA\n", __FUNCTION__ );
+            throw;
+        }
+    }
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+int Stream::setDmaDirection(U32 direction)
 {
     AMB_SET_DMA_CHANNEL SetDescrip;
     SetDescrip.DmaChanNum = m_DmaChan;
@@ -378,7 +397,7 @@ int Stream::setDmaDirection(u32 direction)
 
 //-----------------------------------------------------------------------------
 
-int Stream::adjustDma(u32 mode)
+int Stream::adjustDma(U32 mode)
 {
     AMB_SET_DMA_CHANNEL SetDescrip;
     SetDescrip.DmaChanNum = m_DmaChan;
@@ -398,7 +417,7 @@ int Stream::adjustDma(u32 mode)
 
 //-----------------------------------------------------------------------------
 
-int Stream::doneDma(u32 blockNumber)
+int Stream::doneDma(U32 blockNumber)
 {
     AMB_SET_DMA_CHANNEL SetDescrip;
     SetDescrip.DmaChanNum = m_DmaChan;

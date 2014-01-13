@@ -38,23 +38,24 @@ public:
 
     int allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA);
     int allocateDmaMemory(void** pBuf,
-                          u32 blkSize,
-                          u32 blkNum,
-                          u32 isSysMem,
-                          u32 dir,
-                          u32 addr,
+                          U32 blkSize,
+                          U32 blkNum,
+                          U32 isSysMem,
+                          U32 dir,
+                          U32 addr,
                           BRDstrm_Stub **pStub);
     int freeDmaMemory();
     int startDma(int isCycle);
     int stopDma();
-    int stateDma(u32 msTimeout, int& state, u32& blkNum);
-    int waitDmaBuffer(u32 timeout);
-    int waitDmaBlock(u32 timeout);
+    int stateDma(U32 msTimeout, int& state, U32& blkNum);
+    int waitDmaBuffer(U32 timeout);
+    int waitDmaBlock(U32 timeout);
     int resetDmaFifo();
-    int setDmaSource(u32 src);
-    int setDmaDirection(u32 dir);
-    int adjustDma(u32 adjust);
-    int doneDma(u32 done);
+    int setDmaSource(U32 src);
+    int setDmaDirection(U32 dir);
+    int setDmaRequestFlag(U32 flag);
+    int adjustDma(U32 adjust);
+    int doneDma(U32 done);
 
     bool writeBlock(IPC_handle file, int blockNumber);
     bool writeBuffer(IPC_handle file, int fpos = 0);
@@ -70,7 +71,7 @@ private:
     Mapper          m_map;
 
     AMB_MEM_DMA_CHANNEL          *m_Descr;
-    u32                          m_DescrSize;
+    U32                          m_DescrSize;
 
     static thread_value __IPC_API stream_thread(void *params);
 };
@@ -80,7 +81,7 @@ private:
 struct StreamParam {
     class Stream            *strm;
     AMB_MEM_DMA_CHANNEL     *dscr;
-    u32                     timeout;
+    U32                     timeout;
     IPC_handle              dataFile;
 };
 

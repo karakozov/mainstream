@@ -32,13 +32,20 @@ public:
     explicit Fpga(unsigned id);
     virtual ~Fpga();
 
-    void initFpga();
+    void init();
+    Memory* DDR3();
+    void resetFifo(unsigned trd);
+    void resetTrd(unsigned trd);
     int trd_number(unsigned trdID);
 
     void FpgaRegPokeInd(S32 trdNo, S32 rgnum, U32 val);
     U32 FpgaRegPeekInd(S32 trdNo, S32 rgnum);
     void FpgaRegPokeDir(S32 trdNo, S32 rgnum, U32 val);
     U32 FpgaRegPeekDir(S32 trdNo, S32 rgnum);
+    U32 FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32 FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32 FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32 FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
 
     int allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 DmaChan,
@@ -57,6 +64,7 @@ public:
     int waitDmaBlock(U32 DmaChan, U32 timeout);
     int resetDmaFifo(U32 DmaChan);
     int setDmaSource(U32 DmaChan, U32 src);
+    int setDmaRequestFlag(U32 DmaChan, U32 flag);
     int setDmaDirection(U32 DmaChan, U32 dir);
     int adjustDma(U32 DmaChan, U32 adjust);
     int doneDma(U32 DmaChan, U32 done);
@@ -64,18 +72,23 @@ public:
     bool writeBlock(U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 DmaChan, IPC_handle file, int fpos = 0);
 
+    bool setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size);
+
 private:
     IPC_handle m_fpgaDev;
     unsigned m_fpgaID;
     std::vector<unsigned> m_trd;
     std::vector<Stream*> m_strm;
-    class Memory *m_mem;
+    Memory *m_ddr;
 
     void openFpgaDevice();
     void closeFpgaDevice();
     void createDmaChannels();
     void deleteDmaCannels();
+    void createMemory();
+    void deleteMemory();
     void scanFpgaTetrades();
+
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
     Stream* stream(U32 DmaChan);
 };

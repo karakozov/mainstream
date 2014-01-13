@@ -14,9 +14,9 @@ TARGET_NAME = mainstream
 all: $(TARGET_NAME)
 
 ROOT_DIR = $(shell pwd)
-LIBPATH  = ../../bin
+LIBPATH  = ../../BARDY/bin
 
-DIRS := ../../gipcy/include
+DIRS := ../../BARDY/gipcy/include
 INC := $(addprefix -I, $(DIRS))
 
 CC = $(CSTOOL_PREFIX)g++

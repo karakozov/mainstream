@@ -22,10 +22,10 @@
 Fpga::Fpga(unsigned id) : m_fpgaID(id)
 {
     m_fpgaDev = 0;
+    m_ddr = 0;
     m_strm.clear();
+    m_trd.clear();
     openFpgaDevice();
-    createDmaChannels();
-    scanFpgaTetrades();
 }
 
 //-----------------------------------------------------------------------------
@@ -33,36 +33,73 @@ Fpga::Fpga(unsigned id) : m_fpgaID(id)
 Fpga::~Fpga()
 {
     m_trd.clear();
+    delete m_ddr;
     deleteDmaCannels();
     closeFpgaDevice();
 }
 
 //-----------------------------------------------------------------------------
 
-void Fpga::initFpga()
+void Fpga::init()
 {
-    //Set RST and FIFO_RST in MODE0 in all tetrades
-    for( int trd=0; trd<TRD_NUM; trd++ ) {
-        FpgaRegPokeInd(trd, 0, 0x3);
-    }
+    try {
 
-    delay(10);
-
-    //zero all other registers
-    for( int trd=0; trd<TRD_NUM; trd++ ) {
-        for( int ii=1; ii<32; ii++ ) {
-            FpgaRegPokeInd(trd, ii, 0);
+        //Set RST and FIFO_RST in MODE0 in all tetrades
+        for( int trd=0; trd<TRD_NUM; trd++ ) {
+            FpgaRegPokeInd(trd, 0, 0x3);
         }
+
+        delay(1);
+
+        //Clear RST and FIFO_RST in MODE0 in all tetrades
+        for( int trd=0; trd<TRD_NUM; trd++ ) {
+            FpgaRegPokeInd(trd, 0, 0);
+        }
+
+        scanFpgaTetrades();
+        createDmaChannels();
+
+        m_ddr = new Memory(this);
+
+    } catch(...) {
+
+        fprintf(stderr, "%s, %d, %s(): Exception!", __FILE__, __LINE__, __FUNCTION__);
+        throw;
     }
+}
 
-    delay(10);
+//-----------------------------------------------------------------------------
 
-    //Clear RST and FIFO_RST in MODE0 in all tetrades
-    for( int trd=0; trd<TRD_NUM; trd++ ) {
-        FpgaRegPokeInd(trd, 0, 0);
-    }
+void Fpga::resetFifo(unsigned trd)
+{
+    U32 mode0 = FpgaRegPeekInd(trd, 0);
 
-    delay(10);
+    mode0 |= 0x2;
+
+    FpgaRegPokeInd(trd, 0, mode0);
+
+    mode0 &= ~0x2;
+
+    delay(1);
+
+    FpgaRegPokeInd(trd, 0, mode0);
+}
+
+//-----------------------------------------------------------------------------
+
+void Fpga::resetTrd(unsigned trd)
+{
+    U32 mode0 = FpgaRegPeekInd(trd, 0);
+
+    mode0 |= 0x1;
+
+    FpgaRegPokeInd(trd, 0, mode0);
+
+    mode0 &= ~0x1;
+
+    delay(1);
+
+    FpgaRegPokeInd(trd, 0, mode0);
 }
 
 //-----------------------------------------------------------------------------
@@ -143,12 +180,88 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
 
 //-----------------------------------------------------------------------------
 
+U32 Fpga::FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpgaDev,
+                IOCTL_AMB_WRITE_REG_BUF,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                0,
+                0);
+    if(res < 0){
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpgaDev,
+                IOCTL_AMB_WRITE_REG_BUF_DIR,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                NULL,
+                0);
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpgaDev,
+                IOCTL_AMB_READ_REG_BUF,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                &reg_buf,
+                sizeof(AMB_BUF_REG));
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpgaDev,
+                IOCTL_AMB_READ_REG_BUF_DIR,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                &reg_buf,
+                sizeof(AMB_BUF_REG));
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
 void Fpga::openFpgaDevice(void)
 {
     char name[256];
     m_fpgaDev = IPC_openDevice(name, AmbDeviceName, m_fpgaID);
     if(!m_fpgaDev) {
-        fprintf(stderr, "Open FPGA%d\n", m_fpgaID);
+        fprintf(stderr, "Error open FPGA%d\n", m_fpgaID);
         throw;
     }
     fprintf(stderr, "Open FPGA%d\n", m_fpgaID);
@@ -196,9 +309,23 @@ void Fpga::deleteDmaCannels()
 
 //-----------------------------------------------------------------------------
 
+void Fpga::createMemory()
+{
+    m_ddr = new Memory(this);
+}
+
+//-----------------------------------------------------------------------------
+
+void Fpga::deleteMemory()
+{
+    if(m_ddr) delete m_ddr;
+}
+
+//-----------------------------------------------------------------------------
+
 Stream* Fpga::stream(U32 DmaChan)
 {
-    if((DmaChan < 0) || (DmaChan >= m_strm.size()) || !m_strm.at(DmaChan)) {
+    if((DmaChan >= m_strm.size()) || !m_strm.at(DmaChan)) {
         fprintf(stderr, "Invalid DMA number: %d\n", DmaChan);
         throw;
     }
@@ -215,6 +342,8 @@ void Fpga::scanFpgaTetrades()
         if(trd_ID != 0xff && trd_ID != 0x0) {
             fprintf(stderr, "TRD %d: - ID 0x%x\n", i, trd_ID);
             m_trd.push_back(trd_ID);
+        } else {
+            m_trd.push_back(0);
         }
     }
 }
@@ -231,6 +360,13 @@ int Fpga::trd_number(unsigned trdID)
         }
     }
     return -1;
+}
+
+//-----------------------------------------------------------------------------
+
+Memory* Fpga::DDR3()
+{
+    return m_ddr;
 }
 
 //-----------------------------------------------------------------------------
@@ -297,13 +433,13 @@ int Fpga::allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param)
 //-----------------------------------------------------------------------------
 
 int Fpga::allocateDmaMemory(U32 DmaChan,
-                      void** pBuf,
-                      U32 blkSize,
-                      U32 blkNum,
-                      U32 isSysMem,
-                      U32 dir,
-                      U32 addr,
-                      BRDstrm_Stub **pStub)
+                            void** pBuf,
+                            U32 blkSize,
+                            U32 blkNum,
+                            U32 isSysMem,
+                            U32 dir,
+                            U32 addr,
+                            BRDstrm_Stub **pStub)
 {
     return stream(DmaChan)->allocateDmaMemory(pBuf, blkSize, blkNum, isSysMem, dir, addr, pStub);
 }
@@ -366,6 +502,13 @@ int Fpga::setDmaSource(U32 DmaChan, U32 src)
 
 //-----------------------------------------------------------------------------
 
+int Fpga::setDmaRequestFlag(U32 DmaChan, U32 flag)
+{
+    return stream(DmaChan)->setDmaRequestFlag(flag);
+}
+
+//-----------------------------------------------------------------------------
+
 int Fpga::setDmaDirection(U32 DmaChan, U32 dir)
 {
     return stream(DmaChan)->setDmaDirection(dir);
@@ -397,6 +540,13 @@ bool Fpga::writeBlock(U32 DmaChan, IPC_handle file, int blockNumber)
 bool Fpga::writeBuffer(U32 DmaChan, IPC_handle file, int fpos)
 {
     return stream(DmaChan)->writeBuffer(file, fpos);
+}
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size)
+{
+    return m_ddr->setMemory(mem_mode, PretrigMode, PostTrigSize, Buf_size);
 }
 
 //-----------------------------------------------------------------------------

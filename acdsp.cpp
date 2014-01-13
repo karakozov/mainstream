@@ -1,8 +1,10 @@
+#include "isvi.h"
 #include "acdsp.h"
 #include "i2c.h"
 #include "si571.h"
 #include "fpga.h"
 #include "stream.h"
+#include "memory.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -25,10 +27,10 @@
 acdsp::acdsp()
 {
     m_fpga.clear();
-
-    iic = new i2c(1);
+    m_exit = false;
+    m_iic = new i2c(1);
     enableSwitchOut(0x1);
-    si571 = new Si571(iic);
+    m_si571 = new Si571(m_iic);
 
     createFpgaDevices();
 }
@@ -39,21 +41,21 @@ acdsp::~acdsp()
 {
     deleteFpgaDevices();
 
-    delete si571;
-    delete iic;
+    delete m_si571;
+    delete m_iic;
 }
 
 //-----------------------------------------------------------------------------
 
 int acdsp::enableSwitchOut(unsigned mask)
 {
-    if(!iic) return 0;
+    if(!m_iic) return 0;
 
     // enable i2c switch output to Si571
-    iic->write(0x70,mask);
+    m_iic->write(0x70,mask);
 
     // check switch settings
-    unsigned val = iic->read(0x70);
+    unsigned val = m_iic->read(0x70);
     if(val != mask) {
         fprintf(stderr, "Can't set i2c switch: mask = 0x%x\n", mask);
         throw;
@@ -66,11 +68,11 @@ int acdsp::enableSwitchOut(unsigned mask)
 int acdsp::setSi57xFreq(float freq)
 {
     float desiredFreq = freq;
-    si571->SetRate(&desiredFreq);
+    m_si571->SetRate(&desiredFreq);
     fprintf(stderr, "desiredFreq = %f\n", desiredFreq);
 
     float setFreq = 0;
-    si571->GetRate(&setFreq);
+    m_si571->GetRate(&setFreq);
     fprintf(stderr, "setFreq = %f\n", setFreq);
 
     return 0;
@@ -86,6 +88,7 @@ void acdsp::createFpgaDevices(void)
             if(!fpga) {
                 throw;
             }
+            fpga->init();
             m_fpga.push_back(fpga);
         }
     } catch(...)  {
@@ -109,18 +112,11 @@ void acdsp::deleteFpgaDevices()
 
 Fpga* acdsp::FPGA(unsigned fpgaNum)
 {
-    if((fpgaNum < 0) || (fpgaNum >= m_fpga.size())) {
+    if(fpgaNum >= m_fpga.size()) {
         fprintf(stderr, "Invalid FPGA number: %d\n", fpgaNum);
         throw;
     }
     return m_fpga.at(fpgaNum);
-}
-
-//-----------------------------------------------------------------------------
-
-void acdsp::initFpga(unsigned fpgaNum)
-{
-    FPGA(fpgaNum)->initFpga();
 }
 
 //-----------------------------------------------------------------------------
@@ -169,13 +165,13 @@ int acdsp::allocateDmaMemory(U32 fpgaNum, U32 DmaChan, BRDctrl_StreamCBufAlloc* 
 //-----------------------------------------------------------------------------
 
 int acdsp::allocateDmaMemory(U32 fpgaNum, U32 DmaChan,
-                      void** pBuf,
-                      U32 blkSize,
-                      U32 blkNum,
-                      U32 isSysMem,
-                      U32 dir,
-                      U32 addr,
-                      BRDstrm_Stub **pStub)
+                             void** pBuf,
+                             U32 blkSize,
+                             U32 blkNum,
+                             U32 isSysMem,
+                             U32 dir,
+                             U32 addr,
+                             BRDstrm_Stub **pStub)
 {
     return FPGA(fpgaNum)->allocateDmaMemory(DmaChan, pBuf, blkSize, blkNum, isSysMem, dir, addr, pStub);
 }
@@ -245,6 +241,13 @@ int acdsp::setDmaDirection(U32 fpgaNum, U32 DmaChan, U32 dir)
 
 //-----------------------------------------------------------------------------
 
+int acdsp::setDmaRequestFlag(U32 fpgaNum, U32 DmaChan, U32 flag)
+{
+    return FPGA(fpgaNum)->setDmaRequestFlag(DmaChan, flag);
+}
+
+//-----------------------------------------------------------------------------
+
 int acdsp::adjustDma(U32 fpgaNum, U32 DmaChan, U32 adjust)
 {
     return FPGA(fpgaNum)->adjustDma(DmaChan, adjust);
@@ -255,6 +258,13 @@ int acdsp::adjustDma(U32 fpgaNum, U32 DmaChan, U32 adjust)
 int acdsp::doneDma(U32 fpgaNum, U32 DmaChan, U32 done)
 {
     return FPGA(fpgaNum)->doneDma(DmaChan, done);
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::resetFifo(U32 fpgaNum, U32 trd)
+{
+    return FPGA(fpgaNum)->resetFifo(trd);
 }
 
 //-----------------------------------------------------------------------------
@@ -279,3 +289,272 @@ bool acdsp::writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos)
 }
 
 //-----------------------------------------------------------------------------
+
+#define ADC_TRD 4
+#define MEM_TRD 5
+
+//-----------------------------------------------------------------------------
+
+void acdsp::dataFromAdc(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA)
+{
+    fprintf(stderr, "Set DMA source\n");
+    setDmaSource(fpgaNum, DmaChan, ADC_TRD);
+
+    fprintf(stderr, "Set DMA direction\n");
+    setDmaDirection(fpgaNum, DmaChan, BRDstrm_DIR_IN);
+
+    fprintf(stderr, "Set ADC channels mask\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0x10, AdcMask);
+
+    fprintf(stderr, "Set ADC start mode\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0x17, (0x3 << 4));
+
+    fprintf(stderr, "Start DMA\n");
+    startDma(fpgaNum, DmaChan, 0);
+
+    fprintf(stderr, "Start ADC\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0, 0x2038);
+
+    u32 *data0 = (u32*)sSCA.ppBlk[0];
+    u32 *data1 = (u32*)sSCA.ppBlk[1];
+    u32 *data2 = (u32*)sSCA.ppBlk[2];
+    u32 *data3 = (u32*)sSCA.ppBlk[3];
+
+    unsigned counter = 0;
+
+    while(1) {
+
+        if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
+
+            U32 status = RegPeekDir(fpgaNum,ADC_TRD,0x0);
+            fprintf( stderr, "ERROR TIMEOUT! STATUS = 0x%.4X\n", status);
+            break;
+
+        } else {
+
+            writeBuffer(fpgaNum, DmaChan, isviFile, 0);
+            lockDataFile(flgName, counter);
+        }
+
+        u32 status = RegPeekDir(fpgaNum,ADC_TRD,0x0);
+        fprintf(stderr, "%d: STATUS = 0x%.4X [0x%.8x 0x%.8x 0x%.8x 0x%.8x]\r", ++counter, (u16)status, data0[0], data1[0], data2[0], data3[0]);
+
+        stopDma(fpgaNum, DmaChan);
+        RegPokeDir(fpgaNum,ADC_TRD,0,0x3);
+        startDma(fpgaNum, DmaChan, 0);
+        delay(10);
+        RegPokeDir(fpgaNum,ADC_TRD,0,0x2038);
+
+        if(exitFlag()) {
+            fprintf(stderr, "\n");
+            break;
+        }
+
+        IPC_delay(50);
+    }
+
+    fprintf(stderr, "Stop DMA channel\n");
+    stopDma(fpgaNum, DmaChan);
+
+    fprintf(stderr, "Reset DMA FIFO\n");
+    resetDmaFifo(fpgaNum, DmaChan);
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::dataFromMemAsMem(U32 fpgaNum, U32 DmaChan, U32 AdcMask, U32 BufferCounter, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA)
+{
+    U32 MemBufSize = BufferCounter * sSCA.blkSize * sSCA.blkNum;
+    U32 PostTrigSize = 0;
+
+    FPGA(fpgaNum)->DDR3()->setMemory(1, 0, PostTrigSize, MemBufSize);
+    FPGA(fpgaNum)->DDR3()->Enable(true);
+
+    fprintf(stderr, "setDmaSource(MEM_TRD)\n");
+    setDmaSource(fpgaNum, DmaChan, MEM_TRD);
+
+    fprintf(stderr, "setDmaRequestFlag(BRDstrm_DRQ_HALF)\n");
+    setDmaRequestFlag(fpgaNum, DmaChan, BRDstrm_DRQ_HALF);
+
+    fprintf(stderr, "resetFifo(ADC_TRD)\n");
+    resetFifo(fpgaNum, ADC_TRD);
+
+    fprintf(stderr, "resetFifo(MEM_TRD)\n");
+    resetFifo(fpgaNum, MEM_TRD);
+
+    fprintf(stderr, "resetDmaFifo()\n");
+    resetDmaFifo(fpgaNum, DmaChan);
+
+    fprintf(stderr, "setAdcMask(0x%x)\n", AdcMask);
+    RegPokeInd(fpgaNum, ADC_TRD, 0x10, AdcMask);
+
+    fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
+    RegPokeInd(fpgaNum, ADC_TRD, 0x17, (0x3 << 4));
+
+    //fprintf(stderr, "ADC_TRD: TEST = 0x100\n");
+    //RegPokeInd(fpgaNum, ADC_TRD, 0xC, (1 << 8));
+
+    fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
+    RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x2038);
+    IPC_delay(10);
+
+    fprintf(stderr, "ADC_TRD: MODE0 = 0x2038\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x2038);
+    IPC_delay(10);
+
+    // дожидаемся окончания сбора
+    fprintf(stderr, "Waiting data DDR3...");
+    bool ok = true;
+    while(!FPGA(fpgaNum)->DDR3()->AcqComplete()) {
+        if(m_exit) {
+            ok = false;
+            break;
+        }
+    }
+    if(ok) {
+        fprintf(stderr, "OK\n");
+    } else {
+        fprintf(stderr, "ERROR\n");
+        return;
+    }
+
+    fprintf(stderr, "MEM_TRD: MODE0 = 0x0\n");
+    RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x0);
+
+    fprintf(stderr, "ADC_TRD: MODE0 = 0x0");
+    RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x0);
+
+    fprintf(stderr, "ADC_TRD: TEST = 0x0\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0xC, 0x0);
+
+    unsigned counter = 0;
+
+    fprintf(stderr, "\n");
+    for(counter = 0; counter < BufferCounter; counter++) {
+
+        startDma(fpgaNum, DmaChan, 0x0);
+
+        IPC_delay(10);
+
+        if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
+
+            u32 status = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status);
+            status = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! MEM STATUS = 0x%.4X\n", status);
+            break;
+
+        } else {
+
+            writeBuffer(fpgaNum, DmaChan, isviFile, counter * sSCA.blkSize * sSCA.blkNum);
+            lockDataFile(flgName, counter);
+            fprintf(stderr, "Write DMA buffer: %d\r", counter);
+            sync();
+        }
+    }
+    fprintf(stderr, "\n");
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::dataFromMemAsFifo(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA)
+{
+    U32 MemBufSize = sSCA.blkSize * sSCA.blkNum;
+    U32 PostTrigSize = 0;
+
+    FPGA(fpgaNum)->DDR3()->setMemory(2, 0, PostTrigSize, MemBufSize);
+    FPGA(fpgaNum)->DDR3()->Enable(true);
+
+    fprintf(stderr, "setDmaSource(ADC_TRD)\n");
+    setDmaSource(fpgaNum, DmaChan, ADC_TRD);
+
+    fprintf(stderr, "setDmaRequestFlag(BRDstrm_DRQ_HALF)\n");
+    setDmaRequestFlag(fpgaNum, DmaChan, BRDstrm_DRQ_HALF);
+
+    fprintf(stderr, "resetFifo(ADC_TRD)\n");
+    resetFifo(fpgaNum, ADC_TRD);
+
+    fprintf(stderr, "resetFifo(MEM_TRD)\n");
+    resetFifo(fpgaNum, MEM_TRD);
+
+    fprintf(stderr, "resetDmaFifo()\n");
+    resetDmaFifo(fpgaNum, DmaChan);
+
+    fprintf(stderr, "startDma(): Cycle = %d\n", 0x0);
+    startDma(fpgaNum, DmaChan, 0x0);
+
+    fprintf(stderr, "setAdcMask(0x%x)\n", AdcMask);
+    RegPokeInd(fpgaNum, ADC_TRD, 0x10, AdcMask);
+
+    fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
+    RegPokeInd(fpgaNum, ADC_TRD, 0x17, (0x3 << 4));
+
+    //fprintf(stderr, "ADC_TRD: TEST = 0x100\n");
+    //RegPokeInd(fpgaNum, ADC_TRD, 0xC, (1 << 8));
+
+    fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
+    RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x2038);
+    IPC_delay(10);
+
+    fprintf(stderr, "ADC_TRD: MODE0 = 0x2038\n");
+    RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x2038);
+    IPC_delay(10);
+
+    unsigned counter = 0;
+
+    u32 *data0 = (u32*)sSCA.ppBlk[0];
+    u32 *data1 = (u32*)sSCA.ppBlk[1];
+    u32 *data2 = (u32*)sSCA.ppBlk[2];
+    u32 *data3 = (u32*)sSCA.ppBlk[3];
+
+    while(1) {
+
+        if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
+
+            u32 status = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status);
+            status = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! MEM STATUS = 0x%.4X\n", status);
+            break;
+
+        } else {
+
+            writeBuffer(fpgaNum, DmaChan, isviFile, 0);
+            lockDataFile(flgName, counter);
+        }
+
+        u32 status_adc = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+        u32 status_mem = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
+        fprintf(stderr, "%d: ADC: 0x%.4X - MEM: 0x%.4X  [0x%.8x 0x%.8x 0x%.8x 0x%.8x]\r",
+                ++counter, (u16)status_adc, (u16)status_mem, data0[0], data1[0], data2[0], data3[0]);
+
+        stopDma(fpgaNum, DmaChan);
+        RegPokeDir(fpgaNum,ADC_TRD,0,0x3);
+        startDma(fpgaNum,DmaChan,0);
+        delay(10);
+        RegPokeDir(fpgaNum,ADC_TRD,0,0x2038);
+
+        if(exitFlag()) {
+            fprintf(stderr, "\n");
+            break;
+        }
+
+        IPC_delay(50);
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::setExitFlag(bool exit)
+{
+    m_exit = exit;
+}
+
+//-----------------------------------------------------------------------------
+
+bool acdsp::exitFlag()
+{
+    if(IPC_kbhit())
+        return true;
+    return m_exit;
+}
