@@ -23,6 +23,8 @@
 #include <iostream>
 
 //-----------------------------------------------------------------------------
+using namespace std;
+//-----------------------------------------------------------------------------
 
 acdsp::acdsp()
 {
@@ -315,10 +317,9 @@ void acdsp::dataFromAdc(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFi
     fprintf(stderr, "Start ADC\n");
     RegPokeInd(fpgaNum, ADC_TRD, 0, 0x2038);
 
-    u32 *data0 = (u32*)sSCA.ppBlk[0];
-    u32 *data1 = (u32*)sSCA.ppBlk[1];
-    u32 *data2 = (u32*)sSCA.ppBlk[2];
-    u32 *data3 = (u32*)sSCA.ppBlk[3];
+    vector<u32*> data;
+    for(unsigned i=0; i<sSCA.blkNum; i++)
+        data.push_back((u32*)sSCA.ppBlk[i]);
 
     unsigned counter = 0;
 
@@ -326,8 +327,8 @@ void acdsp::dataFromAdc(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFi
 
         if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
 
-            U32 status = RegPeekDir(fpgaNum,ADC_TRD,0x0);
-            fprintf( stderr, "ERROR TIMEOUT! STATUS = 0x%.4X\n", status);
+            u32 status_adc = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status_adc);
             break;
 
         } else {
@@ -336,14 +337,20 @@ void acdsp::dataFromAdc(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFi
             lockDataFile(flgName, counter);
         }
 
-        u32 status = RegPeekDir(fpgaNum,ADC_TRD,0x0);
-        fprintf(stderr, "%d: STATUS = 0x%.4X [0x%.8x 0x%.8x 0x%.8x 0x%.8x]\r", ++counter, (u16)status, data0[0], data1[0], data2[0], data3[0]);
+        fprintf(stderr, "%d: STATUS = 0x%.4X [", ++counter, (u16)RegPeekDir(fpgaNum,ADC_TRD,0x0));
+        for(unsigned i=0; i<data.size(); i++) {
+            u32 *value = data.at(i);
+            fprintf(stderr, " 0x%.8x ", value[0]);
+        }
+        fprintf(stderr, " ]\r");
 
+        RegPokeInd(fpgaNum,ADC_TRD,0,0x0);
         stopDma(fpgaNum, DmaChan);
-        RegPokeDir(fpgaNum,ADC_TRD,0,0x3);
-        startDma(fpgaNum, DmaChan, 0);
+        resetFifo(fpgaNum, ADC_TRD);
+        resetDmaFifo(fpgaNum, DmaChan);
+        startDma(fpgaNum,DmaChan,0);
         delay(10);
-        RegPokeDir(fpgaNum,ADC_TRD,0,0x2038);
+        RegPokeInd(fpgaNum,ADC_TRD,0,0x2038);
 
         if(exitFlag()) {
             fprintf(stderr, "\n");
@@ -353,11 +360,8 @@ void acdsp::dataFromAdc(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle isviFi
         IPC_delay(50);
     }
 
-    fprintf(stderr, "Stop DMA channel\n");
+    RegPokeInd(fpgaNum,ADC_TRD,0,0x0);
     stopDma(fpgaNum, DmaChan);
-
-    fprintf(stderr, "Reset DMA FIFO\n");
-    resetDmaFifo(fpgaNum, DmaChan);
 }
 
 //-----------------------------------------------------------------------------
@@ -391,9 +395,6 @@ void acdsp::dataFromMemAsMem(U32 fpgaNum, U32 DmaChan, U32 AdcMask, U32 BufferCo
     fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
     RegPokeInd(fpgaNum, ADC_TRD, 0x17, (0x3 << 4));
 
-    //fprintf(stderr, "ADC_TRD: TEST = 0x100\n");
-    //RegPokeInd(fpgaNum, ADC_TRD, 0xC, (1 << 8));
-
     fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
     RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x2038);
     IPC_delay(10);
@@ -424,8 +425,7 @@ void acdsp::dataFromMemAsMem(U32 fpgaNum, U32 DmaChan, U32 AdcMask, U32 BufferCo
     fprintf(stderr, "ADC_TRD: MODE0 = 0x0");
     RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x0);
 
-    fprintf(stderr, "ADC_TRD: TEST = 0x0\n");
-    RegPokeInd(fpgaNum, ADC_TRD, 0xC, 0x0);
+    FPGA(fpgaNum)->DDR3()->Enable(false);
 
     unsigned counter = 0;
 
@@ -438,10 +438,9 @@ void acdsp::dataFromMemAsMem(U32 fpgaNum, U32 DmaChan, U32 AdcMask, U32 BufferCo
 
         if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
 
-            u32 status = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
-            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status);
-            status = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
-            fprintf( stderr, "ERROR TIMEOUT! MEM STATUS = 0x%.4X\n", status);
+            u32 status_adc = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+            u32 status_mem = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
             break;
 
         } else {
@@ -453,6 +452,11 @@ void acdsp::dataFromMemAsMem(U32 fpgaNum, U32 DmaChan, U32 AdcMask, U32 BufferCo
         }
     }
     fprintf(stderr, "\n");
+
+    RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x0);
+    RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x0);
+    stopDma(fpgaNum, DmaChan);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -489,9 +493,6 @@ void acdsp::dataFromMemAsFifo(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle 
     fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
     RegPokeInd(fpgaNum, ADC_TRD, 0x17, (0x3 << 4));
 
-    //fprintf(stderr, "ADC_TRD: TEST = 0x100\n");
-    //RegPokeInd(fpgaNum, ADC_TRD, 0xC, (1 << 8));
-
     fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
     RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x2038);
     IPC_delay(10);
@@ -500,21 +501,19 @@ void acdsp::dataFromMemAsFifo(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle 
     RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x2038);
     IPC_delay(10);
 
-    unsigned counter = 0;
+    vector<u32*> data;
+    for(unsigned i=0; i<sSCA.blkNum; i++)
+        data.push_back((u32*)sSCA.ppBlk[i]);
 
-    u32 *data0 = (u32*)sSCA.ppBlk[0];
-    u32 *data1 = (u32*)sSCA.ppBlk[1];
-    u32 *data2 = (u32*)sSCA.ppBlk[2];
-    u32 *data3 = (u32*)sSCA.ppBlk[3];
+    unsigned counter = 0;
 
     while(1) {
 
         if( waitDmaBuffer(fpgaNum, DmaChan, 2000) < 0 ) {
 
-            u32 status = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
-            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status);
-            status = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
-            fprintf( stderr, "ERROR TIMEOUT! MEM STATUS = 0x%.4X\n", status);
+            u32 status_adc = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
+            u32 status_mem = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
+            fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
             break;
 
         } else {
@@ -525,22 +524,36 @@ void acdsp::dataFromMemAsFifo(U32 fpgaNum, U32 DmaChan, U32 AdcMask, IPC_handle 
 
         u32 status_adc = RegPeekDir(fpgaNum, ADC_TRD, 0x0);
         u32 status_mem = RegPeekDir(fpgaNum, MEM_TRD, 0x0);
-        fprintf(stderr, "%d: ADC: 0x%.4X - MEM: 0x%.4X  [0x%.8x 0x%.8x 0x%.8x 0x%.8x]\r",
-                ++counter, (u16)status_adc, (u16)status_mem, data0[0], data1[0], data2[0], data3[0]);
+        fprintf(stderr, "%d: ADC: 0x%.4X - MEM: 0x%.4X [", ++counter, (u16)status_adc, (u16)status_mem);
+        for(unsigned i=0; i<data.size(); i++) {
+            u32 *value = data.at(i);
+            fprintf(stderr, " 0x%.8x ", value[0]);
+        }
+        fprintf(stderr, " ]\r");
 
+
+        RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x0);
+        RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x0);
         stopDma(fpgaNum, DmaChan);
-        RegPokeDir(fpgaNum,ADC_TRD,0,0x3);
-        startDma(fpgaNum,DmaChan,0);
+        resetFifo(fpgaNum, ADC_TRD);
+        resetFifo(fpgaNum, MEM_TRD);
+        resetDmaFifo(fpgaNum, DmaChan);
+        startDma(fpgaNum,DmaChan,0x0);
         delay(10);
-        RegPokeDir(fpgaNum,ADC_TRD,0,0x2038);
+        RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x2038);
+        RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x2038);
 
         if(exitFlag()) {
             fprintf(stderr, "\n");
             break;
         }
 
-        IPC_delay(50);
+        IPC_delay(250);
     }
+
+    RegPokeInd(fpgaNum, ADC_TRD, 0x0, 0x0);
+    RegPokeInd(fpgaNum, MEM_TRD, 0x0, 0x0);
+    stopDma(fpgaNum, DmaChan);
 }
 
 //-----------------------------------------------------------------------------
@@ -558,3 +571,5 @@ bool acdsp::exitFlag()
         return true;
     return m_exit;
 }
+
+//-----------------------------------------------------------------------------

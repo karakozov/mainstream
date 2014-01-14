@@ -4,7 +4,7 @@
 #endif
 
 #include "acdsp.h"
-#include "memory.h"
+#include "iniparser.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -57,7 +57,7 @@ bool lockDataFile(const char* fname, int counter);
 #define ADC_MAX_CHAN            (0x4)
 
 //-----------------------------------------------------------------------------
-#define USE_SIGNAL 0
+#define USE_SIGNAL 1
 //-----------------------------------------------------------------------------
 
 #if USE_SIGNAL
@@ -75,10 +75,14 @@ void stop_exam(int sig)
 
 int main(int argc, char *argv[])
 {
-    if(argc != 5) {
-        fprintf(stderr, "usage: mainstream <FPGA number> <DMA channel> <ADC mask> <ADC frequency>\n");
+    struct app_params_t params;
+
+    if(!getParams(argc, argv, params)) {
+        fprintf(stderr, "Error get parameters from file: %s\n", argv[1]);
         return -1;
     }
+
+    showParams(params);
 
 #if USE_SIGNAL
     signal(SIGINT, stop_exam);
@@ -88,64 +92,60 @@ int main(int argc, char *argv[])
 
     try {
 
-        U32 fpgaNum = strtol(argv[1], 0, 16);
-        U32 DmaChan = strtol(argv[2], 0, 16);
-        U32 AdcMask = strtol(argv[3], 0, 16);
-        float AdcFreq = strtof(argv[4], 0);
-        void *pBuffers[4] = {0,0,0,0,};
-
-        fprintf(stderr, "fpgaNum: 0x%d\n", fpgaNum);
-        fprintf(stderr, "DmaChan: 0x%d\n", DmaChan);
-        fprintf(stderr, "AdcMask: 0x%x\n", AdcMask);
-        fprintf(stderr, "AdcFreq: %f\n", AdcFreq);
-
         acdsp brd;
 
-        brd.setSi57xFreq(AdcFreq);
+        brd.setSi57xFreq(params.adcFreq);
 
 #if USE_SIGNAL
         boardPtr = &brd;
 #endif
 
-        fprintf(stderr, "Start testing DMA: %d\n", DmaChan);
+        fprintf(stderr, "Start testing DMA: %d\n", params.dmaChannel);
         fprintf(stderr, "DMA information:\n" );
-        brd.infoDma(fpgaNum);
+        brd.infoDma(params.fpgaNumber);
+
+        vector<void*> Buffers(params.dmaBlockCount, NULL);
 
 #ifndef ALLOCATION_TYPE_1
-        BRDctrl_StreamCBufAlloc sSCA = {BRDstrm_DIR_IN, 1, STREAM_BLK_NUM, STREAM_BLK_SIZE, pBuffers, NULL, };
+        BRDctrl_StreamCBufAlloc sSCA = {BRDstrm_DIR_IN, 1, params.dmaBlockCount, params.dmaBlockSize, Buffers.data(), NULL, };
         fprintf(stderr, "Allocate DMA memory\n");
-        brd.allocateDmaMemory(fpgaNum, DmaChan, &sSCA);
+        brd.allocateDmaMemory(params.fpgaNumber, params.dmaChannel, &sSCA);
 #else
         BRDstrm_Stub *pStub = 0;
         fprintf(stderr, "Allocate DMA memory\n");
-        brd.allocateDmaMemory(fpgaNum, DmaChan, pBuffers,STREAM_BLK_SIZE,STREAM_BLK_NUM,1,BRDstrm_DIR_IN,0x1000,&pStub);
+        brd.allocateDmaMemory(params.fpgaNumber, params.dmaChannel, Buffers.data(), params.dmaBlockSize, params.dmaBlockCount, 1, BRDstrm_DIR_IN, 0x1000, &pStub);
 #endif
         delay(100);
 
         char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d.bin", fpgaNum);
+        snprintf(fname, sizeof(fname), "data_%d.bin", params.fpgaNumber);
         IPC_handle isviFile = createDataFile(fname);
 
         char flgname[64];
-        snprintf(flgname, sizeof(flgname), "data_%d.flg", fpgaNum);
+        snprintf(flgname, sizeof(flgname), "data_%d.flg", params.fpgaNumber);
         createFlagFile(flgname);
 
         //---------------------------------------------------- DATA FROM STREAM ADC
 
-        brd.dataFromAdc(fpgaNum, DmaChan, AdcMask, isviFile, flgname, sSCA);
+        if(params.testMode == 0)
+            brd.dataFromAdc(params.fpgaNumber, params.dmaChannel, params.adcMask, isviFile, flgname, sSCA);
 
         //---------------------------------------------------- DDR3 FPGA AS MEMORY
 
-        brd.dataFromMemAsMem(fpgaNum, DmaChan, AdcMask, 16, isviFile, flgname, sSCA);
+        if(params.testMode == 1)
+            brd.dataFromMemAsMem(params.fpgaNumber, params.dmaChannel, params.adcMask, 16, isviFile, flgname, sSCA);
 
         //---------------------------------------------------- DDR3 FPGA AS FIFO
 
-        brd.dataFromMemAsFifo(fpgaNum, DmaChan, AdcMask,isviFile, flgname, sSCA);
+        if(params.testMode == 2)
+            brd.dataFromMemAsFifo(params.fpgaNumber, params.dmaChannel, params.adcMask,isviFile, flgname, sSCA);
 
         //----------------------------------------------------
 
         fprintf(stderr, "Free DMA memory\n");
-        brd.freeDmaMemory(fpgaNum, DmaChan);
+        brd.freeDmaMemory(params.fpgaNumber, params.dmaChannel);
+
+        Buffers.clear();
 
         IPC_closeFile(isviFile);
 
