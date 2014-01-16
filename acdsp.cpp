@@ -36,12 +36,14 @@ acdsp::acdsp()
     m_si571 = new Si571(m_iic);
 
     createFpgaDevices();
+    createFpgaMemory();
 }
 
 //-----------------------------------------------------------------------------
 
 acdsp::~acdsp()
 {
+    deleteFpgaMemory();
     deleteFpgaDevices();
 
     delete m_si571;
@@ -83,7 +85,7 @@ int acdsp::setSi57xFreq(float freq)
 
 //-----------------------------------------------------------------------------
 
-void acdsp::createFpgaDevices(void)
+void acdsp::createFpgaDevices()
 {
     try {
         for(unsigned i=0; i<FPGA_COUNT; i++) {
@@ -113,6 +115,35 @@ void acdsp::deleteFpgaDevices()
 
 //-----------------------------------------------------------------------------
 
+void acdsp::createFpgaMemory()
+{
+    try {
+        for(unsigned i=0; i<m_fpga.size(); i++) {
+            Memory *ddr = new Memory(m_fpga.at(i));
+            if(!ddr) {
+                throw;
+            }
+            m_ddr.push_back(ddr);
+        }
+    } catch(...)  {
+        deleteFpgaMemory();
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::deleteFpgaMemory()
+{
+    for(unsigned i=0; i<m_ddr.size(); i++) {
+        Memory *ddr = m_ddr.at(i);
+        m_ddr.at(i) = 0;
+        delete ddr;
+    }
+    m_ddr.clear();
+}
+
+//-----------------------------------------------------------------------------
+
 Fpga* acdsp::FPGA(unsigned fpgaNum)
 {
     if(fpgaNum >= m_fpga.size()) {
@@ -120,6 +151,17 @@ Fpga* acdsp::FPGA(unsigned fpgaNum)
         throw;
     }
     return m_fpga.at(fpgaNum);
+}
+
+//-----------------------------------------------------------------------------
+
+Memory* acdsp::DDR3(unsigned fpgaNum)
+{
+    if(fpgaNum >= m_ddr.size()) {
+        fprintf(stderr, "Invalid FPGA number: %d\n", fpgaNum);
+        throw;
+    }
+    return m_ddr.at(fpgaNum);
 }
 
 //-----------------------------------------------------------------------------
@@ -373,8 +415,8 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, c
     U32 MemBufSize = params.dmaBuffersCount * sSCA.blkSize * sSCA.blkNum;
     U32 PostTrigSize = 0;
 
-    FPGA(params.fpgaNumber)->DDR3()->setMemory(1, 0, PostTrigSize, MemBufSize);
-    FPGA(params.fpgaNumber)->DDR3()->Enable(true);
+    DDR3(params.fpgaNumber)->setMemory(1, 0, PostTrigSize, MemBufSize);
+    DDR3(params.fpgaNumber)->Enable(true);
 
     fprintf(stderr, "setDmaSource(MEM_TRD)\n");
     setDmaSource(params.fpgaNumber, params.dmaChannel, MEM_TRD);
@@ -408,7 +450,7 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, c
     // дожидаемся окончания сбора
     fprintf(stderr, "Waiting data DDR3...");
     bool ok = true;
-    while(!FPGA(params.fpgaNumber)->DDR3()->AcqComplete()) {
+    while(!DDR3(params.fpgaNumber)->AcqComplete()) {
         if(exitFlag()) {
             ok = false;
             break;
@@ -427,7 +469,7 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, c
     fprintf(stderr, "ADC_TRD: MODE0 = 0x0");
     RegPokeInd(params.fpgaNumber, ADC_TRD, 0x0, 0x0);
 
-    FPGA(params.fpgaNumber)->DDR3()->Enable(false);
+    DDR3(params.fpgaNumber)->Enable(false);
 
     unsigned counter = 0;
 
@@ -468,8 +510,8 @@ void acdsp::dataFromMemAsFifo(struct app_params_t& params, IPC_handle isviFile, 
     U32 MemBufSize = sSCA.blkSize * sSCA.blkNum;
     U32 PostTrigSize = 0;
 
-    FPGA(params.fpgaNumber)->DDR3()->setMemory(2, 0, PostTrigSize, MemBufSize);
-    FPGA(params.fpgaNumber)->DDR3()->Enable(true);
+    DDR3(params.fpgaNumber)->setMemory(2, 0, PostTrigSize, MemBufSize);
+    DDR3(params.fpgaNumber)->Enable(true);
 
     fprintf(stderr, "setDmaSource(ADC_TRD)\n");
     setDmaSource(params.fpgaNumber, params.dmaChannel, ADC_TRD);
@@ -659,8 +701,8 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviF
     U32 MemBufSize = params.dmaBuffersCount * sSCA.blkSize * sSCA.blkNum;
     U32 PostTrigSize = 0;
 
-    FPGA(params.fpgaNumber)->DDR3()->setMemory(1, 0, PostTrigSize, MemBufSize);
-    FPGA(params.fpgaNumber)->DDR3()->Enable(true);
+    DDR3(params.fpgaNumber)->setMemory(1, 0, PostTrigSize, MemBufSize);
+    DDR3(params.fpgaNumber)->Enable(true);
 
     fprintf(stderr, "setDmaSource(MEM_TRD)\n");
     setDmaSource(params.fpgaNumber, params.dmaChannel, MEM_TRD);
@@ -691,7 +733,7 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviF
     // дожидаемся окончания сбора
     fprintf(stderr, "Waiting data DDR3...");
     bool ok = true;
-    while(!FPGA(params.fpgaNumber)->DDR3()->AcqComplete()) {
+    while(!DDR3(params.fpgaNumber)->AcqComplete()) {
         if(exitFlag()) {
             ok = false;
             break;
@@ -711,7 +753,7 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviF
     fprintf(stderr, "MAIN_TRD: MODE0 = 0x0");
     RegPokeInd(params.fpgaNumber, MAIN_TRD, 0x0, 0x0);
 
-    FPGA(params.fpgaNumber)->DDR3()->Enable(false);
+    DDR3(params.fpgaNumber)->Enable(false);
 
     unsigned counter = 0;
 
@@ -752,8 +794,8 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params, IPC_handle isvi
     U32 MemBufSize = sSCA.blkSize * sSCA.blkNum;
     U32 PostTrigSize = 0;
 
-    FPGA(params.fpgaNumber)->DDR3()->setMemory(2, 0, PostTrigSize, MemBufSize);
-    FPGA(params.fpgaNumber)->DDR3()->Enable(true);
+    DDR3(params.fpgaNumber)->setMemory(2, 0, PostTrigSize, MemBufSize);
+    DDR3(params.fpgaNumber)->Enable(true);
 
     fprintf(stderr, "setDmaSource(MAIN_TRD)\n");
     setDmaSource(params.fpgaNumber, params.dmaChannel, MAIN_TRD);

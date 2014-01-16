@@ -21,7 +21,6 @@
 
 Fpga::Fpga(unsigned id) : fpga_base(id)
 {
-    m_ddr = 0;
     m_strm.clear();
     m_trd.clear();
 }
@@ -31,7 +30,6 @@ Fpga::Fpga(unsigned id) : fpga_base(id)
 Fpga::~Fpga()
 {
     m_trd.clear();
-    delete m_ddr;
     deleteDmaCannels();
 }
 
@@ -55,8 +53,6 @@ void Fpga::init()
 
         scanFpgaTetrades();
         createDmaChannels();
-
-        m_ddr = new Memory(this);
 
     } catch(...) {
 
@@ -293,20 +289,6 @@ void Fpga::deleteDmaCannels()
 
 //-----------------------------------------------------------------------------
 
-void Fpga::createMemory()
-{
-    m_ddr = new Memory(this);
-}
-
-//-----------------------------------------------------------------------------
-
-void Fpga::deleteMemory()
-{
-    if(m_ddr) delete m_ddr;
-}
-
-//-----------------------------------------------------------------------------
-
 Stream* Fpga::stream(U32 DmaChan)
 {
     if((DmaChan >= m_strm.size()) || !m_strm.at(DmaChan)) {
@@ -344,13 +326,6 @@ int Fpga::trd_number(unsigned trdID)
         }
     }
     return -1;
-}
-
-//-----------------------------------------------------------------------------
-
-Memory* Fpga::DDR3()
-{
-    return m_ddr;
 }
 
 //-----------------------------------------------------------------------------
@@ -524,13 +499,6 @@ bool Fpga::writeBlock(U32 DmaChan, IPC_handle file, int blockNumber)
 bool Fpga::writeBuffer(U32 DmaChan, IPC_handle file, int fpos)
 {
     return stream(DmaChan)->writeBuffer(file, fpos);
-}
-
-//-----------------------------------------------------------------------------
-
-bool Fpga::setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size)
-{
-    return m_ddr->setMemory(mem_mode, PretrigMode, PostTrigSize, Buf_size);
 }
 
 //-----------------------------------------------------------------------------
