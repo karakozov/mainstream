@@ -24,7 +24,6 @@
 //-----------------------------------------------------------------------------
 
 class Stream;
-class Memory;
 
 //-----------------------------------------------------------------------------
 
@@ -35,7 +34,6 @@ public:
     virtual ~Fpga();
 
     void init();
-    Memory* DDR3();
     void resetFifo(unsigned trd);
     void resetTrd(unsigned trd);
     int trd_number(unsigned trdID);
@@ -73,7 +71,6 @@ public:
     void infoDma();
     bool writeBlock(U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 DmaChan, IPC_handle file, int fpos = 0);
-    bool setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size);
     bool fpgaInfo(AMB_CONFIGURATION &info);
 
     bool writeSPD(unsigned id, unsigned data_address, unsigned data_value, int imeout);
@@ -82,12 +79,9 @@ public:
 private:
     std::vector<unsigned>   m_trd;
     std::vector<Stream*>    m_strm;
-    Memory                 *m_ddr;
 
     void createDmaChannels();
     void deleteDmaCannels();
-    void createMemory();
-    void deleteMemory();
     void scanFpgaTetrades();
 
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
