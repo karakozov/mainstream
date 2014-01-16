@@ -28,6 +28,7 @@ public:
     virtual ~Mapper();
 
     void* mapPhysicalAddress(void* physicalAddress, uint32_t areaSize);
+    void* mapPhysicalAddress(size_t physicalAddress, uint32_t areaSize);
 
 private:
     IPC_handle      m_devMem;

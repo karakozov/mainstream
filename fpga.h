@@ -5,10 +5,12 @@
 #include "gipcy.h"
 #endif
 
+#include "fpga_base.h"
 #include "utypes.h"
 #include "ddwambpex.h"
 #include "ctrlstrm.h"
 #include "memory.h"
+#include "mapper.h"
 
 #include <vector>
 #include <string>
@@ -26,7 +28,7 @@ class Memory;
 
 //-----------------------------------------------------------------------------
 
-class Fpga
+class Fpga : public fpga_base
 {
 public:
     explicit Fpga(unsigned id);
@@ -71,18 +73,17 @@ public:
     void infoDma();
     bool writeBlock(U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 DmaChan, IPC_handle file, int fpos = 0);
-
     bool setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size);
+    bool fpgaInfo(AMB_CONFIGURATION &info);
+
+    bool writeSPD(unsigned id, unsigned data_address, unsigned data_value, int imeout);
+    bool readSPD(unsigned id, unsigned data_address, unsigned& data_value, int imeout);
 
 private:
-    IPC_handle m_fpgaDev;
-    unsigned m_fpgaID;
-    std::vector<unsigned> m_trd;
-    std::vector<Stream*> m_strm;
-    Memory *m_ddr;
+    std::vector<unsigned>   m_trd;
+    std::vector<Stream*>    m_strm;
+    Memory                 *m_ddr;
 
-    void openFpgaDevice();
-    void closeFpgaDevice();
     void createDmaChannels();
     void deleteDmaCannels();
     void createMemory();

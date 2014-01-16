@@ -14,6 +14,7 @@ struct app_params_t {
     float adcFreq;
     unsigned dmaBlockSize;
     unsigned dmaBlockCount;
+    unsigned dmaBuffersCount;
     unsigned testMode;
 };
 

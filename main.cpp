@@ -127,20 +127,42 @@ int main(int argc, char *argv[])
 
         //---------------------------------------------------- DATA FROM STREAM ADC
 
-        if(params.testMode == 0)
-            brd.dataFromAdc(params.fpgaNumber, params.dmaChannel, params.adcMask, isviFile, flgname, sSCA);
+        if(params.fpgaNumber != 0) {
 
-        //---------------------------------------------------- DDR3 FPGA AS MEMORY
+            if(params.testMode == 0)
+                brd.dataFromAdc(params, isviFile, flgname, sSCA);
 
-        if(params.testMode == 1)
-            brd.dataFromMemAsMem(params.fpgaNumber, params.dmaChannel, params.adcMask, 16, isviFile, flgname, sSCA);
+            //---------------------------------------------------- DDR3 FPGA AS MEMORY
 
-        //---------------------------------------------------- DDR3 FPGA AS FIFO
+            if(params.testMode == 1)
+                brd.dataFromMemAsMem(params, isviFile, flgname, sSCA);
 
-        if(params.testMode == 2)
-            brd.dataFromMemAsFifo(params.fpgaNumber, params.dmaChannel, params.adcMask,isviFile, flgname, sSCA);
+            //---------------------------------------------------- DDR3 FPGA AS FIFO
 
-        //----------------------------------------------------
+            if(params.testMode == 2)
+                brd.dataFromMemAsFifo(params, isviFile, flgname, sSCA);
+
+            //----------------------------------------------------
+
+        } else {
+
+            //---------------------------------------------------- DATA FROM MAIN STREAM
+
+            if(params.testMode == 0)
+                brd.dataFromMain(params, isviFile, flgname, sSCA);
+
+            //---------------------------------------------------- DDR3 FPGA AS MEMORY
+
+            if(params.testMode == 1)
+                brd.dataFromMainToMemAsMem(params, isviFile, flgname, sSCA);
+
+            //---------------------------------------------------- DDR3 FPGA AS FIFO
+
+            if(params.testMode == 2)
+                brd.dataFromMainToMemAsFifo(params, isviFile, flgname, sSCA);
+
+            //----------------------------------------------------
+        }
 
         fprintf(stderr, "Free DMA memory\n");
         brd.freeDmaMemory(params.fpgaNumber, params.dmaChannel);

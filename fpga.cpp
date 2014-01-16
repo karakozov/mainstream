@@ -19,13 +19,11 @@
 
 //-----------------------------------------------------------------------------
 
-Fpga::Fpga(unsigned id) : m_fpgaID(id)
+Fpga::Fpga(unsigned id) : fpga_base(id)
 {
-    m_fpgaDev = 0;
     m_ddr = 0;
     m_strm.clear();
     m_trd.clear();
-    openFpgaDevice();
 }
 
 //-----------------------------------------------------------------------------
@@ -35,7 +33,6 @@ Fpga::~Fpga()
     m_trd.clear();
     delete m_ddr;
     deleteDmaCannels();
-    closeFpgaDevice();
 }
 
 //-----------------------------------------------------------------------------
@@ -75,13 +72,9 @@ void Fpga::resetFifo(unsigned trd)
     U32 mode0 = FpgaRegPeekInd(trd, 0);
 
     mode0 |= 0x2;
-
     FpgaRegPokeInd(trd, 0, mode0);
-
     mode0 &= ~0x2;
-
     delay(1);
-
     FpgaRegPokeInd(trd, 0, mode0);
 }
 
@@ -92,13 +85,9 @@ void Fpga::resetTrd(unsigned trd)
     U32 mode0 = FpgaRegPeekInd(trd, 0);
 
     mode0 |= 0x1;
-
     FpgaRegPokeInd(trd, 0, mode0);
-
     mode0 &= ~0x1;
-
     delay(1);
-
     FpgaRegPokeInd(trd, 0, mode0);
 }
 
@@ -106,10 +95,11 @@ void Fpga::resetTrd(unsigned trd)
 
 void Fpga::FpgaRegPokeInd(S32 TetrNum, S32 RegNum, U32 RegVal)
 {
+#ifdef _USE_IOCTL_
     AMB_DATA_REG reg_data = { 0, TetrNum, RegNum, RegVal};
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_WRITE_REG_DATA,
                 &reg_data,
                 sizeof(AMB_DATA_REG),
@@ -118,16 +108,20 @@ void Fpga::FpgaRegPokeInd(S32 TetrNum, S32 RegNum, U32 RegVal)
     if(res < 0){
         throw;
     }
+#else
+    core_reg_poke_ind(TetrNum, RegNum, RegVal);
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 U32 Fpga::FpgaRegPeekInd(S32 TetrNum, S32 RegNum)
 {
+#ifdef _USE_IOCTL_
     AMB_DATA_REG reg_data = { 0, TetrNum, RegNum, 0};
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_READ_REG_DATA,
                 &reg_data,
                 sizeof(AMB_DATA_REG),
@@ -138,16 +132,20 @@ U32 Fpga::FpgaRegPeekInd(S32 TetrNum, S32 RegNum)
     }
 
     return reg_data.Value;
+#else
+    return core_reg_peek_ind(TetrNum, RegNum);
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 void Fpga::FpgaRegPokeDir(S32 TetrNum, S32 RegNum, U32 RegVal)
 {
+#ifdef _USE_IOCTL_
     AMB_DATA_REG reg_data = { 0, TetrNum, RegNum, RegVal};
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_WRITE_REG_DATA_DIR,
                 &reg_data,
                 sizeof(AMB_DATA_REG),
@@ -156,16 +154,20 @@ void Fpga::FpgaRegPokeDir(S32 TetrNum, S32 RegNum, U32 RegVal)
     if(res < 0){
         throw;
     }
+#else
+    core_reg_poke_dir(TetrNum, RegNum, RegVal);
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
 {
+#ifdef _USE_IOCTL_
     AMB_DATA_REG reg_data = { 0, TetrNum, RegNum, 0};
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_READ_REG_DATA_DIR,
                 &reg_data,
                 sizeof(AMB_DATA_REG),
@@ -176,6 +178,9 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
     }
 
     return reg_data.Value;
+#else
+    return core_reg_peek_dir(TetrNum, RegNum);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -185,7 +190,7 @@ U32 Fpga::FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_WRITE_REG_BUF,
                 &reg_buf,
                 sizeof(AMB_BUF_REG),
@@ -204,7 +209,7 @@ U32 Fpga::FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSi
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_WRITE_REG_BUF_DIR,
                 &reg_buf,
                 sizeof(AMB_BUF_REG),
@@ -223,7 +228,7 @@ U32 Fpga::FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_READ_REG_BUF,
                 &reg_buf,
                 sizeof(AMB_BUF_REG),
@@ -242,7 +247,7 @@ U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSiz
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
     int res = IPC_ioctlDevice(
-                m_fpgaDev,
+                m_fpga,
                 IOCTL_AMB_READ_REG_BUF_DIR,
                 &reg_buf,
                 sizeof(AMB_BUF_REG),
@@ -256,27 +261,6 @@ U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSiz
 
 //-----------------------------------------------------------------------------
 
-void Fpga::openFpgaDevice(void)
-{
-    char name[256];
-    m_fpgaDev = IPC_openDevice(name, AmbDeviceName, m_fpgaID);
-    if(!m_fpgaDev) {
-        fprintf(stderr, "Error open FPGA%d\n", m_fpgaID);
-        throw;
-    }
-    fprintf(stderr, "Open FPGA%d\n", m_fpgaID);
-}
-
-//-----------------------------------------------------------------------------
-
-void Fpga::closeFpgaDevice()
-{
-    fprintf(stderr, "Close FPGA%d\n", m_fpgaID);
-    IPC_closeDevice(m_fpgaDev);
-}
-
-//-----------------------------------------------------------------------------
-
 void Fpga::createDmaChannels()
 {
     for(unsigned i=0; i<DMA_CHANNEL_NUM; i++) {
@@ -284,13 +268,13 @@ void Fpga::createDmaChannels()
         AMB_GET_DMA_INFO InfoDescrip;
         InfoDescrip.DmaChanNum = i;
 
-        int res = IPC_ioctlDevice( m_fpgaDev, IOCTL_AMB_GET_INFOIO, &InfoDescrip, sizeof(AMB_GET_DMA_INFO), &InfoDescrip, sizeof(AMB_GET_DMA_INFO));
+        int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_INFOIO, &InfoDescrip, sizeof(AMB_GET_DMA_INFO), &InfoDescrip, sizeof(AMB_GET_DMA_INFO));
         if(res < 0) {
             m_strm.push_back(0);
             continue;
         }
 
-        Stream *strm = new Stream(m_fpgaDev, i);
+        Stream *strm = new Stream(m_fpga, i);
         m_strm.push_back(strm);
     }
 }
@@ -380,7 +364,7 @@ bool Fpga::dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize)
     AMB_GET_DMA_INFO InfoDescrip;
     InfoDescrip.DmaChanNum = DmaChan;
 
-    int res = IPC_ioctlDevice( m_fpgaDev, IOCTL_AMB_GET_INFOIO, &InfoDescrip, sizeof(AMB_GET_DMA_INFO), &InfoDescrip, sizeof(AMB_GET_DMA_INFO));
+    int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_INFOIO, &InfoDescrip, sizeof(AMB_GET_DMA_INFO), &InfoDescrip, sizeof(AMB_GET_DMA_INFO));
     if(res < 0) {
         return false;
     }
@@ -550,3 +534,20 @@ bool Fpga::setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_
 }
 
 //-----------------------------------------------------------------------------
+
+bool Fpga::fpgaInfo(AMB_CONFIGURATION& info)
+{
+    AMB_CONFIGURATION fpgaInfo;
+
+    int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &fpgaInfo, sizeof(AMB_CONFIGURATION), &fpgaInfo, sizeof(AMB_CONFIGURATION));
+    if(res < 0) {
+        return false;
+    }
+
+    info = fpgaInfo;
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+

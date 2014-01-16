@@ -38,13 +38,6 @@ Memory::Memory(Fpga *fpga) : m_fpga(fpga)
         MemInit(1);
         Info();
     }
-
-//    PrepareDDR3();
-
-    U32 mode1 = m_fpga->FpgaRegPeekInd(m_MemTetrNum, 9);
-    fprintf(stderr, "MODE1 = 0x%X\n", mode1);
-    mode1 |= (1 << 13);
-    m_fpga->FpgaRegPokeInd(m_MemTetrNum, 9, mode1);
 }
 
 //-----------------------------------------------------------------------------
@@ -198,18 +191,18 @@ void Memory::MemInit(U32 init)
     m_fpga->FpgaRegPokeInd(m_MemTetrNum, SDRAMnr_CFG, ddrCfg.AsWhole);
 
     fprintf(stderr, "MODE1 = 0x%x\n", (U16)ddrCfg.AsWhole);
-    fprintf(stderr, "Waiting for Memory Initialization  ... \r\n");
+    fprintf(stderr, "Waiting for Memory Initialization  ... \n");
     IPC_delay( 200 );
     {
-        U32 status;
-        U32 loop=0;
+        U32 status_mem = 0;
+        U32 loop = 0;
         do
         {
-            status = m_fpga->FpgaRegPeekDir(m_MemTetrNum, 0);
-            fprintf( stderr, "%10d STATUS: %.4X \r", loop, status ); IPC_delay( 100 ); loop++;
-        } while( !(status & 0x800));
+            status_mem = m_fpga->FpgaRegPeekDir(m_MemTetrNum, 0);
+            fprintf( stderr, "%.8d: STATUS 0x%.4X\r", loop, status_mem ); IPC_delay( 100 ); loop++;
+        } while( !(status_mem & 0x800));
     }
-    fprintf(stderr, "\r\nMemory Initialization DONE\r\n");
+    fprintf(stderr, "\nMemory Initialization DONE\n");
 }
 
 //-----------------------------------------------------------------------------

@@ -69,6 +69,23 @@ void* Mapper::mapPhysicalAddress(void* physicalAddress, uint32_t areaSize)
 
 //-----------------------------------------------------------------------------
 
+void* Mapper::mapPhysicalAddress(size_t physicalAddress, uint32_t areaSize)
+{
+    struct map_addr_t map = {0, physicalAddress, areaSize};
+
+    int res = IPC_mapPhysAddr(m_devMem, &map.virtualAddress, map.physicalAddress, map.areaSize);
+    if(res < 0) {
+        fprintf(stderr, "%s(): Error in IPC_mapPhysAddr()\n", __FUNCTION__);
+        throw;
+    }
+
+    m_MappedList.push_back(map);
+
+    return map.virtualAddress;
+}
+
+//-----------------------------------------------------------------------------
+
 void Mapper::unmapMemory()
 {
     for(unsigned i=0; i<m_MappedList.size(); i++) {
