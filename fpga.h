@@ -9,8 +9,6 @@
 #include "utypes.h"
 #include "ddwambpex.h"
 #include "ctrlstrm.h"
-#include "memory.h"
-#include "mapper.h"
 
 #include <vector>
 #include <string>

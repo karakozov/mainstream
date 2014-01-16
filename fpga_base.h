@@ -38,7 +38,6 @@ protected:
     u32  core_block_read( u32 nb, u32 reg );
 
     IPC_handle              m_fpga;
-    u32                     m_fpgaNumber;
 
 private:
     Mapper                  m_map;
@@ -46,6 +45,7 @@ private:
     u32*                    m_bar0;
     u32*                    m_bar1;
     u32*                    m_bar2;
+    u32                     m_fpgaNumber;
 
     fpga_base();
     void openFpga();
