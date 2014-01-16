@@ -22,14 +22,16 @@
 Fpga::Fpga(unsigned id) : fpga_base(id)
 {
     m_strm.clear();
-    m_trd.clear();
+    m_fpga_blocks.clear();
+    m_fpga_trd.clear();
 }
 
 //-----------------------------------------------------------------------------
 
 Fpga::~Fpga()
 {
-    m_trd.clear();
+    m_fpga_blocks.clear();
+    m_fpga_trd.clear();
     deleteDmaCannels();
 }
 
@@ -40,17 +42,18 @@ void Fpga::init()
     try {
 
         //Set RST and FIFO_RST in MODE0 in all tetrades
-        for( int trd=0; trd<TRD_NUM; trd++ ) {
+        for( int trd=0; trd<FPGA_TRD_NUM; trd++ ) {
             FpgaRegPokeInd(trd, 0, 0x3);
         }
 
         delay(1);
 
         //Clear RST and FIFO_RST in MODE0 in all tetrades
-        for( int trd=0; trd<TRD_NUM; trd++ ) {
+        for( int trd=0; trd<FPGA_TRD_NUM; trd++ ) {
             FpgaRegPokeInd(trd, 0, 0);
         }
 
+        scanFpgaBlocks();
         scanFpgaTetrades();
         createDmaChannels();
 
@@ -300,17 +303,46 @@ Stream* Fpga::stream(U32 DmaChan)
 
 //-----------------------------------------------------------------------------
 
+void Fpga::scanFpgaBlocks()
+{
+    for(unsigned i=0; i<FPGA_BLK_NUM; i++) {
+
+        fpga_block_t block;
+        memset(&block, 0, sizeof(block));
+
+        unsigned id = core_block_read(i, 0x0);
+        if(id != 0xffff && id != 0x0) {
+
+            unsigned ver = core_block_read(i, 0x1);
+
+            block.number = i;
+            block.id = id;
+            block.ver = ver;
+
+            fprintf(stderr, "BLOCK%d: ID 0x%.4x VER 0x%.4x\n", i, id, ver);
+        }
+
+        m_fpga_blocks.push_back(block);
+    }
+}
+
+//-----------------------------------------------------------------------------
+
 void Fpga::scanFpgaTetrades()
 {
-    for(unsigned i=0; i<TRD_NUM; i++) {
+    for(unsigned i=0; i<FPGA_TRD_NUM; i++) {
 
-        unsigned trd_ID = FpgaRegPeekInd(i, 0x100);
-        if(trd_ID != 0xff && trd_ID != 0x0) {
-            fprintf(stderr, "TRD %d: - ID 0x%x\n", i, trd_ID);
-            m_trd.push_back(trd_ID);
-        } else {
-            m_trd.push_back(0);
+        fpga_trd_t trd;
+        memset(&trd, 0, sizeof(trd));
+
+        unsigned id = FpgaRegPeekInd(i, 0x100);
+        if(id != 0xffff && id != 0x0) {
+            fprintf(stderr, "TRD %d: - ID 0x%x\n", i, id);
+            trd.number = i;
+            trd.id = id;
         }
+
+        m_fpga_trd.push_back(trd);
     }
 }
 
@@ -318,11 +350,12 @@ void Fpga::scanFpgaTetrades()
 
 int Fpga::trd_number(unsigned trdID)
 {
-    for(unsigned i=0; i<m_trd.size(); i++) {
+    for(unsigned i=0; i<m_fpga_trd.size(); i++) {
 
-        unsigned fpga_trd_ID = m_trd.at(i);
-        if(fpga_trd_ID == trdID) {
-            return i;
+        fpga_trd_t trd = m_fpga_trd.at(i);
+
+        if(trd.id == trdID) {
+            return trd.number;
         }
     }
     return -1;

@@ -16,12 +16,37 @@
 
 //-----------------------------------------------------------------------------
 
-#define DMA_CHANNEL_NUM  4
-#define TRD_NUM          8
+#define DMA_CHANNEL_NUM         4
+#define FPGA_TRD_NUM            8
+#define FPGA_BLK_NUM            8
 
 //-----------------------------------------------------------------------------
 
 class Stream;
+
+//-----------------------------------------------------------------------------
+
+typedef  struct _fpga_block_t {
+
+    u16 number;
+    u16 id;
+    u16 ver;
+    u16 device_id;
+    u16 rev_mode;
+    u16 pld_ver;
+    u16 block_cnt;
+    u16 core_id_mod;
+
+} fpga_block_t;
+
+//-----------------------------------------------------------------------------
+
+typedef  struct _fpga_trd_t {
+
+    u16 number;
+    u16 id;
+
+} fpga_trd_t;
 
 //-----------------------------------------------------------------------------
 
@@ -40,6 +65,7 @@ public:
     U32 FpgaRegPeekInd(S32 trdNo, S32 rgnum);
     void FpgaRegPokeDir(S32 trdNo, S32 rgnum, U32 val);
     U32 FpgaRegPeekDir(S32 trdNo, S32 rgnum);
+
     U32 FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
     U32 FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
     U32 FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
@@ -75,11 +101,13 @@ public:
     bool readSPD(unsigned id, unsigned data_address, unsigned& data_value, int imeout);
 
 private:
-    std::vector<unsigned>   m_trd;
-    std::vector<Stream*>    m_strm;
+    std::vector<Stream*>         m_strm;
+    std::vector<fpga_block_t>    m_fpga_blocks;
+    std::vector<fpga_trd_t>      m_fpga_trd;
 
     void createDmaChannels();
     void deleteDmaCannels();
+    void scanFpgaBlocks();
     void scanFpgaTetrades();
 
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
