@@ -1,6 +1,18 @@
 
-1. Copy mainstream directory into ~/BARDY/EXAM/
-2. source embedded/environment-c6x
+1. source embedded/environment-c6x
 3. make
 
-usage: mainstream <fpga number> <dma channel>
+usage: ./mainstream <mainstream.ini>
+
+mainstream.ini content:
+
+[VARIABLE]
+
+fpgaNumber=0x2
+dmaChannel=0x0
+adcMask=0x1
+adcFreq=500000000
+dmaBlockSize=0x10000
+dmaBlockCount=0x4
+dmaBuffersCount=16
+testMode=0x0

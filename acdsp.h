@@ -10,6 +10,8 @@
 #include "dbglog.h"
 #include "ctrlstrm.h"
 #include "memory.h"
+#include "pe_chn_tx.h"
+#include "pe_chn_rx.h"
 
 #include <vector>
 #include <string>
@@ -83,6 +85,8 @@ public:
     // ISVI INTERFACE
     bool writeBlock(U32 fpgaNum, U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos = 0);
+
+    void start_local_pcie_test(struct app_params_t& params);
 
 private:
     i2c                     *m_iic;

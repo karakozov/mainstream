@@ -65,6 +65,14 @@ void fpga_base::infoFpga()
 
 //-----------------------------------------------------------------------------
 
+bool fpga_base::info(AMB_CONFIGURATION& info)
+{
+    info = m_info;
+    return m_ok;
+}
+
+//-----------------------------------------------------------------------------
+
 void fpga_base::mapFpga()
 {
     int res_count = 0;
@@ -90,6 +98,8 @@ void fpga_base::mapFpga()
         fprintf(stderr, "Not all resources was mapped\n");
         throw;
     }
+
+    m_ok = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -100,12 +110,15 @@ void fpga_base::initBar()
 
     if(m_info.VirtAddress[0]) {
         m_bar0 = (u32*)m_info.VirtAddress[0];
+        m_bar[0] = m_bar0;
     }
     if(m_info.VirtAddress[1]) {
         m_bar1 = (u32*)m_info.VirtAddress[1];
+        m_bar[1] = m_bar1;
     }
     if(m_info.VirtAddress[2]) {
         m_bar2 = (u32*)m_info.VirtAddress[2];
+        m_bar[2] = m_bar2;
     }
 }
 
@@ -158,9 +171,9 @@ u32 fpga_base::core_reg_peek_ind( u32 trd, u32 reg )
 
         fprintf(stderr, "status = 0x%x\r", status);
 
-        if( ii>1000 )
+        if( ii>100 )
             IPC_delay( 1 );
-        if( ii>2000 ) {
+        if( ii>200 ) {
             return 0xFFFF;
         }
     }
@@ -194,9 +207,9 @@ void fpga_base::core_reg_poke_ind( u32 trd, u32 reg, u32 val )
 
         fprintf(stderr, "status = 0x%x\r", status);
 
-        if( ii>1000 )
+        if( ii>100 )
             IPC_delay( 1 );
-        if( ii>2000 ) {
+        if( ii>200 ) {
             return;
         }
     }
@@ -206,30 +219,18 @@ void fpga_base::core_reg_poke_ind( u32 trd, u32 reg, u32 val )
 
 //-----------------------------------------------------------------------------
 
-u32  fpga_base::core_bar0_read( u32 offset )
+u32  fpga_base::core_bar_read( u32 bar, u32 offset )
 {
-    return m_bar0[2*offset];
+    u32 *base = m_bar[bar];
+    return base[2*offset];
 }
 
 //-----------------------------------------------------------------------------
 
-void fpga_base::core_bar0_write( u32 offset, u32 val )
+void fpga_base::core_bar_write( u32 bar, u32 offset, u32 val )
 {
-    m_bar0[2*offset] = val;
-}
-
-//-----------------------------------------------------------------------------
-
-u32  fpga_base::core_bar1_read( u32 offset )
-{
-    return m_bar1[2*offset];
-}
-
-//-----------------------------------------------------------------------------
-
-void fpga_base::core_bar1_write( u32 offset, u32 val )
-{
-    m_bar1[2*offset] = val;
+    u32 *base = m_bar[bar];
+    base[2*offset] = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -239,7 +240,7 @@ void fpga_base::core_block_write( u32 nb, u32 reg, u32 val )
     if( (nb>7) || (reg>31) )
         return;
 
-    *(m_bar0+nb*64+reg*2)=val;
+    *(m_bar0 + nb*64 + reg*2) = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -249,13 +250,111 @@ u32  fpga_base::core_block_read( u32 nb, u32 reg )
     if( (nb>7) || (reg>31) )
         return -1;
 
-    u32 ret = 0;
+    u32 ret = *(m_bar0 + nb*64 + reg*2);
 
-    ret=*(m_bar0+nb*64+reg*2);
     if( reg<8 )
-        ret&=0xFFFF;
+        ret &= 0xFFFF;
 
     return ret;
 }
 
 //-----------------------------------------------------------------------------
+/*
+void fpga_base::core_block_write( u32 nb, u32 reg, u32 val )
+{
+    if( (nb>7) || (reg>31) )
+        return;
+
+    core_bar_write(0, nb*32 + reg, val);
+}
+
+//-----------------------------------------------------------------------------
+
+u32  fpga_base::core_block_read( u32 nb, u32 reg )
+{
+    if( (nb>7) || (reg>31) )
+        return -1;
+
+    u32 ret = core_bar_read(0, nb*32 + reg);
+    if( reg<8 )
+        ret &= 0xFFFF;
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpga,
+                IOCTL_AMB_WRITE_REG_BUF,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                0,
+                0);
+    if(res < 0){
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpga,
+                IOCTL_AMB_WRITE_REG_BUF_DIR,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                NULL,
+                0);
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpga,
+                IOCTL_AMB_READ_REG_BUF,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                &reg_buf,
+                sizeof(AMB_BUF_REG));
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
+
+    int res = IPC_ioctlDevice(
+                m_fpga,
+                IOCTL_AMB_READ_REG_BUF_DIR,
+                &reg_buf,
+                sizeof(AMB_BUF_REG),
+                &reg_buf,
+                sizeof(AMB_BUF_REG));
+    if(res < 0) {
+        throw;
+    }
+    return 0;
+}
+*/

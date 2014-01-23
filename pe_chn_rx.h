@@ -16,13 +16,13 @@ public:
     pe_chn_rx(Fpga *fpga);
     virtual ~pe_chn_rx();
 
-    void set_fpga_addr(int devnum, u32 src_fpga_addr);
-    void set_fpga_sign(u32 sign);
-    void set_fpga_chan(u32 chan);
+    void set_fpga_addr(u32 chan, u32 src_fpga_addr, u32 sign);
     void set_fpga_test(u32 mode);
-    u32 rx_block_number();
-    u32 sign_err_number();
-    u32 block_err_number();
+    void set_fpga_chan(u32 chan);
+
+    u32 rx_block_number(u32 chan);
+    u32 sign_err_number(u32 chan);
+    u32 block_err_number(u32 chan);
 
     void start_rx(bool start);
 

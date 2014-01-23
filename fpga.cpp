@@ -37,30 +37,57 @@ Fpga::~Fpga()
 
 //-----------------------------------------------------------------------------
 
+bool Fpga::syncFpga()
+{
+    int count = 0;
+
+    core_block_write(0, 8, 0);
+    IPC_delay(100);
+again:
+    core_block_write(0, 8, 1);
+    IPC_delay(100);
+    core_block_write(0, 8, 3);
+    IPC_delay(100);
+    core_block_write(0, 8, 7);
+    IPC_delay(100);
+
+    U32 status = core_block_read(0, 0x10);
+    if((status & 0x1)) {
+        fprintf(stderr, "%s(): FPGA sync complete!\n", __FUNCTION__);
+        return true;
+    }
+
+    if(count > 10) {
+        fprintf(stderr, "%s(): FPGA sync not complete!\n", __FUNCTION__);
+        return false;
+    }
+
+    ++count;
+
+    goto again;
+}
+
+//-----------------------------------------------------------------------------
+
 void Fpga::init()
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     try {
 
-        //Set RST and FIFO_RST in MODE0 in all tetrades
-        for( int trd=0; trd<FPGA_TRD_NUM; trd++ ) {
-            FpgaRegPokeInd(trd, 0, 0x3);
-        }
-
-        delay(1);
-
-        //Clear RST and FIFO_RST in MODE0 in all tetrades
-        for( int trd=0; trd<FPGA_TRD_NUM; trd++ ) {
-            FpgaRegPokeInd(trd, 0, 0);
-        }
-
+        syncFpga();
         scanFpgaBlocks();
         scanFpgaTetrades();
         createDmaChannels();
 
     } catch(...) {
 
-        fprintf(stderr, "%s, %d, %s(): Exception!", __FILE__, __LINE__, __FUNCTION__);
+        fprintf(stderr, "%s, %d, %s(): Exception!\n", __FILE__, __LINE__, __FUNCTION__);
         throw;
+    }
+
+    fpga_block_t main;
+    if(fpgaBlock(0,0x013,main)) {
     }
 }
 
@@ -90,6 +117,8 @@ void Fpga::resetTrd(unsigned trd)
     FpgaRegPokeInd(trd, 0, mode0);
 }
 
+//-----------------------------------------------------------------------------
+//#define _USE_IOCTL_
 //-----------------------------------------------------------------------------
 
 void Fpga::FpgaRegPokeInd(S32 TetrNum, S32 RegNum, U32 RegVal)
@@ -184,84 +213,38 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
 
 //-----------------------------------------------------------------------------
 
-U32 Fpga::FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+U32  Fpga::FpgaBarRead( U32 bar, U32 offset )
 {
-    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
-
-    int res = IPC_ioctlDevice(
-                m_fpga,
-                IOCTL_AMB_WRITE_REG_BUF,
-                &reg_buf,
-                sizeof(AMB_BUF_REG),
-                0,
-                0);
-    if(res < 0){
-        throw;
-    }
-    return 0;
+    return core_bar_read(bar, offset);
 }
 
 //-----------------------------------------------------------------------------
 
-U32 Fpga::FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+void Fpga::FpgaBarWrite( U32 bar, U32 offset, U32 val )
 {
-    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
-
-    int res = IPC_ioctlDevice(
-                m_fpga,
-                IOCTL_AMB_WRITE_REG_BUF_DIR,
-                &reg_buf,
-                sizeof(AMB_BUF_REG),
-                NULL,
-                0);
-    if(res < 0) {
-        throw;
-    }
-    return 0;
+    core_bar_write(bar, offset, val);
 }
 
 //-----------------------------------------------------------------------------
 
-U32 Fpga::FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+void Fpga::FpgaBlockWrite( U32 nb, U32 reg, U32 val )
 {
-    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
-
-    int res = IPC_ioctlDevice(
-                m_fpga,
-                IOCTL_AMB_READ_REG_BUF,
-                &reg_buf,
-                sizeof(AMB_BUF_REG),
-                &reg_buf,
-                sizeof(AMB_BUF_REG));
-    if(res < 0) {
-        throw;
-    }
-    return 0;
+    core_block_write(nb, reg, val);
 }
 
 //-----------------------------------------------------------------------------
 
-U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+U32  Fpga::FpgaBlockRead( U32 nb, U32 reg )
 {
-    AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
-
-    int res = IPC_ioctlDevice(
-                m_fpga,
-                IOCTL_AMB_READ_REG_BUF_DIR,
-                &reg_buf,
-                sizeof(AMB_BUF_REG),
-                &reg_buf,
-                sizeof(AMB_BUF_REG));
-    if(res < 0) {
-        throw;
-    }
-    return 0;
+    return core_block_read(nb, reg);
 }
 
 //-----------------------------------------------------------------------------
 
 void Fpga::createDmaChannels()
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     for(unsigned i=0; i<DMA_CHANNEL_NUM; i++) {
 
         AMB_GET_DMA_INFO InfoDescrip;
@@ -305,13 +288,18 @@ Stream* Fpga::stream(U32 DmaChan)
 
 void Fpga::scanFpgaBlocks()
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     for(unsigned i=0; i<FPGA_BLK_NUM; i++) {
 
         fpga_block_t block;
         memset(&block, 0, sizeof(block));
 
-        unsigned id = core_block_read(i, 0x0);
-        if(id != 0xffff && id != 0x0) {
+        unsigned id = core_block_read(i, 0x0) & 0x7ff;
+
+        fprintf(stderr, "Block ID 0x%x\n", id);
+
+        if((id != 0x7ff) && (id != 0x0)) {
 
             unsigned ver = core_block_read(i, 0x1);
 
@@ -319,17 +307,50 @@ void Fpga::scanFpgaBlocks()
             block.id = id;
             block.ver = ver;
 
-            fprintf(stderr, "BLOCK%d: ID 0x%.4x VER 0x%.4x\n", i, id, ver);
-        }
+            if(id == 0x13) {
 
-        m_fpga_blocks.push_back(block);
+                unsigned did = core_block_read(i, 0x2);
+                block.device_id = did;
+                fprintf(stderr, "BLOCK%d: ID 0x%.4x  DID 0x%.4x  VER 0x%.4x\n", i, id, did, ver);
+
+            } else {
+
+                fprintf(stderr, "BLOCK%d: ID 0x%.4x  VER 0x%.4x\n", i, id, ver);
+            }
+
+            m_fpga_blocks.push_back(block);
+        }
     }
+
+    fprintf(stderr, "Total %d blocks was found\n", m_fpga_blocks.size());
+}
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::fpgaBlock(unsigned startSearch, u16 id, fpga_block_t& block)
+{
+    if(m_fpga_blocks.empty())
+        return false;
+
+    if(startSearch >= m_fpga_blocks.size())
+        return false;
+
+    for(unsigned i=startSearch; i<m_fpga_blocks.size(); i++) {
+
+        block = m_fpga_blocks.at(i);
+        if(block.id == id)
+            return true;
+    }
+
+    return false;
 }
 
 //-----------------------------------------------------------------------------
 
 void Fpga::scanFpgaTetrades()
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     for(unsigned i=0; i<FPGA_TRD_NUM; i++) {
 
         fpga_trd_t trd;
@@ -360,6 +381,25 @@ int Fpga::trd_number(unsigned trdID)
     }
     return -1;
 }
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::fpgaTrd(unsigned startSearch, u16 id, fpga_trd_t& trd)
+{
+    if(startSearch >= m_fpga_trd.size())
+        return false;
+
+    for(unsigned i=startSearch; i<m_fpga_trd.size(); i++) {
+
+        trd = m_fpga_trd.at(i);
+        if(trd.id == id)
+            return true;
+    }
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -538,16 +578,7 @@ bool Fpga::writeBuffer(U32 DmaChan, IPC_handle file, int fpos)
 
 bool Fpga::fpgaInfo(AMB_CONFIGURATION& info)
 {
-    AMB_CONFIGURATION fpgaInfo;
-
-    int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &fpgaInfo, sizeof(AMB_CONFIGURATION), &fpgaInfo, sizeof(AMB_CONFIGURATION));
-    if(res < 0) {
-        return false;
-    }
-
-    info = fpgaInfo;
-
-    return true;
+    return fpga_base::info(info);
 }
 
 //-----------------------------------------------------------------------------

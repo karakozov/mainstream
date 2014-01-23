@@ -21,6 +21,7 @@ public:
     void set_fpga_chan(u32 chan);
     void set_fpga_test(u32 mode);
     u32 tx_block_number();
+    void write_test_block(u32 dst_fpga_addr, u32 count);
 
     void start_tx(bool start);
 

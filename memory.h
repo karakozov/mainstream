@@ -50,7 +50,7 @@ public:
     bool setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size);
     bool AcqComplete();
     void Enable(bool enable);
-    U32 GetData(void *Buffer, U32 BufferSize);
+    //U32 GetData(void *Buffer, U32 BufferSize);
     u8 ReadSpdByte(U32 OffsetSPD, U32 CtrlSPD);
     bool GetCfgFromSpd();
     bool CheckCfg();

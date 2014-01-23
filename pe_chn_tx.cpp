@@ -24,7 +24,7 @@ pe_chn_tx::~pe_chn_tx()
 
 void pe_chn_tx::set_fpga_addr(int devnum, u32 dst_fpga_addr)
 {
-    m_fpga->FpgaBlockWrite(m_tx.number, 0xC + devnum, dst_fpga_addr);
+    m_fpga->FpgaBlockWrite(m_tx.number, 0xC + devnum, (dst_fpga_addr|0x1));
 }
 
 //-------------------------------------------------------------------
@@ -71,6 +71,17 @@ void pe_chn_tx::start_tx(bool start)
         m_fpga->FpgaBlockWrite(m_tx.number, 0x8, (0x3 << 5));
     } else {
         m_fpga->FpgaBlockWrite(m_tx.number, 0x8, 0x0);
+    }
+}
+
+//-------------------------------------------------------------------
+
+void pe_chn_tx::write_test_block(u32 dst_fpga_addr, u32 count)
+{
+    u32* rx_bar = (u32*)dst_fpga_addr;
+    for(u32 i=0; i<count; i++) {
+        u32 val = ((i+1) << 24) | ((i+1) << 16) | ((i+1) << 8) | ((i+1) << 0);
+        rx_bar[i] = val;
     }
 }
 

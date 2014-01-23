@@ -119,11 +119,19 @@ void acdsp::createFpgaMemory()
 {
     try {
         for(unsigned i=0; i<m_fpga.size(); i++) {
-            Memory *ddr = new Memory(m_fpga.at(i));
-            if(!ddr) {
-                throw;
+
+            Fpga *fpga = m_fpga.at(i);
+            fpga_trd_t memTrd;
+
+            if(fpga->fpgaTrd(0, 0x9B, memTrd)) {
+                Memory *ddr = new Memory(fpga);
+                if(!ddr) {
+                    throw;
+                }
+                m_ddr.push_back(ddr);
+            } else {
+                fprintf(stderr, "No DDR3 tetrade found\n");
             }
-            m_ddr.push_back(ddr);
         }
     } catch(...)  {
         deleteFpgaMemory();
@@ -879,6 +887,63 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params, IPC_handle isvi
     RegPokeInd(params.fpgaNumber, MAIN_TRD, 0x0, 0x0);
     RegPokeInd(params.fpgaNumber, MEM_TRD, 0x0, 0x0);
     stopDma(params.fpgaNumber, params.dmaChannel);
+}
+
+//-----------------------------------------------------------------------------
+
+void acdsp::start_local_pcie_test(struct app_params_t& params)
+{
+    AMB_CONFIGURATION cfg0;
+    AMB_CONFIGURATION cfg1;
+    AMB_CONFIGURATION cfg2;
+
+    FPGA(0)->fpgaInfo(cfg0);
+    FPGA(1)->fpgaInfo(cfg1);
+    FPGA(2)->fpgaInfo(cfg2);
+
+    //---------------------------------------
+
+    fprintf(stderr, "Set ADC mask\n");
+    RegPokeInd(params.fpgaNumber, ADC_TRD, 0x10, params.adcMask);
+
+    fprintf(stderr, "Set ADC mode\n");
+    RegPokeInd(params.fpgaNumber, ADC_TRD, 0x17, (0x3 << 4));
+
+    fprintf(stderr, "Start ADC\n");
+    RegPokeInd(params.fpgaNumber, ADC_TRD, 0, 0x2038);
+
+    fprintf(stderr, "Start CHECK trd\n");
+    RegPokeInd(0, 4, 0, 0x2038);
+
+    //---------------------------------------
+
+    pe_chn_rx rx(FPGA(0));
+
+    rx.set_fpga_addr(0, cfg0.PhysAddress[2], 0x786543);
+    rx.start_rx(true);
+
+    //---------------------------------------
+
+    pe_chn_tx tx(FPGA(params.fpgaNumber));
+
+    tx.set_fpga_chan(0);
+    tx.set_fpga_addr(0, cfg0.PhysAddress[2]);
+    tx.set_fpga_sign(0x786543);
+    tx.start_tx(true);
+
+    //---------------------------------------
+
+    while(1) {
+
+        if(exitFlag()) {
+            break;
+        }
+
+        fprintf(stderr, "TX0: %d RX0: %d SIGN_ERR0: %d BLOCK_ERR0: %d\r",
+                tx.tx_block_number(), rx.rx_block_number(0), rx.sign_err_number(0), rx.block_err_number(0));
+
+        IPC_delay(250);
+    }
 }
 
 //-----------------------------------------------------------------------------

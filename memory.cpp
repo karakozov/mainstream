@@ -472,7 +472,7 @@ typedef union _ADM2IF_STATUS {
 } ADM2IF_STATUS, *PADM2IF_STATUS;
 
 //-----------------------------------------------------------------------------
-
+/*
 U32 Memory::GetData(void *Buffer, U32 BufferSize)
 {
     U32 HalfFifoSize = (m_fpga->FpgaRegPeekInd(m_MemTetrNum, 0x104) << 2);
@@ -512,7 +512,7 @@ U32 Memory::GetData(void *Buffer, U32 BufferSize)
 
     return total;
 }
-
+*/
 //-----------------------------------------------------------------------------
 
 bool Memory::setMemory(U32 mem_mode, U32 PretrigMode, U32& PostTrigSize, U32& Buf_size)

@@ -65,11 +65,16 @@ public:
     U32 FpgaRegPeekInd(S32 trdNo, S32 rgnum);
     void FpgaRegPokeDir(S32 trdNo, S32 rgnum, U32 val);
     U32 FpgaRegPeekDir(S32 trdNo, S32 rgnum);
-
+/*
     U32 FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
     U32 FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
     U32 FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
     U32 FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+*/
+    U32  FpgaBarRead( U32 bar, U32 offset );
+    void FpgaBarWrite( U32 bar, U32 offset, U32 val );
+    void FpgaBlockWrite( U32 nb, U32 reg, U32 val );
+    U32  FpgaBlockRead( U32 nb, U32 reg );
 
     int allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 DmaChan,
@@ -96,9 +101,8 @@ public:
     bool writeBlock(U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 DmaChan, IPC_handle file, int fpos = 0);
     bool fpgaInfo(AMB_CONFIGURATION &info);
-
-    bool writeSPD(unsigned id, unsigned data_address, unsigned data_value, int imeout);
-    bool readSPD(unsigned id, unsigned data_address, unsigned& data_value, int imeout);
+    bool fpgaBlock(unsigned startSearch, u16 id, fpga_block_t& block);
+    bool fpgaTrd(unsigned startSearch, u16 id, fpga_trd_t& trd);
 
 private:
     std::vector<Stream*>         m_strm;
@@ -112,6 +116,8 @@ private:
 
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
     Stream* stream(U32 DmaChan);
+
+    bool syncFpga();
 };
 
 //-----------------------------------------------------------------------------

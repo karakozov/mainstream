@@ -25,18 +25,18 @@ public:
     explicit fpga_base(u32 fpgaNumber);
     virtual ~fpga_base();
 
+    bool info(AMB_CONFIGURATION& info);
+
 protected:
     u32 core_reg_peek_dir( u32 trd, u32 reg );
     u32 core_reg_peek_ind( u32 trd, u32 reg );
     void core_reg_poke_dir( u32 trd, u32 reg, u32 val );
     void core_reg_poke_ind( u32 trd, u32 reg, u32 val );
-    u32  core_bar0_read( u32 offset );
-    void core_bar0_write( u32 offset, u32 val );
-    u32  core_bar1_read( u32 offset );
-    void core_bar1_write( u32 offset, u32 val );
+
+    u32  core_bar_read( u32 bar, u32 offset );
+    void core_bar_write( u32 bar, u32 offset, u32 val );
     void core_block_write( u32 nb, u32 reg, u32 val );
     u32  core_block_read( u32 nb, u32 reg );
-
     IPC_handle              m_fpga;
 
 private:
@@ -45,7 +45,9 @@ private:
     u32*                    m_bar0;
     u32*                    m_bar1;
     u32*                    m_bar2;
+    u32*                    m_bar[3];
     u32                     m_fpgaNumber;
+    bool                    m_ok;
 
     fpga_base();
     void openFpga();

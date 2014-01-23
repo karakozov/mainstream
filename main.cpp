@@ -57,7 +57,7 @@ bool lockDataFile(const char* fname, int counter);
 #define ADC_MAX_CHAN            (0x4)
 
 //-----------------------------------------------------------------------------
-#define USE_SIGNAL 1
+#define USE_SIGNAL 0
 //-----------------------------------------------------------------------------
 
 #if USE_SIGNAL
@@ -90,6 +90,15 @@ int main(int argc, char *argv[])
     IPC_initKeyboard();
 #endif
 
+    try {
+        acdsp brd;
+        brd.start_local_pcie_test(params);
+    }
+    catch(...) {
+
+        fprintf(stderr, "Exception was generated in the program. Exit from application.\n");
+    }
+/*
     try {
 
         acdsp brd;
@@ -171,11 +180,12 @@ int main(int argc, char *argv[])
 
         IPC_closeFile(isviFile);
 
-    } catch(...) {
+    }
+    catch(...) {
 
         fprintf(stderr, "Exception was generated in the program. Exit from application.\n");
     }
-
+*/
 #if !USE_SIGNAL
     IPC_cleanupKeyboard();
 #endif
