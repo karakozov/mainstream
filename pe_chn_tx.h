@@ -16,12 +16,8 @@ public:
     pe_chn_tx(Fpga *fpga);
     virtual ~pe_chn_tx();
 
-    void set_fpga_addr(int devnum, u32 dst_fpga_addr);
-    void set_fpga_sign(u32 sign);
-    void set_fpga_chan(u32 chan);
-    void set_fpga_test(u32 mode);
+    void set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign);
     u32 tx_block_number();
-    void write_test_block(u32 dst_fpga_addr, u32 count);
 
     void start_tx(bool start);
 

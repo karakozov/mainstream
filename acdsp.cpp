@@ -904,32 +904,38 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     //---------------------------------------
 
     fprintf(stderr, "Set ADC mask\n");
-    RegPokeInd(params.fpgaNumber, ADC_TRD, 0x10, params.adcMask);
+    RegPokeInd(1, ADC_TRD, 0x10, params.adcMask);
+    RegPokeInd(2, ADC_TRD, 0x10, params.adcMask);
 
     fprintf(stderr, "Set ADC mode\n");
-    RegPokeInd(params.fpgaNumber, ADC_TRD, 0x17, (0x3 << 4));
+    RegPokeInd(1, ADC_TRD, 0x17, (0x3 << 4));
+    RegPokeInd(2, ADC_TRD, 0x17, (0x3 << 4));
 
     fprintf(stderr, "Start ADC\n");
-    RegPokeInd(params.fpgaNumber, ADC_TRD, 0, 0x2038);
-
-    fprintf(stderr, "Start CHECK trd\n");
-    RegPokeInd(0, 4, 0, 0x2038);
+    RegPokeInd(1, ADC_TRD, 0, 0x2038);
+    RegPokeInd(2, ADC_TRD, 0, 0x2038);
 
     //---------------------------------------
 
+    fprintf(stderr, "Start RX CHECK trd\n");
+    RegPokeInd(0, 4, 0, 0x2038);
+
     pe_chn_rx rx(FPGA(0));
 
-    rx.set_fpga_addr(0, cfg0.PhysAddress[2], 0x786543);
+    rx.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x786541);
+    rx.set_fpga_addr(1, cfg0.PhysAddress[2]+0x20000, 0x786542);
     rx.start_rx(true);
 
     //---------------------------------------
 
-    pe_chn_tx tx(FPGA(params.fpgaNumber));
+    pe_chn_tx tx1(FPGA(1));
+    pe_chn_tx tx2(FPGA(2));
 
-    tx.set_fpga_chan(0);
-    tx.set_fpga_addr(0, cfg0.PhysAddress[2]);
-    tx.set_fpga_sign(0x786543);
-    tx.start_tx(true);
+    tx1.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x786541);
+    tx2.set_fpga_addr(0, cfg0.PhysAddress[2]+0x20000, 0x786542);
+
+    tx1.start_tx(true);
+    tx2.start_tx(true);
 
     //---------------------------------------
 
@@ -938,10 +944,12 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
         if(exitFlag()) {
             break;
         }
-
-        fprintf(stderr, "TX0: %d RX0: %d SIGN_ERR0: %d BLOCK_ERR0: %d\r",
-                tx.tx_block_number(), rx.rx_block_number(0), rx.sign_err_number(0), rx.block_err_number(0));
-
+/*
+        fprintf(stderr, "TX: [%d] [%2d] RX [%d SE1: %d BE1: %d] [%d SE2: %d BE2: %d]\r",
+                tx1.tx_block_number(), tx2.tx_block_number(),
+                rx.rx_block_number(0), rx.sign_err_number(0), rx.block_err_number(0),
+                rx.rx_block_number(1), rx.sign_err_number(1), rx.block_err_number(1));
+*/
         IPC_delay(250);
     }
 }

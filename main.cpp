@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
 
     try {
         acdsp brd;
+
+        brd.setSi57xFreq(params.adcFreq);
         brd.start_local_pcie_test(params);
     }
     catch(...) {

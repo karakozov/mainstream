@@ -130,9 +130,8 @@ u32 fpga_base::core_reg_peek_dir( u32 trd, u32 reg )
         return -1;
 
     u32 offset = trd*0x4000 + reg*0x1000;
-    u32 ret = *(m_bar1 + offset/4);
 
-    return ret;
+    return m_bar1[offset/4];
 }
 
 //-----------------------------------------------------------------------------
@@ -142,7 +141,7 @@ void fpga_base::core_reg_poke_dir( u32 trd, u32 reg, u32 val )
     if( (trd>15) || (reg>3) )
         return;
 
-    u32 offset = trd*0x4000+reg*0x1000;
+    u32 offset = trd*0x4000 + reg*0x1000;
 
     m_bar1[offset/4]=val;
 }

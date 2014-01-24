@@ -85,10 +85,6 @@ void Fpga::init()
         fprintf(stderr, "%s, %d, %s(): Exception!\n", __FILE__, __LINE__, __FUNCTION__);
         throw;
     }
-
-    fpga_block_t main;
-    if(fpgaBlock(0,0x013,main)) {
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -100,7 +96,7 @@ void Fpga::resetFifo(unsigned trd)
     mode0 |= 0x2;
     FpgaRegPokeInd(trd, 0, mode0);
     mode0 &= ~0x2;
-    delay(1);
+    IPC_delay(1);
     FpgaRegPokeInd(trd, 0, mode0);
 }
 
@@ -113,7 +109,7 @@ void Fpga::resetTrd(unsigned trd)
     mode0 |= 0x1;
     FpgaRegPokeInd(trd, 0, mode0);
     mode0 &= ~0x1;
-    delay(1);
+    IPC_delay(1);
     FpgaRegPokeInd(trd, 0, mode0);
 }
 
@@ -361,6 +357,8 @@ void Fpga::scanFpgaTetrades()
             fprintf(stderr, "TRD %d: - ID 0x%x\n", i, id);
             trd.number = i;
             trd.id = id;
+
+            resetTrd(trd.number);
         }
 
         m_fpga_trd.push_back(trd);
