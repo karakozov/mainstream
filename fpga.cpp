@@ -209,6 +209,34 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
 
 //-----------------------------------------------------------------------------
 
+U32 Fpga::FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    return core_write_reg_buf(TetrNum, RegNum, RegBuf, RegBufSize);
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    return core_write_reg_buf_dir(TetrNum, RegNum, RegBuf, RegBufSize);
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    return core_read_reg_buf(TetrNum, RegNum, RegBuf, RegBufSize);
+}
+
+//-----------------------------------------------------------------------------
+
+U32 Fpga::FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+{
+    return core_read_reg_buf_dir(TetrNum, RegNum, RegBuf, RegBufSize);
+}
+
+//-----------------------------------------------------------------------------
+
 U32  Fpga::FpgaBarRead( U32 bar, U32 offset )
 {
     return core_bar_read(bar, offset);

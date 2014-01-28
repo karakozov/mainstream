@@ -62,19 +62,17 @@ public:
     int trd_number(unsigned trdID);
 
     void FpgaRegPokeInd(S32 trdNo, S32 rgnum, U32 val);
-    U32 FpgaRegPeekInd(S32 trdNo, S32 rgnum);
+    U32  FpgaRegPeekInd(S32 trdNo, S32 rgnum);
     void FpgaRegPokeDir(S32 trdNo, S32 rgnum, U32 val);
-    U32 FpgaRegPeekDir(S32 trdNo, S32 rgnum);
-/*
-    U32 FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-*/
-    U32  FpgaBarRead( U32 bar, U32 offset );
-    void FpgaBarWrite( U32 bar, U32 offset, U32 val );
-    void FpgaBlockWrite( U32 nb, U32 reg, U32 val );
-    U32  FpgaBlockRead( U32 nb, U32 reg );
+    U32  FpgaRegPeekDir(S32 trdNo, S32 rgnum);
+    U32  FpgaWriteRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32  FpgaWriteRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32  FpgaReadRegBuf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32  FpgaReadRegBufDir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    U32  FpgaBarRead(U32 bar, U32 offset);
+    void FpgaBarWrite(U32 bar, U32 offset, U32 val);
+    void FpgaBlockWrite(U32 nb, U32 reg, U32 val);
+    U32  FpgaBlockRead(U32 nb, U32 reg);
 
     int allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 DmaChan,
