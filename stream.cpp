@@ -29,6 +29,7 @@ Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaCh
 {
     m_logInfo = false;
     m_logErr = true;
+    m_Descr = 0;
 
     stopDma();
     resetDmaFifo();
