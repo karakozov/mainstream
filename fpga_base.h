@@ -18,6 +18,31 @@
 #include <string>
 #include <sstream>
 
+//-----------------------------------------------------------------------------
+
+typedef  struct _fpga_block_t {
+
+    u16 number;
+    u16 id;
+    u16 ver;
+    u16 device_id;
+    u16 rev_mode;
+    u16 pld_ver;
+    u16 block_cnt;
+    u16 core_id_mod;
+
+} fpga_block_t;
+
+//-----------------------------------------------------------------------------
+
+typedef  struct _fpga_trd_t {
+
+    u16 number;
+    u16 id;
+
+} fpga_trd_t;
+
+//-----------------------------------------------------------------------------
 
 class fpga_base
 {
