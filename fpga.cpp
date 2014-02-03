@@ -321,8 +321,6 @@ void Fpga::scanFpgaBlocks()
 
         unsigned id = core_block_read(i, 0x0) & 0x7ff;
 
-        fprintf(stderr, "Block ID 0x%x\n", id);
-
         if((id != 0x7ff) && (id != 0x0)) {
 
             unsigned ver = core_block_read(i, 0x1);
