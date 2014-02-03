@@ -27,15 +27,33 @@
 using namespace std;
 //-----------------------------------------------------------------------------
 
-acdsp::acdsp()
+acdsp::acdsp(U32 startFpgaNumber)
 {
     m_fpga.clear();
     m_exit = false;
     m_iic = new i2c(1);
     enableSwitchOut(0x1);
     m_si571 = new Si571(m_iic);
+    m_cleanup = true;
 
-    createFpgaDevices();
+    createFpgaDevices(startFpgaNumber);
+    createFpgaMemory();
+}
+
+//-----------------------------------------------------------------------------
+
+acdsp::acdsp(std::vector<Fpga*>& fpgaList)
+{
+    m_fpga.clear();
+    m_exit = false;
+    m_iic = new i2c(1);
+    enableSwitchOut(0x1);
+    m_si571 = new Si571(m_iic);
+    m_cleanup = false;
+
+    for(unsigned i=0; i<fpgaList.size(); i++) {
+        m_fpga.push_back(fpgaList.at(i));
+    }
     createFpgaMemory();
 }
 
@@ -85,10 +103,10 @@ int acdsp::setSi57xFreq(float freq)
 
 //-----------------------------------------------------------------------------
 
-void acdsp::createFpgaDevices()
+void acdsp::createFpgaDevices(U32 start)
 {
     try {
-        for(unsigned i=0; i<FPGA_COUNT; i++) {
+        for(unsigned i=start; i<start+ACDSP_FPGA_COUNT; i++) {
             Fpga *fpga = new Fpga(i);
             if(!fpga) {
                 throw;
@@ -105,10 +123,12 @@ void acdsp::createFpgaDevices()
 
 void acdsp::deleteFpgaDevices()
 {
-    for(unsigned i=0; i<m_fpga.size(); i++) {
-        Fpga *fpga = m_fpga.at(i);
-        m_fpga.at(i) = 0;
-        delete fpga;
+    if(m_cleanup) {
+        for(unsigned i=0; i<m_fpga.size(); i++) {
+            Fpga *fpga = m_fpga.at(i);
+            m_fpga.at(i) = 0;
+            delete fpga;
+        }
     }
     m_fpga.clear();
 }
@@ -944,7 +964,7 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
         if(exitFlag()) {
             break;
         }
-/*
+        /*
         fprintf(stderr, "TX: [%d] [%2d] RX [%d SE1: %d BE1: %d] [%d SE2: %d BE2: %d]\r",
                 tx1.tx_block_number(), tx2.tx_block_number(),
                 rx.rx_block_number(0), rx.sign_err_number(0), rx.block_err_number(0),

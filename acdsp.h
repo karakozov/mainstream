@@ -19,8 +19,8 @@
 
 //-----------------------------------------------------------------------------
 
-#define FPGA_COUNT          3
-#define DMA_CHANNEL_NUM     4
+#define ACDSP_FPGA_COUNT          3
+#define DMA_CHANNEL_NUM           4
 
 //-----------------------------------------------------------------------------
 
@@ -32,7 +32,8 @@ class Memory;
 class acdsp
 {
 public:
-    acdsp();
+    acdsp(U32 startFpgaNumber = 0);
+    acdsp(std::vector<Fpga*>& fpgaList);
     virtual ~acdsp();
 
     // Si571 INTERFACE
@@ -95,8 +96,9 @@ private:
     std::vector<Memory*>     m_ddr;
     BRDctrl_StreamCBufAlloc  m_sSCA;
     bool                     m_exit;
+    bool                     m_cleanup;
 
-    void createFpgaDevices();
+    void createFpgaDevices(U32 start);
     void deleteFpgaDevices();
     void createFpgaMemory();
     void deleteFpgaMemory();
