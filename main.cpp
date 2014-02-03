@@ -4,6 +4,7 @@
 #endif
 
 #include "acdsp.h"
+#include "acsync.h"
 #include "iniparser.h"
 
 #include <stdio.h>
@@ -91,10 +92,20 @@ int main(int argc, char *argv[])
 #endif
 
     try {
-        acdsp brd;
+        acsync sync(0);
 
-        brd.setSi57xFreq(params.adcFreq);
-        brd.start_local_pcie_test(params);
+        fprintf(stderr, "Create AC_SYNC board\n");
+
+        sync.progFD(0, 0, 400.0, 10.0);
+        //sync.progADF4002(10, 56, 0);
+
+        //sync.RegPokeInd(0,4,1,0x7);
+        //IPC_delay(1000);
+        //sync.RegPokeInd(0,4,1,0x0);
+
+        //acdsp brd;
+        //brd.setSi57xFreq(params.adcFreq);
+        //brd.start_local_pcie_test(params);
     }
     catch(...) {
 
@@ -191,6 +202,8 @@ int main(int argc, char *argv[])
 #if !USE_SIGNAL
     IPC_cleanupKeyboard();
 #endif
+
+    fprintf(stderr, "STOP\n");
 
     return 0;
 }
