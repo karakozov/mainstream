@@ -2,10 +2,11 @@
 #change this makefile for your target...
 #
 
-ifeq "$(findstring QNX, $(shell uname -a))" "QNX"
-	OS := DZY_QNX
-else
-	OS := DZY_LINUX
+ifeq "$(findstring c6x-uclinux-gcc, $(CC))" "c6x-uclinux-gcc"
+    OS := __LINUX__
+    CSTOOL_PREFIX ?= c6x-uclinux-
+    IPC := __IPC_LINUX__
+    TARGET := -march=c674x
 endif
 
 PHONY = clean
@@ -22,21 +23,15 @@ INC := $(addprefix -I, $(DIRS))
 CC = $(CSTOOL_PREFIX)g++
 LD = $(CSTOOL_PREFIX)g++
 
-#ARCH := c674x
-TARGET := -march=c674x
-
-#ARCH := -march=c674x
-#TARGET := 
-
-CFLAGS = $(TARGET) -D$(OS) -D__LINUX__ -g -Wall $(INC)
+CFLAGS += $(TARGET) -D__LINUX__ -g -Wall $(INC)
 #LFLAGS = -Wl,-rpath $(LIBPATH) -L"$(LIBPATH)"
-LFLAGS = $(TARGET)
+LFLAGS += $(TARGET)
 
 $(TARGET_NAME): $(patsubst %.cpp,%.o, $(wildcard *.cpp))
 #	$(LD) -o $(TARGET_NAME) $^ $(LFLAGS)
 	$(LD) -o $(TARGET_NAME) $^ $(LIBPATH)/libgipcy.a $(LFLAGS)
 #	cp $(TARGET_NAME) ../../bin
-	cp $(TARGET_NAME) $(INSTALL_PREFIX)/home/$(TARGETFS_USER)/bardy/bin
+#	cp $(TARGET_NAME) $(INSTALL_PREFIX)/home/$(TARGETFS_USER)/bardy/bin
 	rm -f *.o *~ core
 
 %.o: %.cpp
