@@ -101,13 +101,19 @@ struct ioctl_param {
 
 #endif
 
+#ifdef __linux__
+#define __packed__ __attribute__((packed))
+#else
+#define __packed__
+#endif
+
 // data structure for read/write value from/to register of board
 typedef struct _AMB_DATA_REG {
 	ULONG	AdmNumber;		// IN
 	ULONG	TetrNumber;		// IN
 	ULONG	RegNumber;		// IN
 	ULONG	Value;			// INOUT
-} __attribute__((packed)) AMB_DATA_REG, *PAMB_DATA_REG;
+} __packed__ AMB_DATA_REG, *PAMB_DATA_REG;
 
 // data structure for read/write buffer from/to register of board
 typedef struct _AMB_BUF_REG {
@@ -116,20 +122,20 @@ typedef struct _AMB_BUF_REG {
 	ULONG	RegNumber;		// IN
 	PVOID	pBuffer;		// IN
 	ULONG	BufferSize;		// IN
-} __attribute__((packed)) AMB_BUF_REG, *PAMB_BUF_REG;
+} __packed__ AMB_BUF_REG, *PAMB_BUF_REG;
 
 typedef struct _AMB_DATA_BUF {
 	PVOID	pBuffer;
 	ULONG	BufferSize;
 	ULONG	Offset;
-} __attribute__((packed)) AMB_DATA_BUF, *PAMB_DATA_BUF;
+} __packed__ AMB_DATA_BUF, *PAMB_DATA_BUF;
 
 // board location data structure
 typedef struct _AMB_LOCATION {
 	ULONG	BusNumber;		// OUT
 	ULONG	DeviceNumber;	// OUT 
 	ULONG	SlotNumber;		// OUT
-} __attribute__((packed)) AMB_LOCATION, *PAMB_LOCATION;
+} __packed__ AMB_LOCATION, *PAMB_LOCATION;
 
 // board configuration data structure
 typedef struct _AMB_CONFIGURATION {
@@ -143,7 +149,7 @@ typedef struct _AMB_CONFIGURATION {
 	ULONG	Size[3];		// OUT
 	ULONG	InterruptLevel;	// OUT 
 	ULONG	InterruptVector;// OUT
-} __attribute__((packed)) AMB_CONFIGURATION, *PAMB_CONFIGURATION;
+} __packed__ AMB_CONFIGURATION, *PAMB_CONFIGURATION;
 
 // tetrad interrupt request data structure
 typedef struct _AMB_TETR_IRQ {
@@ -152,7 +158,7 @@ typedef struct _AMB_TETR_IRQ {
 	ULONG	IrqMask;		// IN
 	ULONG	IrqInv;			// IN
 	HANDLE	hTetrEvent;		// IN
-} __attribute__((packed)) AMB_TETR_IRQ, *PAMB_TETR_IRQ;
+} __packed__ AMB_TETR_IRQ, *PAMB_TETR_IRQ;
 /*
 typedef struct
 {
@@ -172,12 +178,12 @@ typedef struct _AMB_MEM_DMA_CHANNEL {
 	PVOID	pStub;
 	HANDLE	hBlockEndEvent;
 	PVOID	pBlock[1];
-} __attribute__((packed)) AMB_MEM_DMA_CHANNEL, *PAMB_MEM_DMA_CHANNEL;
+} __packed__ AMB_MEM_DMA_CHANNEL, *PAMB_MEM_DMA_CHANNEL;
 
 typedef struct _AMB_START_DMA_CHANNEL {
 	ULONG	DmaChanNum;		// IN
 	ULONG	IsCycling;
-} __attribute__((packed)) AMB_START_DMA_CHANNEL, *PAMB_START_DMA_CHANNEL;
+} __packed__ AMB_START_DMA_CHANNEL, *PAMB_START_DMA_CHANNEL;
 
 typedef struct _AMB_STATE_DMA_CHANNEL {
 	ULONG	DmaChanNum;		// IN
@@ -186,12 +192,12 @@ typedef struct _AMB_STATE_DMA_CHANNEL {
 	ULONG	OffsetInBlock;	// OUT		
 	ULONG	DmaChanState;	// OUT		
 	LONG	Timeout;		// IN
-} __attribute__((packed)) AMB_STATE_DMA_CHANNEL, *PAMB_STATE_DMA_CHANNEL;
+} __packed__ AMB_STATE_DMA_CHANNEL, *PAMB_STATE_DMA_CHANNEL;
 
 typedef struct _AMB_SET_DMA_CHANNEL {
 	ULONG	DmaChanNum;		// IN
 	ULONG	Param;
-} __attribute__((packed)) AMB_SET_DMA_CHANNEL, *PAMB_SET_DMA_CHANNEL;
+} __packed__ AMB_SET_DMA_CHANNEL, *PAMB_SET_DMA_CHANNEL;
 
 //typedef struct _AMB_GET_DMA_INFO {
 //	ULONG	DmaChanNum;		// IN
@@ -205,7 +211,7 @@ typedef struct _AMB_GET_DMA_INFO {
 	ULONG	Direction;		// OUT
 	ULONG	FifoSize;		// OUT
 	ULONG	MaxDmaSize;		// OUT
-} __attribute__((packed)) AMB_GET_DMA_INFO, *PAMB_GET_DMA_INFO;
+} __packed__ AMB_GET_DMA_INFO, *PAMB_GET_DMA_INFO;
 
 #endif // _DDWAMBPEX_H_
 

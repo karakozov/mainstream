@@ -127,8 +127,6 @@ void trd_check::show_report(u32 chan)
 
     val.w16.block_d0 = word[9];
     val.w16.block_d1 = word[10];
-
-    val = val;
 }
 
 //-------------------------------------------------------------------

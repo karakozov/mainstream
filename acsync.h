@@ -52,7 +52,7 @@ public:
     void RegPokeDir(U32 fpgaNum, S32 trdNo, S32 rgnum, U32 val);
     U32 RegPeekDir(U32 fpgaNum, S32 trdNo, S32 rgnum);
 
-    bool checkFrequencyParam(U32 mode, float FD, float FO);
+    bool checkFrequencyParam(float FD, float FO);
     bool progFD(U32 mode, U32 selout, float FD, float FO);
 
     void calcADF4002(U32 FO, U32 Fvco, U32 variant = 0);
@@ -60,7 +60,6 @@ public:
     void FreqMultipler1(U32 mode, U32 FO);
     void FreqMultipler2(U32 mode, float FD);
     void FreqDivider(U32 mode, float FD);
-    void PowerON(bool on);
 
 private:
     std::vector<Fpga*>       m_fpga;
@@ -82,8 +81,8 @@ private:
     U32 gcd(U32 a, U32 b);
     void writeADF4002(U16 reg, U32 data);
     void fillMultipler2();
-    U08 getMultipler2Scale(int code);
-    U08 getDividerScale(int code);
+    U08 getMultipler2Scale(U08 code);
+    U08 getDividerScale(U08 code);
 
     void getMultCxMode0(float FD, U08& C4, U08& C5);
     void getMultCxMode1(float FD, U08& C4, U08& C5);

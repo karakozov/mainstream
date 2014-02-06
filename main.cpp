@@ -11,13 +11,15 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#ifdef __linux__
+#include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <getopt.h>
+#endif
 
 #include <vector>
 #include <string>
@@ -95,12 +97,14 @@ int main(int argc, char *argv[])
         acsync sync(0);
 
         fprintf(stderr, "Create AC_SYNC board\n");
-	sync.PowerON(true);
-        sync.progFD(0, 1, 448.0, 0.0);
+
+        sync.progFD(0, 0, 400.0, 10.0);
         //sync.progADF4002(10, 56, 0);
+
         //sync.RegPokeInd(0,4,1,0x7);
         //IPC_delay(1000);
         //sync.RegPokeInd(0,4,1,0x0);
+
         //acdsp brd;
         //brd.setSi57xFreq(params.adcFreq);
         //brd.start_local_pcie_test(params);
