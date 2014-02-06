@@ -29,7 +29,7 @@ string toString ( T Number )
 
 //-----------------------------------------------------------------------------
 
-Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaChan(channel)
+Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_map(handle), m_DmaChan(channel)
 {
     m_logInfo = false;
     m_logErr = true;

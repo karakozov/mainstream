@@ -43,6 +43,7 @@ void fpga_base::openFpga()
         throw;
     }
     fprintf(stderr, "Open FPGA%d\n", m_fpgaNumber);
+	m_map = new Mapper(m_fpga);
 }
 
 //-----------------------------------------------------------------------------
@@ -50,6 +51,7 @@ void fpga_base::openFpga()
 void fpga_base::closeFpga()
 {
     fprintf(stderr, "Close FPGA%d\n", m_fpgaNumber);
+	if(m_map) delete m_map;
     IPC_closeDevice(m_fpga);
 }
 
@@ -90,9 +92,9 @@ void fpga_base::mapFpga()
         if(m_info.PhysAddress[i] && m_info.Size[i]) {
 
             ++res_count;
-
-            m_info.VirtAddress[i] = m_map.mapPhysicalAddress(m_info.PhysAddress[i], m_info.Size[i]);
-
+#ifdef __linux__
+            m_info.VirtAddress[i] = m_map->mapPhysicalAddress(m_info.PhysAddress[i], m_info.Size[i]);
+#endif
             if(m_info.VirtAddress[i]) {
 
                 fprintf(stderr, "BAR%d: 0x%x -> %p\n", i, m_info.PhysAddress[i], m_info.VirtAddress[i]);

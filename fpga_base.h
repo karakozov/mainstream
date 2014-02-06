@@ -74,7 +74,7 @@ protected:
     IPC_handle              m_fpga;
 
 private:
-    Mapper                  m_map;
+    Mapper*                 m_map;
     AMB_CONFIGURATION       m_info;
     u32*                    m_bar0;
     u32*                    m_bar1;

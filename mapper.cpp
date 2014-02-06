@@ -11,11 +11,18 @@
 using namespace std;
 
 //-----------------------------------------------------------------------------
-
-Mapper::Mapper()
+/*
+Mapper::Mapper() : extHandle(false)
 {
     m_MappedList.clear();
     openMemDevice();
+}
+*/
+//-----------------------------------------------------------------------------
+
+Mapper::Mapper(IPC_handle handle) : m_devMem(handle), extHandle(true)
+{
+    m_MappedList.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -23,7 +30,8 @@ Mapper::Mapper()
 Mapper::~Mapper()
 {
     unmapMemory();
-    closeMemDevice();
+	if(!extHandle)
+		closeMemDevice();
 }
 
 //-----------------------------------------------------------------------------
