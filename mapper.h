@@ -28,7 +28,8 @@ struct map_addr_t {
 class Mapper {
 
 public:
-    explicit Mapper();
+    //Mapper();
+	Mapper(IPC_handle handle);
     virtual ~Mapper();
 
     void* mapPhysicalAddress(void* physicalAddress, uint32_t areaSize);
@@ -36,6 +37,7 @@ public:
 
 private:
     IPC_handle      m_devMem;
+	bool			extHandle;
 
     std::vector<struct map_addr_t> m_MappedList;
 
