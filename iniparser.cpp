@@ -31,13 +31,13 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
 
     memset(&param, 0, sizeof(param));
 
-    string s = argv[0];
-    string iniFileName = "";
-    if(argc == 1) {
+    //string s = argv[0];
+    string iniFileName = "mainstream.ini";
+/*    if(argc == 1) {
         iniFileName = s + ".ini";
     } else {
         iniFileName = argv[1];
-    }
+    } */
 
     IPC_getCurrentDir(iniFilePath, sizeof(iniFilePath)/sizeof(char));
     strcat(iniFilePath, "/");
@@ -126,13 +126,13 @@ bool getSyncParams(int argc, char *argv[], struct sync_params_t& param)
 
     memset(&param, 0, sizeof(param));
 
-    string s = argv[0];
-    string iniFileName = "";
-    if(argc == 1) {
+    //string s = argv[0];
+    string iniFileName = "mainstream.ini";
+/*    if(argc == 1) {
         iniFileName = s + ".ini";
     } else {
         iniFileName = argv[1];
-    }
+    } */
 
     IPC_getCurrentDir(iniFilePath, sizeof(iniFilePath)/sizeof(char));
     strcat(iniFilePath, "/");
