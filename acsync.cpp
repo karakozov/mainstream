@@ -529,8 +529,6 @@ void acsync::fillMultipler2()
     m_Cx[15] = 0x1C;
 
     m_Cx[16] = 0x1E;
-
-    fprintf(stderr, "m_Cx[10] = 0x%x\n", m_Cx[9]);
 }
 
 //-----------------------------------------------------------------------------
@@ -546,7 +544,7 @@ bool acsync::checkFrequencyParam(float FD, float FO)
     }
 
     if(FO == 56.0) {
-        if(FD == 448.0 || FD == 488.72) {
+        if(FD == 448.0 || FD >= 488.72) {
             ok = true;
         }
     }
@@ -585,7 +583,6 @@ bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
         progADF4002(FO, m_FVCO_ADF4002);
     }
 
-    fillMultipler2();
     FreqMultipler2(mode, FD);
     FreqDivider(mode, FD);
 
