@@ -290,7 +290,7 @@ u32  fpga_base::core_block_read( u32 nb, u32 reg )
 */
 //-----------------------------------------------------------------------------
 
-U32 fpga_base::core_write_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+u32 fpga_base::core_write_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize)
 {
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
@@ -309,7 +309,7 @@ U32 fpga_base::core_write_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 Reg
 
 //-----------------------------------------------------------------------------
 
-U32 fpga_base::core_write_reg_buf_dir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+u32 fpga_base::core_write_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize)
 {
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
@@ -328,7 +328,7 @@ U32 fpga_base::core_write_reg_buf_dir(U32 TetrNum, U32 RegNum, void* RegBuf, U32
 
 //-----------------------------------------------------------------------------
 
-U32 fpga_base::core_read_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+u32 fpga_base::core_read_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize)
 {
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
@@ -347,7 +347,7 @@ U32 fpga_base::core_read_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegB
 
 //-----------------------------------------------------------------------------
 
-U32 fpga_base::core_read_reg_buf_dir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize)
+u32 fpga_base::core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize)
 {
     AMB_BUF_REG reg_buf = { 0, TetrNum, RegNum, RegBuf, RegBufSize };
 
