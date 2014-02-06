@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
         acsync sync(0);
 
         fprintf(stderr, "Create AC_SYNC board\n");
-	sync.PowerON(true);
-        sync.progFD(0, 1, 448.0, 0.0);
+        sync.PowerON(true);
+        sync.progFD(1, 1, 400.0, 10.0);
         //sync.progADF4002(10, 56, 0);
         //sync.RegPokeInd(0,4,1,0x7);
         //IPC_delay(1000);
