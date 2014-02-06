@@ -377,17 +377,19 @@ U08 acsync::getMultipler2Scale(int code)
 
 void acsync::getMultCxMode0(float FD, U8& C4, U8& C5)
 {
+    fprintf(stderr, "%s(): FD = %f\n", __FUNCTION__, FD);
+
     if(FD == 400.0) {
         C4 = 10; C5 = 10;
     }
     if(FD == 448.0) {
         C4 = 8; C5 = 8;
     }
-    if(FD == 488.72) {
-        C4 = 5; C5 = 12;
+    if(FD >= 488.72) {
+        C4 = 8; C5 = 12;
     }
     if(FD == 480.0) {
-        C4 = 5; C5 = 6;
+        C4 = 10; C5 = 6;
     }
 
     fprintf(stderr, "%s(): C4 = %d, C5 = %d\n", __FUNCTION__, C4, C5);
@@ -403,7 +405,7 @@ void acsync::getMultCxMode1(float FD, U8& C4, U8& C5)
     if(FD == 448.0) {
         C4 = 2; C5 = 5;
     }
-    if(FD == 488.72) {
+    if(FD >= 488.72) {
         C4 = 3; C5 = 4;
     }
     if(FD == 480.0) {
@@ -423,7 +425,7 @@ void acsync::getMultCxMode2(float FD, U8& C4, U8& C5)
     if(FD == 448.0) {
         C4 = 8; C5 = 8;
     }
-    if(FD == 488.72) {
+    if(FD >= 488.72) {
         C4 = 5; C5 = 12;
     }
     if(FD == 480.0) {
@@ -438,12 +440,12 @@ void acsync::getMultCxMode2(float FD, U8& C4, U8& C5)
 void acsync::getDivDxMode0(float FD, U8& D1, U8& D2)
 {
     if(FD == 400.0) {
-        D1 = 2; D2 = 7;
+        D1 = 7; D2 = 2;
     }
     if(FD == 448.0) {
-        D1 = 4; D2 = 4;
+        D1 = 4; D2 = 2;
     }
-    if(FD == 488.72) {
+    if(FD >= 488.72) {
         D1 = 11; D2 = 1;
     }
     if(FD == 480.0) {
@@ -463,11 +465,11 @@ void acsync::getDivDxMode1(float FD, U8& D1, U8& D2)
     if(FD == 448.0) {
         D1 = 2; D2 = 5;
     }
-    if(FD == 488.72) {
+    if(FD >= 488.72) {
         D1 = 11; D2 = 1;
     }
     if(FD == 480.0) {
-        D1 = 2; D2 = 5;
+        D1 = 5; D2 = 2;
     }
 
     fprintf(stderr, "%s(): D1 = %d, D2 = %d\n", __FUNCTION__, D1, D2);
@@ -481,13 +483,13 @@ void acsync::getDivDxMode2(float FD, U8& D1, U8& D2)
         D1 = 1; D2 = 1;
     }
     if(FD == 448.0) {
-        D1 = 8; D2 = 8;
+        D1 = 4; D2 = 2;
     }
-    if(FD == 488.72) {
-        D1 = 5; D2 = 12;
+    if(FD >= 488.72) {
+        D1 = 11; D2 = 1;
     }
     if(FD == 480.0) {
-        D1 = 5; D2 = 8;
+        D1 = 2; D2 = 5;
     }
 
     fprintf(stderr, "%s(): D1 = %d, D2 = %d\n", __FUNCTION__, D1, D2);
