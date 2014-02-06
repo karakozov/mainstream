@@ -66,10 +66,10 @@ protected:
     void core_block_write( u32 nb, u32 reg, u32 val );
     u32  core_block_read( u32 nb, u32 reg );
 
-    U32 core_write_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 core_write_reg_buf_dir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 core_read_reg_buf(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
-    U32 core_read_reg_buf_dir(U32 TetrNum, U32 RegNum, void* RegBuf, U32 RegBufSize);
+    u32 core_write_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
+    u32 core_write_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
+    u32 core_read_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
+    u32 core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
 
     IPC_handle              m_fpga;
 
