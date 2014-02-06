@@ -51,7 +51,7 @@ public:
     void RegPokeDir(U32 fpgaNum, S32 trdNo, S32 rgnum, U32 val);
     U32 RegPeekDir(U32 fpgaNum, S32 trdNo, S32 rgnum);
 
-    bool checkFrequencyParam(U32 mode, float FD, float FO);
+    bool checkFrequencyParam(float FD, float FO);
     bool progFD(U32 mode, U32 selout, float FD, float FO);
 
     void calcADF4002(U32 FO, U32 Fvco, U32 variant = 0);

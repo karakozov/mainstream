@@ -157,7 +157,7 @@ void acsync::selclkMode0(U32 FO)
 
     switch(FO) {
     case 0:
-    case 10: 
+    case 10:
     case 56:
     case 120:
     {
@@ -251,29 +251,29 @@ U32 acsync::gcd(U32 freqA, U32 freqB)
 void acsync::calcADF4002(U32 FO, U32 Fvco, U32 variant)
 {
     if(FO) {
-    U32 Fd = gcd(FO, Fvco);
-    U32 R = FO/Fd;
-    U32 N = Fvco/Fd;
+        U32 Fd = gcd(FO, Fvco);
+        U32 R = FO/Fd;
+        U32 N = Fvco/Fd;
 
-    fprintf(stderr, "Fd = %d\n", Fd);
-    fprintf(stderr, "R = %d\n", R);
-    fprintf(stderr, "N = %d\n", N);
+        fprintf(stderr, "Fd = %d\n", Fd);
+        fprintf(stderr, "R = %d\n", R);
+        fprintf(stderr, "N = %d\n", N);
 
-    U8 ablw = 1;
-    U16 ref14 = (R & 0x3FFF);
-    m_adf_regs.reg0 = (ablw << 16) | (ref14 << 2) | 0x0;
+        U8 ablw = 1;
+        U16 ref14 = (R & 0x3FFF);
+        m_adf_regs.reg0 = (ablw << 16) | (ref14 << 2) | 0x0;
 
-    U8 gpgain = 1;
-    U16 ref13 = (N & 0x1FFF);
-    m_adf_regs.reg1 = (gpgain << 21) | (ref13 << 8) | 0x1;
+        U8 gpgain = 1;
+        U16 ref13 = (N & 0x1FFF);
+        m_adf_regs.reg1 = (gpgain << 21) | (ref13 << 8) | 0x1;
 
-    m_adf_regs.reg2 = variant ? 0x1F90C2 : 0x1F90A2;
-    m_adf_regs.reg3 = variant ? 0x1F90C3 : 0x1F90A3;
+        m_adf_regs.reg2 = variant ? 0x1F90C2 : 0x1F90A2;
+        m_adf_regs.reg3 = variant ? 0x1F90C3 : 0x1F90A3;
     } else {
-    m_adf_regs.reg0 = 0x010014;
-    m_adf_regs.reg1 = 0x201C01;
-    m_adf_regs.reg2 = 0x1F90C6;
-    m_adf_regs.reg3 = 0x1F90C7;
+        m_adf_regs.reg0 = 0x010014;
+        m_adf_regs.reg1 = 0x201C01;
+        m_adf_regs.reg2 = 0x1F90C6;
+        m_adf_regs.reg3 = 0x1F90C7;
     }
 
     fprintf(stderr, "3: 0x%X\n", m_adf_regs.reg3);
@@ -535,7 +535,7 @@ void acsync::fillMultipler2()
 
 //-----------------------------------------------------------------------------
 
-bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
+bool acsync::checkFrequencyParam(float FD, float FO)
 {
     bool ok = false;
 
@@ -558,7 +558,7 @@ bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
     }
 
     if(FO == 0.0) {
-      ok = true;
+        ok = true;
     }
 
     if(ok) {
@@ -575,7 +575,7 @@ bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
 
 bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
 {
-    if(!checkFrequencyParam(mode, FD, FO)) {
+    if(!checkFrequencyParam(FD, FO)) {
         return false;
     }
 
@@ -615,9 +615,9 @@ void acsync::PowerON(bool on)
 {
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
     if(on)
-      mode1 |= 0x5;
+        mode1 |= 0x5;
     else
-      mode1 &= ~0x5;
+        mode1 &= ~0x5;
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
 }

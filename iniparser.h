@@ -22,11 +22,14 @@ struct sync_params_t {
     unsigned sync_mode;
     float sync_fd;
     float sync_fo;
+/*
     unsigned sync_selclk0;
     unsigned sync_selclk1;
     unsigned sync_selclk2;
     unsigned sync_selclk3;
+*/
     unsigned sync_selclkout;
+/*
     unsigned sync_enpow_ocxo;
     unsigned sync_reg3;
     unsigned sync_reg2;
@@ -36,6 +39,7 @@ struct sync_params_t {
     unsigned sync_div1;
     unsigned sync_div2;
     unsigned sync_div3;
+*/
 };
 
 bool getParams(int argc, char *argv[], struct app_params_t& param);

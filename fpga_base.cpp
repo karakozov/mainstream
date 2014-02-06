@@ -43,7 +43,7 @@ void fpga_base::openFpga()
         throw;
     }
     fprintf(stderr, "Open FPGA%d\n", m_fpgaNumber);
-	m_map = new Mapper(m_fpga);
+    m_map = new Mapper(m_fpga);
 }
 
 //-----------------------------------------------------------------------------
@@ -51,7 +51,7 @@ void fpga_base::openFpga()
 void fpga_base::closeFpga()
 {
     fprintf(stderr, "Close FPGA%d\n", m_fpgaNumber);
-	if(m_map) delete m_map;
+    if(m_map) delete m_map;
     IPC_closeDevice(m_fpga);
 }
 

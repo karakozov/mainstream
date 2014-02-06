@@ -62,12 +62,12 @@ public:
 private:
 
     IPC_handle      m_fpgaDev;
+    Mapper          m_map;
     unsigned        m_DmaChan;
     unsigned        m_CMD;
     unsigned long   m_counter;
     bool            m_logInfo;
     bool            m_logErr;
-    Mapper          m_map;
 
     AMB_MEM_DMA_CHANNEL          *m_Descr;
     U32                          m_DescrSize;

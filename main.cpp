@@ -79,13 +79,20 @@ void stop_exam(int sig)
 int main(int argc, char *argv[])
 {
     struct app_params_t params;
+    struct sync_params_t sync_params;
 
     if(!getParams(argc, argv, params)) {
         fprintf(stderr, "Error get parameters from file: %s\n", argv[1]);
         return -1;
     }
 
+    if(!getSyncParams(argc, argv, sync_params)) {
+        fprintf(stderr, "Error get parameters from file: %s\n", argv[1]);
+        return -1;
+    }
+
     showParams(params);
+    showSyncParams(sync_params);
 
 #if USE_SIGNAL
     signal(SIGINT, stop_exam);
@@ -97,10 +104,11 @@ int main(int argc, char *argv[])
         acsync sync(0);
 
         fprintf(stderr, "Create AC_SYNC board\n");
-        sync.PowerON(true);
-        sync.progFD(1, 1, 400.0, 10.0);
-        //sync.progADF4002(10, 56, 0);
 
+        sync.PowerON(true);
+        sync.progFD(sync_params.sync_mode, sync_params.sync_selclkout, sync_params.sync_fd, sync_params.sync_fo);
+
+        //sync.progADF4002(10, 56, 0);
         //sync.RegPokeInd(0,4,1,0x7);
         //IPC_delay(1000);
         //sync.RegPokeInd(0,4,1,0x0);
@@ -113,7 +121,7 @@ int main(int argc, char *argv[])
 
         fprintf(stderr, "Exception was generated in the program. Exit from application.\n");
     }
-/*
+    /*
     try {
 
         acdsp brd;
