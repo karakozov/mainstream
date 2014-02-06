@@ -7,7 +7,6 @@
 
 #include "utypes.h"
 #include "ddwambpex.h"
-#include "dbglog.h"
 #include "ctrlstrm.h"
 #include "fpga.h"
 

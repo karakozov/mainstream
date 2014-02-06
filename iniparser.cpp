@@ -142,10 +142,10 @@ bool getSyncParams(int argc, char *argv[], struct sync_params_t& param)
     param.sync_mode = strtol(Buffer,0,16);
 
     IPC_getPrivateProfileString(SECTION_NAME, "sync_fd", "448.0", Buffer, sizeof(Buffer), iniFilePath);
-    param.sync_fd = strtof(Buffer,0);
+    param.sync_fd = (float)strtod(Buffer,0);
 
     IPC_getPrivateProfileString(SECTION_NAME, "sync_fo", "0.0", Buffer, sizeof(Buffer), iniFilePath);
-    param.sync_fo = strtof(Buffer,0);
+    param.sync_fo = (float)strtod(Buffer,0);
 
     IPC_getPrivateProfileString(SECTION_NAME, "sync_selclk0", "0x0", Buffer, sizeof(Buffer), iniFilePath);
     param.sync_selclk0 = strtol(Buffer,0,16);
