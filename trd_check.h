@@ -27,10 +27,10 @@ typedef union _report_word_t {
     } w16;
 
     struct {
-      u64 read;
-      u64 expect;
-      u16 index;
-      u32 block;
+      U64 read;
+      U64 expect;
+      U16 index;
+      U32 block;
     } w64;
 
 } report_word_t;

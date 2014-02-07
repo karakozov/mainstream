@@ -5,8 +5,8 @@
 //-----------------------------------------------------------------------------
 
 #include "i2c.h"
+#include "utypes.h"
 
-#include <stdint.h>
 #include <vector>
 #include <string>
 #include <sstream>

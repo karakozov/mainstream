@@ -6,9 +6,10 @@
 
 #ifdef __linux__
 #include "i2c-dev.h"
-#endif
-
 #include <stdint.h>
+#endif
+#include "utypes.h"
+
 #include <vector>
 #include <string>
 #include <sstream>

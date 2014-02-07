@@ -71,6 +71,7 @@ typedef	signed   int	S32, *PS32;
 typedef	unsigned char	uint8_t, u8, U8;
 typedef	unsigned short	uint16_t, u16;
 typedef	unsigned long	uint32_t, u32;
+typedef	signed long		int32_t;
 
 #if _MSC_VER == 1200
 #else

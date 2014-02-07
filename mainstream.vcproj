@@ -179,6 +179,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\acdsp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\acsync.cpp"
 				>
 			</File>
@@ -203,7 +207,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\i2c.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\iniparser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\isvi.cpp"
 				>
 			</File>
 			<File
@@ -215,11 +227,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\memory.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pe_chn_rx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pe_chn_tx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\si571.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stream.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\gipcy\windows\sysipc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\trd_check.cpp"
 				>
 			</File>
 			<File

@@ -11,13 +11,15 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __linux__
 #include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <getopt.h>
+#endif
+#include <fcntl.h>
+#include <signal.h>
 
 #include <vector>
 #include <string>
@@ -520,7 +522,7 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, c
             writeBuffer(params.fpgaNumber, params.dmaChannel, isviFile, counter * sSCA.blkSize * sSCA.blkNum);
             lockDataFile(flgName, counter);
             fprintf(stderr, "Write DMA buffer: %d\r", counter);
-            sync();
+            //sync();
         }
     }
     fprintf(stderr, "\n");
@@ -804,7 +806,7 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviF
             writeBuffer(params.fpgaNumber, params.dmaChannel, isviFile, counter * sSCA.blkSize * sSCA.blkNum);
             lockDataFile(flgName, counter);
             fprintf(stderr, "Write DMA buffer: %d\r", counter);
-            sync();
+            //sync();
         }
     }
     fprintf(stderr, "\n");
