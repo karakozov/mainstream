@@ -25,8 +25,10 @@
 #ifndef LIB_I2CDEV_H
 #define LIB_I2CDEV_H
 
-//#include <linux/types.h>
-//#include <sys/ioctl.h>
+#ifdef __linux__
+#include <linux/types.h>
+#include <sys/ioctl.h>
+#endif
 
 
 /* -- i2c.h -- */

@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 #include <getopt.h>
 #endif
 #include <fcntl.h>
