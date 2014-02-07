@@ -421,7 +421,7 @@ void acdsp::dataFromAdc(struct app_params_t& params, IPC_handle isviFile, const 
         resetFifo(params.fpgaNumber, ADC_TRD);
         resetDmaFifo(params.fpgaNumber, params.dmaChannel);
         startDma(params.fpgaNumber,params.dmaChannel,0);
-        delay(10);
+        IPC_delay(10);
         RegPokeInd(params.fpgaNumber,ADC_TRD,0,0x2038);
 
         if(exitFlag()) {
@@ -611,7 +611,7 @@ void acdsp::dataFromMemAsFifo(struct app_params_t& params, IPC_handle isviFile, 
         resetFifo(params.fpgaNumber, MEM_TRD);
         resetDmaFifo(params.fpgaNumber, params.dmaChannel);
         startDma(params.fpgaNumber,params.dmaChannel,0x0);
-        delay(10);
+        IPC_delay(10);
         RegPokeInd(params.fpgaNumber, ADC_TRD, 0x0, 0x2038);
         RegPokeInd(params.fpgaNumber, MEM_TRD, 0x0, 0x2038);
 
@@ -706,7 +706,7 @@ void acdsp::dataFromMain(struct app_params_t& params, IPC_handle isviFile, const
         resetDmaFifo(params.fpgaNumber, params.dmaChannel);
         RegPokeInd(params.fpgaNumber, MAIN_TRD, 0xC, 0x0);
         startDma(params.fpgaNumber,params.dmaChannel,0);
-        delay(10);
+        IPC_delay(10);
         RegPokeInd(params.fpgaNumber, MAIN_TRD, 0xC, 0x1);
         RegPokeInd(params.fpgaNumber,MAIN_TRD,0,0x2038);
 
@@ -892,7 +892,7 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params, IPC_handle isvi
         resetFifo(params.fpgaNumber, MEM_TRD);
         resetDmaFifo(params.fpgaNumber, params.dmaChannel);
         startDma(params.fpgaNumber,params.dmaChannel,0x0);
-        delay(10);
+        IPC_delay(10);
         RegPokeInd(params.fpgaNumber, MAIN_TRD, 0x0, 0x2038);
         RegPokeInd(params.fpgaNumber, MEM_TRD, 0x0, 0x2038);
 

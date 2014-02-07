@@ -25,6 +25,7 @@
 #include <string>
 #include <iostream>
 
+#include "gipcy.h"
 #include "si571.h"
 #include "utypes.h"
 
@@ -329,7 +330,7 @@ int Si571::Si57x_GetFXTAL(void)
     // Подать питание на Si570/Si571
     //
     SpdWrite( SPDdev_GEN, 135, 0x80 );		// Reset
-    delay(300);
+    IPC_delay(300);
 
     //
     // Считать регистры Si570/Si571

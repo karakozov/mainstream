@@ -4,7 +4,9 @@
 
 //-----------------------------------------------------------------------------
 
+#ifdef __linux__
 #include "i2c-dev.h"
+#endif
 
 #include <stdint.h>
 #include <vector>

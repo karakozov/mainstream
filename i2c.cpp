@@ -35,10 +35,11 @@ i2c::i2c()
     m_force = 1;
 
     char deviceName[256];
-
+#ifdef __linux__
     if( open_i2c_dev(1, deviceName, sizeof(deviceName)) < 0) {
         throw;
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -49,17 +50,20 @@ i2c::i2c(int bus)
     m_force = 1;
 
     char deviceName[256];
-
+#ifdef __linux__
     if( open_i2c_dev(bus, deviceName, sizeof(deviceName)) < 0) {
         throw;
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 i2c::~i2c()
 {
+#ifdef __linux__
     close(m_deviceFile);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -67,7 +71,7 @@ i2c::~i2c()
 int i2c::open_i2c_dev(int i2cbus, char *filename, size_t size)
 {
     m_deviceFile = -1;
-
+#ifdef __linux__
     snprintf(filename, size, "/dev/i2c/%d", i2cbus);
     filename[size - 1] = '\0';
     m_deviceFile = open(filename, O_RDWR);
@@ -89,7 +93,7 @@ int i2c::open_i2c_dev(int i2cbus, char *filename, size_t size)
                 fprintf(stderr, "Run as root?\n");
         }
     }
-
+#endif
     return m_deviceFile;
 }
 
@@ -99,12 +103,14 @@ int i2c::set_slave_addr(int address)
 {
     /* With force, let the user read from/write to the registers
        even when a driver is also running */
+#ifdef __linux__
     if (ioctl(m_deviceFile, m_force ? I2C_SLAVE_FORCE : I2C_SLAVE, address) < 0) {
         fprintf(stderr,
             "Error: Could not set address to 0x%02x: %s\n",
             address, strerror(errno));
         return -errno;
     }
+#endif
 
     return 0;
 }
@@ -116,8 +122,11 @@ int i2c::write(int slaveAddress, int reg, uint8_t value)
     if( set_slave_addr(slaveAddress) < 0 ) {
         throw;
     }
-
+#ifdef __linux__
     return i2c_smbus_write_byte_data(m_deviceFile, reg, value);
+#else
+    return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -127,8 +136,11 @@ int i2c::write(int slaveAddress, uint8_t value)
     if( set_slave_addr(slaveAddress) < 0 ) {
         throw;
     }
-
+#ifdef __linux__
     return i2c_smbus_write_byte(m_deviceFile, value);
+#else
+    return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -138,7 +150,7 @@ int i2c::read(int slaveAddress, int reg)
     if( set_slave_addr(slaveAddress) < 0 ) {
         throw;
     }
-
+#ifdef __linux__
     if(reg >= 0) {
         if (i2c_smbus_write_byte(m_deviceFile, reg) < 0) {
             fprintf(stderr, "i2c_smbus_write_byte() failed\n");
@@ -149,6 +161,9 @@ int i2c::read(int slaveAddress, int reg)
     //fprintf(stderr, "0x%02x\n", val);
 
     return val;
+#else
+    return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------
