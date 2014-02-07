@@ -31,16 +31,6 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-void delay(int ms)
-{
-    struct timeval tv = {0, 0};
-    tv.tv_usec = 1000*ms;
-
-    select(0,NULL,NULL,NULL,&tv);
-}
-
-//-----------------------------------------------------------------------------
-
 IPC_handle createDataFile(const char *fname);
 bool createFlagFile(const char *fname);
 bool lockDataFile(const char* fname, int counter);
