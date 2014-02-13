@@ -50,7 +50,7 @@ bool lockDataFile(const char* fname, int counter);
 #define ADC_MAX_CHAN            (0x4)
 
 //-----------------------------------------------------------------------------
-#define USE_SIGNAL 0
+#define USE_SIGNAL 1
 //-----------------------------------------------------------------------------
 
 #if USE_SIGNAL
@@ -91,21 +91,16 @@ int main(int argc, char *argv[])
 #endif
 
     try {
-        acsync sync(0);
 
+        acsync sync;
         fprintf(stderr, "Create AC_SYNC board\n");
-
         sync.PowerON(true);
         sync.progFD(sync_params.sync_mode, sync_params.sync_selclkout, sync_params.sync_fd, sync_params.sync_fo);
-
-        //sync.progADF4002(10, 56, 0);
-        //sync.RegPokeInd(0,4,1,0x7);
-        //IPC_delay(1000);
-        //sync.RegPokeInd(0,4,1,0x0);
-
-        //acdsp brd;
-        //brd.setSi57xFreq(params.adcFreq);
-        //brd.start_local_pcie_test(params);
+/*
+        acdsp brd;
+        brd.setSi57xFreq(params.adcFreq);
+        brd.start_local_pcie_test(params);
+*/
     }
     catch(...) {
 

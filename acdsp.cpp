@@ -913,6 +913,13 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params, IPC_handle isvi
 
 //-----------------------------------------------------------------------------
 
+unsigned WIDTH = 11;
+unsigned HEIGHT = 3;
+unsigned ROW = 3;
+unsigned COL = 10;
+
+//-----------------------------------------------------------------------------
+
 void acdsp::start_local_pcie_test(struct app_params_t& params)
 {
     AMB_CONFIGURATION cfg0;
@@ -942,10 +949,23 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     fprintf(stderr, "Start RX CHECK trd\n");
     RegPokeInd(0, 4, 0, 0x2038);
 
+    //---------------------------------------
+
+    fprintf(stderr, "Start TRD_PE_CHECK\n");
+    trd_check check(FPGA(0));
+    check.start_check(true);
+
+    //---------------------------------------
+
     pe_chn_rx rx(FPGA(0));
 
-    rx.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x786541);
-    rx.set_fpga_addr(1, cfg0.PhysAddress[2]+0x20000, 0x786542);
+    fprintf(stderr, "ADDRESS[0] = 0x%x\n", cfg0.PhysAddress[2]+0x10000);
+    fprintf(stderr, "ADDRESS[1] = 0x%x\n", cfg0.PhysAddress[2]+0x20000);
+
+    rx.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x111111);
+    IPC_delay(10);
+    rx.set_fpga_addr(1, cfg0.PhysAddress[2]+0x20000, 0x222222);
+    IPC_delay(10);
     rx.start_rx(true);
 
     //---------------------------------------
@@ -953,27 +973,101 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     pe_chn_tx tx1(FPGA(1));
     pe_chn_tx tx2(FPGA(2));
 
-    tx1.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x786541);
-    tx2.set_fpga_addr(0, cfg0.PhysAddress[2]+0x20000, 0x786542);
+    tx1.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x111111);
+    tx2.set_fpga_addr(0, cfg0.PhysAddress[2]+0x20000, 0x222222);
 
+    fprintf(stderr, "Start TX trd\n");
     tx1.start_tx(true);
     tx2.start_tx(true);
 
     //---------------------------------------
+
+    table *t = new table(COL,WIDTH,HEIGHT);
+    if(!t) {
+        exit(-1);
+    }
+
+    t->create_table(ROW, COL);
+
+    if(t->create_header())
+        t->set_header_text("%s", "TEST ACDSP BOARD");
+
+    if(t->create_status())
+        t->set_status_text("%s", "TIME: ");
+
+    //---------------------------------------
+
+    t->set_cell_text(0, 0, "%s", "CHANNEL");
+    t->set_cell_text(1, 0, "CHN%d", 0);
+    t->set_cell_text(2, 0, "CHN%d", 1);
+
+    //---------------------------------------
+
+    t->set_cell_text(0, 1, "%s", "TX COUNT");
+    t->set_cell_text(0, 2, "%s", "RX COUNT");
+    t->set_cell_text(0, 3, "%s", "SIGN ERR");
+    t->set_cell_text(0, 4, "%s", "BLOCK ERR");
+    t->set_cell_text(0, 5, "%s", "TX OVER");
+
+    //---------------------------------------
+
+    t->set_cell_text(0, 6, "%s", "BLOCK WR");
+    t->set_cell_text(0, 7, "%s", "BLOCK RD");
+    t->set_cell_text(0, 8, "%s", "BLOCK OK");
+    t->set_cell_text(0, 9, "%s", "BLOCK ERR");
+
+    //---------------------------------------
+
+    struct timeval start;
+    time_start(&start);
 
     while(1) {
 
         if(exitFlag()) {
             break;
         }
-        /*
-        fprintf(stderr, "TX: [%d] [%2d] RX [%d SE1: %d BE1: %d] [%d SE2: %d BE2: %d]\r",
-                tx1.tx_block_number(), tx2.tx_block_number(),
-                rx.rx_block_number(0), rx.sign_err_number(0), rx.block_err_number(0),
-                rx.rx_block_number(1), rx.sign_err_number(1), rx.block_err_number(1));
-*/
-        IPC_delay(250);
+
+        t->set_status_text("%s%u", "TIME: ", time_stop(start)/1000);
+
+        IPC_delay(1000);
+
+        //---------------------------------------
+
+        t->set_cell_text(1, 1, "%d", tx1.tx_block_number());
+        t->set_cell_text(1, 2, "%d", rx.rx_block_number(0));
+        t->set_cell_text(1, 3, "%d", rx.sign_err_number(0));
+        t->set_cell_text(1, 4, "%d", rx.block_err_number(0));
+        t->set_cell_text(1, 5, "%d", tx1.tx_overflow());
+
+        t->set_cell_text(2, 1, "%d", tx2.tx_block_number());
+        t->set_cell_text(2, 2, "%d", rx.rx_block_number(1));
+        t->set_cell_text(2, 3, "%d", rx.sign_err_number(1));
+        t->set_cell_text(2, 4, "%d", rx.block_err_number(1));
+        t->set_cell_text(2, 5, "%d", tx2.tx_overflow());
+
+        //---------------------------------------
+
+        t->set_cell_text(1, 6, "%d", check.wr_block_number(0));
+        t->set_cell_text(1, 7, "%d", check.rd_block_number(0));
+        t->set_cell_text(1, 8, "%d", check.ok_block_number(0));
+        t->set_cell_text(1, 9, "%d", check.err_block_number(0));
+
+        t->set_cell_text(2, 6, "%d", check.wr_block_number(1));
+        t->set_cell_text(2, 7, "%d", check.rd_block_number(1));
+        t->set_cell_text(2, 8, "%d", check.ok_block_number(1));
+        t->set_cell_text(2, 9, "%d", check.err_block_number(1));
+
+        //---------------------------------------
     }
+
+    delete t;
+
+    check.show_report(0, 0);
+    check.show_report(0, 1);
+
+    tx1.start_tx(false);
+    tx2.start_tx(false);
+    check.start_check(false);
 }
 
 //-----------------------------------------------------------------------------

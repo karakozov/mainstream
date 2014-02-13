@@ -28,8 +28,7 @@ struct map_addr_t {
 class Mapper {
 
 public:
-    //Mapper();
-	Mapper(IPC_handle handle);
+    explicit Mapper(IPC_handle handle = 0);
     virtual ~Mapper();
 
     void* mapPhysicalAddress(void* physicalAddress, uint32_t areaSize);

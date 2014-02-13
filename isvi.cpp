@@ -131,170 +131,31 @@ bool createFlagFile(const char *fname)
 }
 
 //-----------------------------------------------------------------------------
-/*
-void WriteIsviParams(IPC_handle hfile, unsigned long long nNumberOfBytes)
+
+#ifdef __linux__
+void time_start(struct timeval *start)
 {
-    char	fileInfo[2048];
-    char    str_buf[512];
-
-    sprintf(fileInfo, "\r\nDEVICE_NAME_________ " );
-    strcat(fileInfo, "Ac_DSP");
-
-    U32 chanMask;
-    int num_chan = 0;
-    int	chans[ADC_MAX_CHAN];
-    U32 mask = 1;
-    BRD_ValChan val_chan;
-    for(ULONG iChan = 0; iChan < adc_cfg.NumChans; iChan++)
-    {
-        if(chanMask & mask)
-            chans[num_chan++] = iChan;
-        val_chan.chan = iChan;
-        BRD_ctrl(hADC, 0, BRDctrl_ADC_GETGAIN, &val_chan);
-        if(adc_cfg.ChanType == 1)
-            val_chan.value = pow(10., val_chan.value/20); // dB -> разы
-        gains[iChan] = val_chan.value;
-        volt_offset[iChan] = 0.0;
-        mask <<= 1;
-    }
-    if(BRDC_strstr(g_AdcSrvName, _BRDC("ADC1624X192")) || BRDC_strstr(g_AdcSrvName, _BRDC("ADC1624X128")))
-    {
-        int i = 0, j = 0;
-        num_chan = 0;
-        for(int i = 0; i < 16; i++)
-            num_chan += (chanMask >> i) & 0x1;
-        for(i = 0; i < 16; i++)
-        {
-            if(chanMask & (0x1 << i))
-                chans[j++] = i;
-            i++;
-        }
-        for(i = 1; i < 16; i++)
-        {
-            if(chanMask & (0x1 << i))
-                chans[j++] = i;
-            i++;
-        }
-    }
-
-    if(!num_chan)
-    {
-        BRDC_printf(_BRDC("Number of channels for Isvi Parameters is 0 - Error!!!\n"));
-        return;
-    }
-    BRD_ItemArray chan_order;
-    chan_order.item = num_chan;
-    chan_order.itemReal = 0;
-    chan_order.pItem = &chans;
-    BRD_ctrl(hADC, 0, BRDctrl_ADC_GETCHANORDER, &chan_order);
-
-    sprintf(str_buf, "\r\nNUMBER_OF_CHANNELS__ %d", num_chan);
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nNUMBERS_OF_CHANNELS_ ");
-    lstrcatA(fileInfo, str_buf);
-    str_buf[0] = 0;
-    for(int iChan = 0; iChan < num_chan; iChan++)
-    {
-        char buf[16];
-        sprintf(buf, "%d,", chans[iChan]);
-        lstrcatA(str_buf, buf);
-    }
-    lstrcatA(fileInfo, str_buf);
-
-
-    ULONG sample_size = format ? format : sizeof(short);
-    if(format == 0x80) // упакованные 12-разрядные данные
-        sample_size = 2;
-    ULONG samples = ULONG(nNumberOfBytes / sample_size / num_chan);
-    if(g_Cycle > 1)
-         samples *= g_Cycle;
-    sprintf(str_buf, "\r\nNUMBER_OF_SAMPLES___ %d", samples );
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nSAMPLING_RATE_______ %f", g_samplRate );
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nBYTES_PER_SAMPLES___ %d", sample_size);
-    lstrcatA(fileInfo, str_buf);
-
-    if(format == 0x80) // два 12-и битных отсчета упаковано в 3 байта
-        lstrcatA(fileInfo, "\r\nSAMPLES_PER_BYTES___ 3");
-    else
-        lstrcatA(fileInfo, "\r\nSAMPLES_PER_BYTES___ 1");
-
-    if(is_complex)
-        sprintf(str_buf, "\r\nIS_COMPLEX_SIGNAL?__ YES");
-    else
-        sprintf(str_buf, "\r\nIS_COMPLEX_SIGNAL?__ NO");
-    lstrcatA(fileInfo, str_buf);
-
-    //double fc[MAX_CHAN];
-    sprintf(str_buf, "\r\nSHIFT_FREQUENCY_____ ");
-    lstrcatA(fileInfo, str_buf);
-    str_buf[0] = 0;
-    int num_fc = num_chan;
-    for(int iChan = 0; iChan < num_fc; iChan++)
-    {
-        //char buf[16];
-        //fc[iChan] = 0.0;
-        //sprintf(buf, "%.2f,", fc[iChan]);
-        //lstrcat(str_buf, buf);
-        lstrcatA(str_buf, "0.0,");
-    }
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nGAINS_______________ ");
-    lstrcatA(fileInfo, str_buf);
-    str_buf[0] = 0;
-    for(int iChan = 0; iChan < num_chan; iChan++)
-    {
-        char buf[16];
-        sprintf(buf,"%f,", gains[chans[iChan]]);
-        lstrcatA(str_buf, buf);
-    }
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nVOLTAGE_OFFSETS_____ ");
-    lstrcatA(fileInfo, str_buf);
-    str_buf[0] = 0;
-    for(int iChan = 0; iChan < num_chan; iChan++)
-    {
-        char buf[16];
-        sprintf(buf,"%f,", volt_offset[iChan]);
-        lstrcatA(str_buf, buf);
-    }
-    lstrcatA(fileInfo, str_buf);
-
-    sprintf(str_buf, "\r\nVOLTAGE_RANGE_______ %f", adc_cfg.InpRange / 1000.);
-    lstrcatA(fileInfo, str_buf);
-
-//	int BitsPerSample = !format ? adc_cfg.Bits : 8;
-//	if(is_complex)
-//		BitsPerSample = 16;
-    int BitsPerSample = (format == 1) ? 8 : adc_cfg.Bits;
-    if(BRDC_strstr(g_AdcSrvName, _BRDC("ADC1624X192")) || BRDC_strstr(g_AdcSrvName, _BRDC("ADC818X800")))
-        if(format == 0 || format == 2)
-            BitsPerSample = 16;
-    sprintf(str_buf, "\r\nBIT_RANGE___________ %d", BitsPerSample);
-    lstrcatA(fileInfo, str_buf);
-    lstrcatA(fileInfo, "\r\n");
-
-    if(g_PretrigMode)
-    {
-        ULONG event_mark = ULONG(g_bStartEvent / sample_size / num_chan);
-        sprintf(str_buf, "\r\nPRETRIGGER_SAMPLE___ %d", event_mark);
-        lstrcatA(fileInfo, str_buf);
-    }
-
-    int len = lstrlenA(fileInfo);
-
-#if defined(__IPC_WIN__) || defined(__IPC_LINUX__)
-    int bResult = IPC_writeFile(hfile, fileInfo, len);
-        if(bResult < 0)
-            BRDC_printf(_BRDC("Write ISVI info error\n"));
-
+    gettimeofday(start, 0);
 }
-*/
+
 //-----------------------------------------------------------------------------
 
+long time_stop(struct timeval start)
+{
+    struct timeval stop;
+    struct timeval dt;
+
+    gettimeofday(&stop, 0);
+
+    dt.tv_sec = stop.tv_sec - start.tv_sec;
+    dt.tv_usec = stop.tv_usec - start.tv_usec;
+
+    if(dt.tv_usec<0) {
+        dt.tv_sec--;
+        dt.tv_usec += 1000000;
+    }
+
+    return dt.tv_sec*1000 + dt.tv_usec/1000;
+}
+#endif
+//-----------------------------------------------------------------------------

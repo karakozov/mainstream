@@ -44,7 +44,7 @@ acsync::acsync(U32 fpgaNum)
         throw;
     }
 
-    fillMultipler2();
+    fillCxDx();
 }
 
 //-----------------------------------------------------------------------------
@@ -151,19 +151,11 @@ void acsync::selclkMode0(U32 FO)
     mode1 |= 0x2;
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
 
-    IPC_delay(200);
+    IPC_delay(500);
 
     U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF) & ~0xF;
 
-    switch(FO) {
-    case 0:
-    case 10:
-    case 56:
-    case 120:
-    {
-        selclk = (0x8 | 0x4 | 0x1);
-    } break;
-    }
+    selclk |= (0x8 | 0x4 | 0x1);
 
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
 }
@@ -182,7 +174,7 @@ void acsync::selclkMode1(U32 FO)
 
     switch(FO) {
     case 10: {
-        selclk |= (0x4 | 0x1);
+        selclk |= (0x5);
     } break;
     case 56: {
         selclk |= (0x4);
@@ -207,17 +199,7 @@ void acsync::selclkMode2(U32 FO)
 
     U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF) & ~0xF;
 
-    switch(FO) {
-    case 10: {
-        selclk |= (0x8 | 0x1);
-    } break;
-    case 56: {
-        selclk |= (0x8 | 0x1);
-    } break;
-    case 120: {
-        selclk |= (0x8 | 0x1);
-    } break;
-    }
+    selclk |= (0x9);
 
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
 }
@@ -311,59 +293,42 @@ void acsync::writeADF4002(U16 reg, U32 data)
 
 //-----------------------------------------------------------------------------
 
-void acsync::FreqMultipler2(U32 mode, float FD)
+void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
 {
     U8 code_c4 = 1;
     U8 code_c5 = 1;
-
-    switch(mode) {
-    case 0: getMultCxMode0(FD, code_c4, code_c5); break;
-    case 1: getMultCxMode1(FD, code_c4, code_c5); break;
-    case 2: getMultCxMode2(FD, code_c4, code_c5); break;
-    }
-
-    fprintf(stderr, "code_c4 = 0x%x\n", code_c4);
-    fprintf(stderr, "code_c5 = 0x%x\n", code_c5);
-
-    U08 C4 = getMultipler2Scale(code_c4);
-    U08 C5 = getMultipler2Scale(code_c5);
-
-    U32 div01 = ((C5 << 6) | C4);
-
-    fprintf(stderr, "DIV01 = 0x%x\n", div01);
-
-    RegPokeInd(0, m_sync_trd.number, 0x10, div01);
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::FreqDivider(U32 mode, float FD)
-{
     U8 code_d1 = 1;
     U8 code_d2 = 1;
 
     switch(mode) {
-    case 0: getDivDxMode0(FD, code_d1, code_d2); break;
-    case 1: getDivDxMode1(FD, code_d1, code_d2); break;
-    case 2: getDivDxMode2(FD, code_d1, code_d2); break;
+    case 0: getMultCxDxMode0(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    case 1: getMultCxDxMode1(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    case 2: getMultCxDxMode2(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
     }
 
+    fprintf(stderr, "code_c4 = 0x%x\n", code_c4);
+    fprintf(stderr, "code_c5 = 0x%x\n", code_c5);
     fprintf(stderr, "code_d1 = 0x%x\n", code_d1);
     fprintf(stderr, "code_d2 = 0x%x\n", code_d2);
 
-    U8 D1 = getDividerScale(code_d1);
-    U8 D2 = getDividerScale(code_d2);
+    U8 C4 = getCxDxScale(code_c4);
+    U8 C5 = getCxDxScale(code_c5);
+    U8 D1 = getCxDxScale(code_d1);
+    U8 D2 = getCxDxScale(code_d2);
 
+    U32 div01 = ((C5 << 6) | C4);
     U32 div23 = ((D2 << 6) | D1);
 
+    fprintf(stderr, "DIV01 = 0x%x\n", div01);
     fprintf(stderr, "DIV23 = 0x%x\n", div23);
 
+    RegPokeInd(0, m_sync_trd.number, 0x10, div01);
     RegPokeInd(0, m_sync_trd.number, 0x11, div23);
 }
 
 //-----------------------------------------------------------------------------
 
-U08 acsync::getMultipler2Scale(int code)
+U08 acsync::getCxDxScale(int code)
 {
     if((code <= 0) || (code > 17)) {
         fprintf(stderr, "Error: Invalid divider code: %d\n", code);
@@ -377,136 +342,143 @@ U08 acsync::getMultipler2Scale(int code)
 
 //-----------------------------------------------------------------------------
 
-void acsync::getMultCxMode0(float FD, U8& C4, U8& C5)
+void acsync::getMultCxDxMode0(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2)
 {
-    fprintf(stderr, "%s(): FD = %f\n", __FUNCTION__, FD);
+    fprintf(stderr, "%s(): FD = %f, FO = %f\n", __FUNCTION__, FD, FO);
 
-    if(FD == 400.0) {
+    if(FD == 400.0 && FO == 10.0) {
+
         C4 = 10; C5 = 10;
-    }
-    if(FD == 448.0) {
+        D1 = 7;  D2 = 2;
+
+    } else if(FD == 448.0 && FO == 56.0) {
+
         C4 = 8; C5 = 8;
-    }
-    if(FD >= 488.72) {
-        C4 = 8; C5 = 12;
-    }
-    if(FD == 480.0) {
+        D1 = 4; D2 = 2;
+
+    } else if(FD >= 488.72 && FO == 56.0) {
+
+        C4 = 8;  C5 = 12;
+        D1 = 11; D2 = 1;
+
+    } else if(FD == 480.0 && FO == 120) {
+
         C4 = 10; C5 = 6;
+        D1 = 7;  D2 = 1;
+
     }
 
-    fprintf(stderr, "%s(): C4 = %d, C5 = %d\n", __FUNCTION__, C4, C5);
+    fprintf(stderr, "%s(): C4 = %d, C5 = %d, D1 = %d, D2 = %d\n", __FUNCTION__, C4, C5, D1, D2);
 }
 
 //-----------------------------------------------------------------------------
 
-void acsync::getMultCxMode1(float FD, U8& C4, U8& C5)
+void acsync::getMultCxDxMode1(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2)
 {
-    if(FD == 400.0) {
-        C4 = 2; C5 = 5;
-    }
-    if(FD == 448.0) {
-        C4 = 2; C5 = 5;
-    }
-    if(FD >= 488.72) {
-        C4 = 3; C5 = 4;
-    }
-    if(FD == 480.0) {
-        C4 = 2; C5 = 5;
-    }
+    fprintf(stderr, "%s(): FD = %f, FO = %f\n", __FUNCTION__, FD, FO);
 
-    fprintf(stderr, "%s(): C4 = %d, C5 = %d\n", __FUNCTION__, C4, C5);
-}
+    if(FD == 400.0 && FO == 10.0) {
 
-//-----------------------------------------------------------------------------
-
-void acsync::getMultCxMode2(float FD, U8& C4, U8& C5)
-{
-    if(FD == 400.0) {
-        C4 = 1; C5 = 1;
-    }
-    if(FD == 448.0) {
-        C4 = 8; C5 = 8;
-    }
-    if(FD >= 488.72) {
-        C4 = 5; C5 = 12;
-    }
-    if(FD == 480.0) {
-        C4 = 5; C5 = 8;
-    }
-
-    fprintf(stderr, "%s(): C4 = %d, C5 = %d\n", __FUNCTION__, C4, C5);
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::getDivDxMode0(float FD, U8& D1, U8& D2)
-{
-    if(FD == 400.0) {
-        D1 = 7; D2 = 2;
-    }
-    if(FD == 448.0) {
-        D1 = 4; D2 = 2;
-    }
-    if(FD >= 488.72) {
-        D1 = 11; D2 = 1;
-    }
-    if(FD == 480.0) {
-        D1 = 7; D2 = 1;
-    }
-
-    fprintf(stderr, "%s(): D1 = %d, D2 = %d\n", __FUNCTION__, D1, D2);
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::getDivDxMode1(float FD, U8& D1, U8& D2)
-{
-    if(FD == 400.0) {
-        D1 = 2; D2 = 5;
-    }
-    if(FD == 448.0) {
-        D1 = 2; D2 = 5;
-    }
-    if(FD >= 488.72) {
-        D1 = 11; D2 = 1;
-    }
-    if(FD == 480.0) {
+        C4 = 5; C5 = 2;
         D1 = 5; D2 = 2;
-    }
 
-    fprintf(stderr, "%s(): D1 = %d, D2 = %d\n", __FUNCTION__, D1, D2);
-}
+    } else if(FD == 448.0 && FO == 56.0) {
 
-//-----------------------------------------------------------------------------
+        C4 = 5; C5 = 2;
+        D1 = 5; D2 = 2;
 
-void acsync::getDivDxMode2(float FD, U8& D1, U8& D2)
-{
-    if(FD == 400.0) {
-        D1 = 1; D2 = 1;
-    }
-    if(FD == 448.0) {
-        D1 = 4; D2 = 2;
-    }
-    if(FD >= 488.72) {
+    } else if(FD >= 488.72 && FO == 56.0) {
+
+        C4 = 6;  C5 = 2;
         D1 = 11; D2 = 1;
-    }
-    if(FD == 480.0) {
-        D1 = 2; D2 = 5;
+
+    } else if(FD == 480.0 && FO == 120) {
+
+        C4 = 5; C5 = 2;
+        D1 = 5; D2 = 2;
+
     }
 
-    fprintf(stderr, "%s(): D1 = %d, D2 = %d\n", __FUNCTION__, D1, D2);
+    fprintf(stderr, "%s(): C4 = %d, C5 = %d, D1 = %d, D2 = %d\n", __FUNCTION__, C4, C5, D1, D2);
 }
 
 //-----------------------------------------------------------------------------
 
-U08 acsync::getDividerScale(int code)
+void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2)
 {
-    return getMultipler2Scale(code);
+    fprintf(stderr, "%s(): FD = %f, FO = %f\n", __FUNCTION__, FD, FO);
+
+    if(FO == 56.0) {
+
+        if(FD == 400.0) {
+
+            D1 = 7; D2 = 2;
+            C4 = 10; C5 = 10;
+
+        } else if(FD == 448.0) {
+
+            D1 = 4; D2 = 2;
+            C4 = 8; C5 = 8;
+
+        } else if(FD >= 488.72) {
+
+            D1 = 11; D2 = 1;
+            C4 = 12; C5 = 8;
+
+        } else if(FD == 480.0) {
+
+            D1 = 7;  D2 = 1;
+            C4 = 10; C5 = 6;
+        }
+    }
+
+    if(FO == 120.0) {
+
+        if(FD == 480.0) {
+
+            D1 = 5; D2 = 2;
+            C4 = 8; C5 = 5;
+        }
+    }
+
+    if(FO == 400.0) {
+
+        if(FD == 400.0) {
+
+            D1 = 5; D2 = 2;
+            C4 = 5; C5 = 2;
+        }
+    }
+
+    if(FO == 448.0) {
+
+        if(FD == 448.0) {
+
+            D1 = 5; D2 = 2;
+            C4 = 5; C5 = 2;
+        }
+        if(FD >= 488.72) {
+
+            D1 = 11; D2 = 1;
+            C4 = 6; C5 = 2;
+        }
+    }
+
+    if(FO == 480.0) {
+
+        if(FD == 480.0) {
+
+            D1 = 5; D2 = 2;
+            C4 = 5; C5 = 2;
+        }
+    }
+
+    fprintf(stderr, "%s(): C4 = %d, C5 = %d, D1 = %d, D2 = %d\n", __FUNCTION__, C4, C5, D1, D2);
 }
 
 //-----------------------------------------------------------------------------
 
-void acsync::fillMultipler2()
+void acsync::fillCxDx()
 {
     m_Cx[0] = 0x20;
     m_Cx[1] = 0x01;
@@ -533,32 +505,112 @@ void acsync::fillMultipler2()
 
 //-----------------------------------------------------------------------------
 
-bool acsync::checkFrequencyParam(float FD, float FO)
+bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
 {
     bool ok = false;
 
-    if(FO == 10.0) {
-        if(FD == 400.0) {
-            ok = true;
+    //-----------------------------
+
+    if(mode == 0) {
+
+        if(FO == 10.0) {
+            if(FD == 400.0) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 56.0) {
+            if(FD == 448.0 || FD >= 488.72) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 120.0) {
+            if(FD == 480.0) {
+                ok = true;
+                goto finished;
+            }
         }
     }
 
-    if(FO == 56.0) {
-        if(FD == 448.0 || FD >= 488.72) {
-            ok = true;
+    //-----------------------------
+
+    if(mode == 1) {
+
+        if(FO == 10.0) {
+            if(FD == 400.0) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 56.0) {
+            if(FD == 448.0 || FD >= 488.72) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 120.0) {
+            if(FD == 480.0) {
+                ok = true;
+                goto finished;
+            }
         }
     }
 
-    if(FO == 120.0) {
-        if(FD == 480.0) {
-            ok = true;
+    //-----------------------------
+
+    if(mode == 2) {
+
+        if(FO == 10.0) {
+            if(FD == 400.0) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 56.0) {
+            if(FD == 400.0 || FD == 448.0 || FD == 480.0 || FD >= 488.72) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 120.0) {
+            if(FD == 480.0) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 400.0) {
+            if(FD == 400.0) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 448.0) {
+            if(FD == 448.0 || FD >= 488.72 ) {
+                ok = true;
+                goto finished;
+            }
+        }
+
+        if(FO == 480.0) {
+            if(FD == 480.0) {
+                ok = true;
+                goto finished;
+            }
         }
     }
 
-    if(FO == 0.0) {
-        ok = true;
-    }
+    //-----------------------------
 
+finished:
     if(ok) {
         m_FD = FD;
     } else {
@@ -573,7 +625,8 @@ bool acsync::checkFrequencyParam(float FD, float FO)
 
 bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
 {
-    if(!checkFrequencyParam(FD, FO)) {
+    if(!checkFrequencyParam(mode, FD, FO)) {
+        fprintf(stderr, "checkFrequencyParam() error!\n");
         return false;
     }
 
@@ -583,8 +636,7 @@ bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
         progADF4002(FO, m_FVCO_ADF4002);
     }
 
-    FreqMultipler2(mode, FD);
-    FreqDivider(mode, FD);
+    FreqMultiplerDivider(mode, FD, FO);
 
     selclkout(selout);
 
@@ -617,4 +669,6 @@ void acsync::PowerON(bool on)
         mode1 &= ~0x5;
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
+
+    IPC_delay(500);
 }

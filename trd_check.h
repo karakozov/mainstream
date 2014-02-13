@@ -10,20 +10,28 @@
 
 class Fpga;
 
+//-------------------------------------------------------------------
+
+#define REPORT_WORD_COUNT     16
+#define REPORT_WORD_SIZE      16
+#define REPORT_WORD_FIELDS    11
+
+//-------------------------------------------------------------------
+
 typedef union _report_word_t {
 
     struct {
-      u16 read_d0;
-      u16 read_d1;
-      u16 read_d2;
-      u16 read_d3;
-      u16 expect_d0;
-      u16 expect_d1;
-      u16 expect_d2;
-      u16 expect_d3;
-      u16 index;
-      u16 block_d0;
-      u16 block_d1;
+      U16 read_d0;
+      U16 read_d1;
+      U16 read_d2;
+      U16 read_d3;
+      U16 expect_d0;
+      U16 expect_d1;
+      U16 expect_d2;
+      U16 expect_d3;
+      U16 index;
+      U16 block_d0;
+      U16 block_d1;
     } w16;
 
     struct {
@@ -33,7 +41,11 @@ typedef union _report_word_t {
       U32 block;
     } w64;
 
+    U16 fields[REPORT_WORD_FIELDS];
+
 } report_word_t;
+
+//-------------------------------------------------------------------
 
 class trd_check
 {
@@ -46,7 +58,8 @@ public:
     u32 ok_block_number(u32 chan);
     u32 err_block_number(u32 chan);
 
-    void show_report(u32 chan);
+    bool show_report(u32 chan, u32 chx_data);
+    bool read_report_word(u32 chan, u32 chx_data, u32 word_num, report_word_t& word);
     void start_check(bool start);
 
 private:

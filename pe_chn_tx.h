@@ -18,12 +18,15 @@ public:
 
     void set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign);
     u32 tx_block_number();
+    u32 tx_overflow();
 
     void start_tx(bool start);
 
 private:
     Fpga            *m_fpga;
     fpga_block_t    m_tx;
+
+    void reset();
 };
 
 #endif // PE_CHN_TX_H

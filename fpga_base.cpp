@@ -43,7 +43,11 @@ void fpga_base::openFpga()
         throw;
     }
     fprintf(stderr, "Open FPGA%d\n", m_fpgaNumber);
+#ifdef __linux__
+    m_map = new Mapper();
+#else
     m_map = new Mapper(m_fpga);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -177,7 +181,7 @@ u32 fpga_base::core_reg_peek_ind( u32 trd, u32 reg )
         if( status & 1 )
             break;
 
-        fprintf(stderr, "status = 0x%x\r", status);
+        //fprintf(stderr, "status = 0x%x\r", status);
 
         if( ii>100 )
             IPC_delay( 1 );
@@ -213,7 +217,7 @@ void fpga_base::core_reg_poke_ind( u32 trd, u32 reg, u32 val )
         if( status & 1 )
             break;
 
-        fprintf(stderr, "status = 0x%x\r", status);
+        //fprintf(stderr, "status = 0x%x\r", status);
 
         if( ii>100 )
             IPC_delay( 1 );

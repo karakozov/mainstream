@@ -62,7 +62,7 @@ public:
 private:
 
     IPC_handle      m_fpgaDev;
-    Mapper          m_map;
+    Mapper*         m_map;
     unsigned        m_DmaChan;
     unsigned        m_CMD;
     unsigned long   m_counter;

@@ -7,8 +7,8 @@
 
 trd_check::trd_check(Fpga *fpga) : m_fpga(fpga)
 {
-    if(!m_fpga->fpgaTrd(0, 0xCC, m_check)) {
-        fprintf(stderr, "Not found TRD_CHN_CHECK! ID: 0x%x", 0xCC);
+    if(!m_fpga->fpgaTrd(0, 0xB0, m_check)) {
+        fprintf(stderr, "Not found TRD_CHN_CHECK! ID: 0x%x", 0xB0);
         throw;
     }
 }
@@ -97,38 +97,52 @@ u32 trd_check::err_block_number(u32 chan)
 }
 
 //-------------------------------------------------------------------
-#define REPORT_WORD      16
-#define VALID_WORDS      11
-//-------------------------------------------------------------------
 
-void trd_check::show_report(u32 chan)
+bool trd_check::read_report_word(u32 chan, u32 chx_data, u32 word_num, report_word_t& word)
 {
-    u16 word[REPORT_WORD];
-    report_word_t val;
+    u32 word_offset = chx_data * 0x1000 + word_num * REPORT_WORD_SIZE;
 
-    memset(word, 0, REPORT_WORD * sizeof(u16));
-
-    for(unsigned i=0; i<VALID_WORDS; i++) {
-      m_fpga->FpgaRegPokeInd(m_check.number, 0x10 + chan, chan * REPORT_WORD + i);
-      word[i] = m_fpga->FpgaRegPeekInd(m_check.number, 0x208 + chan);
+    if((chx_data > 1) || (word_num > REPORT_WORD_COUNT)) {
+        return false;
     }
 
-    val.w16.read_d0 = word[0];
-    val.w16.read_d1 = word[1];
-    val.w16.read_d2 = word[2];
-    val.w16.read_d3 = word[3];
+    memset(&word, 0, sizeof(word));
 
-    val.w16.expect_d0 = word[4];
-    val.w16.expect_d1 = word[5];
-    val.w16.expect_d2 = word[6];
-    val.w16.expect_d3 = word[7];
+    for(int i=0; i<REPORT_WORD_FIELDS; i++) {
+        m_fpga->FpgaRegPokeInd(m_check.number, 0x10 + chan, word_offset + i);
+        word.fields[i] = m_fpga->FpgaRegPeekInd(m_check.number, 0x208 + chan);
+    }
+/*
+    fprintf(stderr, "0x%.4x%.4x: "
+                    "0x%.4x - "
+                    "readed: 0x%.4x%.4x%.4x%.4x "
+                    "expect: 0x%.4x%.4x%.4x%.4x\n",
+            word.w16.block_d1, word.w16.block_d0,
+            word.w16.index,
+            word.w16.read_d3, word.w16.read_d2, word.w16.read_d1, word.w16.read_d0,
+            word.w16.expect_d3, word.w16.expect_d2, word.w16.expect_d1, word.w16.expect_d0);
+*/
+    return true;
+}
 
-    val.w16.index = word[8];
+//-------------------------------------------------------------------
 
-    val.w16.block_d0 = word[9];
-    val.w16.block_d1 = word[10];
+bool trd_check::show_report(u32 chan, u32 chx_data)
+{
+    fprintf(stderr, "CHANNEL %d. BITS: %s\n", chan, chx_data ? "127 - 64" : "63 - 0" );
 
-    val = val;
+    for(unsigned i=0; i<REPORT_WORD_COUNT; i++) {
+
+        report_word_t w;
+
+        if(!read_report_word(chan, chx_data, i, w)) {
+            return false;
+        }
+
+        fprintf(stderr, "%.8d: 0x%.4x expect - 0x%.16llx  readed - 0x%.16llx\n", w.w64.block, w.w64.index, w.w64.expect, w.w64.read);
+    }
+
+    return true;
 }
 
 //-------------------------------------------------------------------

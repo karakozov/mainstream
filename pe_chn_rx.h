@@ -27,6 +27,8 @@ public:
 private:
     Fpga            *m_fpga;
     fpga_block_t    m_rx;
+
+    void reset();
 };
 
 #endif // PE_CHN_RX_H
