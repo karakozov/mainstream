@@ -33,7 +33,6 @@ class Memory;
 class acdsp
 {
 public:
-    acdsp(U32 startFpgaNumber = 0);
     acdsp(std::vector<Fpga*>& fpgaList);
     virtual ~acdsp();
 
@@ -87,8 +86,10 @@ public:
     // ISVI INTERFACE
     bool writeBlock(U32 fpgaNum, U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos = 0);
-
     void start_local_pcie_test(struct app_params_t& params);
+
+    Fpga *FPGA(unsigned fpgaNum);
+    const std::vector<Fpga*>& FPGA_LIST() { return m_fpga; }
 
 private:
     i2c                     *m_iic;
@@ -100,13 +101,11 @@ private:
     bool                     m_cleanup;
     table*                   m_t;
 
-    void createFpgaDevices(U32 start);
-    void deleteFpgaDevices();
     void createFpgaMemory();
     void deleteFpgaMemory();
 
     Memory *DDR3(unsigned fpgaNum);
-    Fpga *FPGA(unsigned fpgaNum);
+    //Fpga *FPGA(unsigned fpgaNum);
 };
 
 #endif // __ACDSP_H__

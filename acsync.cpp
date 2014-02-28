@@ -1,6 +1,7 @@
 
 #include "fpga.h"
 #include "acsync.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -24,9 +25,8 @@
 using namespace std;
 //-----------------------------------------------------------------------------
 
-acsync::acsync(U32 fpgaNum)
+acsync::acsync(Fpga *fpga) : m_fpga(fpga)
 {
-    m_fpga.clear();
     m_exit = false;
     m_FD = 0;
     m_adf_regs.addr = 0;
@@ -36,12 +36,14 @@ acsync::acsync(U32 fpgaNum)
     m_adf_regs.reg3 = 0;
     m_FVCO_ADF4002 = 56;
 
-    createFpgaDevices(fpgaNum);
+    try {
+      m_fpga->init();
+    } catch(...)  {
+        throw exception_info("%s, %d: %s() - Error init AC_SYNC FPGA.\n", __FILE__, __LINE__, __FUNCTION__);
+    }
 
     if(!FPGA(0)->fpgaTrd(0, 0xB1, m_sync_trd)) {
-        fprintf(stderr, "Error: SYNC_TRD not found!\n");
-        deleteFpgaDevices();
-        throw;
+        throw exception_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     fillCxDx();
@@ -51,48 +53,13 @@ acsync::acsync(U32 fpgaNum)
 
 acsync::~acsync()
 {
-    deleteFpgaDevices();
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::createFpgaDevices(U32 fpgaNum)
-{
-    try {
-        for(unsigned i=fpgaNum; i<fpgaNum+ACSYNC_FPGA_COUNT; i++) {
-            Fpga *fpga = new Fpga(i);
-            if(!fpga) {
-                throw;
-            }
-            fpga->init();
-            m_fpga.push_back(fpga);
-        }
-    } catch(...)  {
-        deleteFpgaDevices();
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::deleteFpgaDevices()
-{
-    for(unsigned i=0; i<m_fpga.size(); i++) {
-        Fpga *fpga = m_fpga.at(i);
-        m_fpga.at(i) = 0;
-        delete fpga;
-    }
-    m_fpga.clear();
 }
 
 //-----------------------------------------------------------------------------
 
 Fpga* acsync::FPGA(unsigned fpgaNum)
 {
-    if(fpgaNum >= m_fpga.size()) {
-        fprintf(stderr, "Invalid FPGA number: %d\n", fpgaNum);
-        throw;
-    }
-    return m_fpga.at(fpgaNum);
+    return m_fpga;
 }
 
 //-----------------------------------------------------------------------------
@@ -331,8 +298,7 @@ void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
 U08 acsync::getCxDxScale(int code)
 {
     if((code <= 0) || (code > 17)) {
-        fprintf(stderr, "Error: Invalid divider code: %d\n", code);
-        //throw;
+        throw exception_info("%s, %d: %s() - Invalid divider/multipler code: %d\n\n", __FILE__, __LINE__, __FUNCTION__, code);
     }
 
     fprintf(stderr, "m_Cx[%d] = 0x%X\n", code-1, m_Cx[code-1]);

@@ -6,6 +6,7 @@
 #include "stream.h"
 #include "memory.h"
 #include "iniparser.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -29,32 +30,24 @@
 using namespace std;
 //-----------------------------------------------------------------------------
 
-acdsp::acdsp(U32 startFpgaNumber)
-{
-    m_fpga.clear();
-    m_exit = false;
-    m_iic = new i2c(1);
-    enableSwitchOut(0x1);
-    m_si571 = new Si571(m_iic);
-    m_cleanup = true;
-
-    createFpgaDevices(startFpgaNumber);
-    createFpgaMemory();
-}
-
-//-----------------------------------------------------------------------------
-
 acdsp::acdsp(std::vector<Fpga*>& fpgaList)
 {
     m_fpga.clear();
     m_exit = false;
+#ifdef _c6x_
     m_iic = new i2c(1);
     enableSwitchOut(0x1);
     m_si571 = new Si571(m_iic);
+#else
+    m_iic = 0;
+    m_si571 = 0;
+#endif
     m_cleanup = false;
 
     for(unsigned i=0; i<fpgaList.size(); i++) {
-        m_fpga.push_back(fpgaList.at(i));
+        Fpga *fpga = fpgaList.at(i);
+        fpga->init();
+        m_fpga.push_back(fpga);
     }
     createFpgaMemory();
 }
@@ -64,10 +57,9 @@ acdsp::acdsp(std::vector<Fpga*>& fpgaList)
 acdsp::~acdsp()
 {
     deleteFpgaMemory();
-    deleteFpgaDevices();
 
-    delete m_si571;
-    delete m_iic;
+    if(m_si571) delete m_si571;
+    if(m_iic) delete m_iic;
 }
 
 //-----------------------------------------------------------------------------
@@ -82,8 +74,7 @@ int acdsp::enableSwitchOut(unsigned mask)
     // check switch settings
     unsigned val = m_iic->read(0x70);
     if(val != mask) {
-        fprintf(stderr, "Can't set i2c switch: mask = 0x%x\n", mask);
-        throw;
+        throw exception_info("%s, %d: %s() - Can't set i2c switch: mask = 0x%x\n", __FILE__, __LINE__, __FUNCTION__, mask);
     }
     return val;
 }
@@ -92,6 +83,8 @@ int acdsp::enableSwitchOut(unsigned mask)
 
 int acdsp::setSi57xFreq(float freq)
 {
+    if(!m_si571) return -1;
+
     float desiredFreq = freq;
     m_si571->SetRate(&desiredFreq);
     fprintf(stderr, "desiredFreq = %f\n", desiredFreq);
@@ -105,57 +98,31 @@ int acdsp::setSi57xFreq(float freq)
 
 //-----------------------------------------------------------------------------
 
-void acdsp::createFpgaDevices(U32 start)
-{
-    try {
-        for(unsigned i=start; i<start+ACDSP_FPGA_COUNT; i++) {
-            Fpga *fpga = new Fpga(i);
-            if(!fpga) {
-                throw;
-            }
-            fpga->init();
-            m_fpga.push_back(fpga);
-        }
-    } catch(...)  {
-        deleteFpgaDevices();
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-void acdsp::deleteFpgaDevices()
-{
-    if(m_cleanup) {
-        for(unsigned i=0; i<m_fpga.size(); i++) {
-            Fpga *fpga = m_fpga.at(i);
-            m_fpga.at(i) = 0;
-            delete fpga;
-        }
-    }
-    m_fpga.clear();
-}
-
-//-----------------------------------------------------------------------------
-
 void acdsp::createFpgaMemory()
 {
     try {
+
         for(unsigned i=0; i<m_fpga.size(); i++) {
 
             Fpga *fpga = m_fpga.at(i);
             fpga_trd_t memTrd;
 
             if(fpga->fpgaTrd(0, 0x9B, memTrd)) {
+
                 Memory *ddr = new Memory(fpga);
                 if(!ddr) {
-                    throw;
+                    throw exception_info("%s, %d: %s() - Error create DDR3 object for FPGA%d\n", __FILE__, __LINE__, __FUNCTION__, i);
                 }
                 m_ddr.push_back(ddr);
+
             } else {
-                fprintf(stderr, "No DDR3 tetrade found\n");
+
+                fprintf(stderr, "FPGA%d: DDR3 tetrade not found\n", i);
             }
         }
+
     } catch(...)  {
+
         deleteFpgaMemory();
     }
 }
@@ -177,8 +144,7 @@ void acdsp::deleteFpgaMemory()
 Fpga* acdsp::FPGA(unsigned fpgaNum)
 {
     if(fpgaNum >= m_fpga.size()) {
-        fprintf(stderr, "Invalid FPGA number: %d\n", fpgaNum);
-        throw;
+        throw exception_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
     }
     return m_fpga.at(fpgaNum);
 }
@@ -188,8 +154,7 @@ Fpga* acdsp::FPGA(unsigned fpgaNum)
 Memory* acdsp::DDR3(unsigned fpgaNum)
 {
     if(fpgaNum >= m_ddr.size()) {
-        fprintf(stderr, "Invalid FPGA number: %d\n", fpgaNum);
-        throw;
+        throw exception_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
     }
     return m_ddr.at(fpgaNum);
 }
@@ -477,7 +442,6 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, c
     RegPokeInd(params.fpgaNumber, ADC_TRD, 0x0, 0x2038);
     IPC_delay(10);
 
-    // дожидаемся окончания сбора
     fprintf(stderr, "Waiting data DDR3...");
     bool ok = true;
     while(!DDR3(params.fpgaNumber)->AcqComplete()) {
@@ -760,7 +724,6 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviF
     RegPokeInd(params.fpgaNumber, ADC_TRD, 0x0, 0x2038);
     IPC_delay(10);
 
-    // дожидаемся окончания сбора
     fprintf(stderr, "Waiting data DDR3...");
     bool ok = true;
     while(!DDR3(params.fpgaNumber)->AcqComplete()) {

@@ -38,7 +38,7 @@ typedef struct _adf4002_t {
 class acsync
 {
 public:
-    explicit acsync(U32 fpgaNum = 0);
+    explicit acsync(Fpga *fpga);
     virtual ~acsync();
 
     // EXIT
@@ -61,7 +61,7 @@ public:
     void PowerON(bool on);
 
 private:
-    std::vector<Fpga*>       m_fpga;
+    Fpga*                    m_fpga;
     bool                     m_exit;
     float                    m_FD;
     U32                      m_mode;
@@ -69,9 +69,9 @@ private:
     adf4002_t                m_adf_regs;
     U08                      m_Cx[17];
     U32                      m_FVCO_ADF4002;
+    bool                     m_cleanup;
 
-    void createFpgaDevices(U32 fpgaNum);
-    void deleteFpgaDevices();
+    bool initFpga();
 
     void selclkMode0(U32 FO);
     void selclkMode1(U32 FO);
@@ -89,7 +89,7 @@ private:
 
     //-----------------------------------------------------------------------------
 
-    Fpga *FPGA(unsigned fpgaNum);
+    Fpga *FPGA(unsigned fpgaNum = 0);
 };
 
 #endif // __ACSYNC_H__
