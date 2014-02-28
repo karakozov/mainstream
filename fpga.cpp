@@ -56,12 +56,12 @@ again:
 
     U32 status = core_block_read(0, 0x10);
     if((status & 0x1)) {
-        fprintf(stderr, "%s(): FPGA sync complete!\n", __FUNCTION__);
+        //fprintf(stderr, "%s(): FPGA sync complete!\n", __FUNCTION__);
         return true;
     }
 
     if(count > 10) {
-        fprintf(stderr, "%s(): FPGA sync not complete!\n", __FUNCTION__);
+        //fprintf(stderr, "%s(): FPGA sync not complete!\n", __FUNCTION__);
         return false;
     }
 
@@ -328,11 +328,11 @@ void Fpga::scanFpgaBlocks()
 
                 unsigned did = core_block_read(i, 0x2);
                 block.device_id = did;
-                fprintf(stderr, "BLOCK%d: ID 0x%.4x  DID 0x%.4x  VER 0x%.4x\n", i, id, did, ver);
+                //fprintf(stderr, "BLOCK%d: ID 0x%.4x  DID 0x%.4x  VER 0x%.4x\n", i, id, did, ver);
 
             } else {
 
-                fprintf(stderr, "BLOCK%d: ID 0x%.4x  VER 0x%.4x\n", i, id, ver);
+                //fprintf(stderr, "BLOCK%d: ID 0x%.4x  VER 0x%.4x\n", i, id, ver);
             }
 
             m_fpga_blocks.push_back(block);
@@ -371,7 +371,7 @@ void Fpga::scanFpgaTetrades()
 
         unsigned id = FpgaRegPeekInd(i, 0x100);
         if(id != 0xffff && id != 0x0) {
-            fprintf(stderr, "TRD %d: - ID 0x%x\n", i, id);
+            //fprintf(stderr, "TRD %d: - ID 0x%x\n", i, id);
             trd.number = i;
             trd.id = id;
 
