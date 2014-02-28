@@ -314,7 +314,7 @@ int	Si571::GetRate(float *pRate)
         SpdRead( SPDdev_GEN, regAdr, &regData[regAdr] );
 
     Si57x_GetRate( pRate, m_dGenFxtal, regData );
-    fprintf(stderr, "Si571 regs 7-12: %x, %x, %x, %x, %x, %x\n", regData[7], regData[8], regData[9], regData[10], regData[11], regData[12] );
+    //fprintf(stderr, "Si571 regs 7-12: %x, %x, %x, %x, %x, %x\n", regData[7], regData[8], regData[9], regData[10], regData[11], regData[12] );
 
     return 0;
 }
@@ -345,9 +345,9 @@ int Si571::Si57x_GetFXTAL(void)
     //
     Si57x_CalcFxtal( &m_dGenFxtal, m_nGenRef, regData );
 
-    fprintf(stderr, "Si571 regs 7-12: %x, %x, %x, %x, %x, %x\n", regData[7], regData[8], regData[9], regData[10], regData[11], regData[12] );
-    fprintf(stderr, ">> XTAL = %f kHz\n", m_dGenFxtal/1000.0 );
-    fprintf(stderr, ">> GREF = %f kHz\n", ((float)(m_nGenRef))/1000.0 );
+    //fprintf(stderr, "Si571 regs 7-12: %x, %x, %x, %x, %x, %x\n", regData[7], regData[8], regData[9], regData[10], regData[11], regData[12] );
+    //fprintf(stderr, ">> XTAL = %f kHz\n", m_dGenFxtal/1000.0 );
+    //fprintf(stderr, ">> GREF = %f kHz\n", ((float)(m_nGenRef))/1000.0 );
 
     return 0;
 }
