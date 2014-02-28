@@ -601,6 +601,8 @@ bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
     U32 hw = core_block_read(0, 0x1F);
     hwAddr =  ((hw >> 8) & 0xff);
     fpgaNum = (hw & 0xff);
+    if(((hw >> 16)&0xffff) != 0x4912)
+      return false;
     return true;
 }
 
