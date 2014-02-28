@@ -6,6 +6,8 @@
 #include "gipcy.h"
 #endif
 
+#include "exceptinfo.h"
+
 #ifdef __linux__
 #include <stdint.h>
 #else

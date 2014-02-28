@@ -125,8 +125,6 @@ typedef void*       LPOVERLAPPED;
 #define MAX_PATH PATH_MAX
 #endif
 
-void delay(int ms);
-
 #endif /* __linux__ */
 
 #endif /* _UTYPES_LINUX_H_ */

@@ -1,4 +1,5 @@
 #include "fpga_base.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -17,9 +18,24 @@
 
 //-----------------------------------------------------------------------------
 
+using namespace std;
+
+//-----------------------------------------------------------------------------
+
 fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
 {
-    openFpga();
+    if(!openFpga()) {
+        throw exception_info("%s, %d: %s() - Error open FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+    }
+
+    fprintf(stderr, "====================== Open FPGA%d ======================\n", m_fpgaNumber);
+
+#ifdef __linux__
+    m_map = new Mapper();
+#else
+    m_map = new Mapper(m_fpga);
+#endif
+
     infoFpga();
     mapFpga();
     initBar();
@@ -34,20 +50,16 @@ fpga_base::~fpga_base()
 
 //-----------------------------------------------------------------------------
 
-void fpga_base::openFpga()
+bool fpga_base::openFpga()
 {
     char name[256];
+
     m_fpga = IPC_openDevice(name, AmbDeviceName, m_fpgaNumber);
     if(!m_fpga) {
-        fprintf(stderr, "Error open FPGA%d\n", m_fpgaNumber);
-        throw;
+        return false;
     }
-    fprintf(stderr, "Open FPGA%d\n", m_fpgaNumber);
-#ifdef __linux__
-    m_map = new Mapper();
-#else
-    m_map = new Mapper(m_fpga);
-#endif
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -69,8 +81,7 @@ void fpga_base::infoFpga()
 
     int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &fpgaInfo, sizeof(AMB_CONFIGURATION), &fpgaInfo, sizeof(AMB_CONFIGURATION));
     if(res < 0) {
-        fprintf(stderr, "Error get FPGA%d information\n", m_fpgaNumber);
-        throw;
+        throw exception_info("%s, %d: %s() - Error get FPGA%d information.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     m_info = fpgaInfo;
@@ -109,7 +120,7 @@ void fpga_base::mapFpga()
 
     if(map_count != res_count) {
         fprintf(stderr, "Not all resources was mapped\n");
-        throw;
+        throw exception_info("%s, %d: %s() - Error map all BARs for FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     m_ok = true;
@@ -308,7 +319,7 @@ u32 fpga_base::core_write_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 Reg
                 0,
                 0);
     if(res < 0){
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
     return 0;
 }
@@ -327,7 +338,7 @@ u32 fpga_base::core_write_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32
                 NULL,
                 0);
     if(res < 0) {
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
     return 0;
 }
@@ -346,7 +357,7 @@ u32 fpga_base::core_read_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegB
                 &reg_buf,
                 sizeof(AMB_BUF_REG));
     if(res < 0) {
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
     return 0;
 }
@@ -365,7 +376,9 @@ u32 fpga_base::core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 
                 &reg_buf,
                 sizeof(AMB_BUF_REG));
     if(res < 0) {
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
     return 0;
 }
+
+//-----------------------------------------------------------------------------

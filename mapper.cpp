@@ -37,11 +37,9 @@ Mapper::~Mapper()
 
 int Mapper::openMemDevice()
 {
-    char name[256];
-    m_devMem = IPC_openDevice(name, "mem", -1);
+    m_devMem = IPC_openDeviceRaw("/dev/mem");
     if(!m_devMem) {
-        fprintf(stderr, "%s(): Error in IPC_openDevice()\n", __FUNCTION__);
-        throw;
+        throw exception_info("%s, %d: %s() - Error open /dev/mem.\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     return 0;
@@ -62,8 +60,7 @@ void* Mapper::mapPhysicalAddress(void* physicalAddress, uint32_t areaSize)
 
     int res = IPC_mapPhysAddr(m_devMem, &map.virtualAddress, map.physicalAddress, map.areaSize);
     if(res < 0) {
-        fprintf(stderr, "%s(): Error in IPC_mapPhysAddr()\n", __FUNCTION__);
-        throw;
+        throw exception_info("%s, %d: %s() - Error in IPC_mapPhysAddr().\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     m_MappedList.push_back(map);
@@ -79,8 +76,7 @@ void* Mapper::mapPhysicalAddress(size_t physicalAddress, uint32_t areaSize)
 
     int res = IPC_mapPhysAddr(m_devMem, &map.virtualAddress, map.physicalAddress, map.areaSize);
     if(res < 0) {
-        fprintf(stderr, "%s(): Error in IPC_mapPhysAddr()\n", __FUNCTION__);
-        throw;
+        throw exception_info("%s, %d: %s() - Error in IPC_mapPhysAddr().\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     m_MappedList.push_back(map);

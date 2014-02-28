@@ -1,5 +1,6 @@
 #include "fpga.h"
 #include "stream.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -73,8 +74,6 @@ again:
 
 void Fpga::init()
 {
-    fprintf(stderr, "%s()\n", __FUNCTION__);
-
     try {
 
         syncFpga();
@@ -84,8 +83,7 @@ void Fpga::init()
 
     } catch(...) {
 
-        fprintf(stderr, "%s, %d, %s(): Exception!\n", __FILE__, __LINE__, __FUNCTION__);
-        throw;
+        throw exception_info("%s, %d: %s() - Error init FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 }
 
@@ -132,7 +130,7 @@ void Fpga::FpgaRegPokeInd(S32 TetrNum, S32 RegNum, U32 RegVal)
                 NULL,
                 0);
     if(res < 0){
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 #else
     core_reg_poke_ind(TetrNum, RegNum, RegVal);
@@ -154,7 +152,7 @@ U32 Fpga::FpgaRegPeekInd(S32 TetrNum, S32 RegNum)
                 &reg_data,
                 sizeof(AMB_DATA_REG));
     if(res < 0){
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     return reg_data.Value;
@@ -178,7 +176,7 @@ void Fpga::FpgaRegPokeDir(S32 TetrNum, S32 RegNum, U32 RegVal)
                 NULL,
                 0);
     if(res < 0){
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 #else
     core_reg_poke_dir(TetrNum, RegNum, RegVal);
@@ -200,7 +198,7 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
                 &reg_data,
                 sizeof(AMB_DATA_REG));
     if(res < 0){
-        throw;
+        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     return reg_data.Value;
@@ -269,8 +267,6 @@ U32  Fpga::FpgaBlockRead( U32 nb, U32 reg )
 
 void Fpga::createDmaChannels()
 {
-    fprintf(stderr, "%s()\n", __FUNCTION__);
-
     for(unsigned i=0; i<DMA_CHANNEL_NUM; i++) {
 
         AMB_GET_DMA_INFO InfoDescrip;
@@ -304,8 +300,7 @@ void Fpga::deleteDmaCannels()
 Stream* Fpga::stream(U32 DmaChan)
 {
     if((DmaChan >= m_strm.size()) || !m_strm.at(DmaChan)) {
-        fprintf(stderr, "Invalid DMA number: %d\n", DmaChan);
-        throw;
+        throw exception_info("%s, %d: %s() - Invalid DMA number: %d.\n", __FILE__, __LINE__, __FUNCTION__, DmaChan);
     }
     return m_strm.at(DmaChan);
 }
@@ -314,8 +309,6 @@ Stream* Fpga::stream(U32 DmaChan)
 
 void Fpga::scanFpgaBlocks()
 {
-    fprintf(stderr, "%s()\n", __FUNCTION__);
-
     for(unsigned i=0; i<FPGA_BLK_NUM; i++) {
 
         fpga_block_t block;
@@ -345,8 +338,6 @@ void Fpga::scanFpgaBlocks()
             m_fpga_blocks.push_back(block);
         }
     }
-
-    fprintf(stderr, "Total %d blocks was found\n", m_fpga_blocks.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -373,8 +364,6 @@ bool Fpga::fpgaBlock(unsigned startSearch, u16 id, fpga_block_t& block)
 
 void Fpga::scanFpgaTetrades()
 {
-    fprintf(stderr, "%s()\n", __FUNCTION__);
-
     for(unsigned i=0; i<FPGA_TRD_NUM; i++) {
 
         fpga_trd_t trd;
@@ -424,8 +413,6 @@ bool Fpga::fpgaTrd(unsigned startSearch, u16 id, fpga_trd_t& trd)
 
     return false;
 }
-
-//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -609,3 +596,22 @@ bool Fpga::fpgaInfo(AMB_CONFIGURATION& info)
 
 //-----------------------------------------------------------------------------
 
+bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
+{
+    U32 hw = core_block_read(0, 0x1F);
+    hwAddr =  ((hw >> 8) & 0xff);
+    fpgaNum = (hw & 0xff);
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::FpgaDeviceID(U16& device_id)
+{
+    device_id = (core_block_read(0, 2) & 0xffff);
+    if((device_id != 0) && (device_id != 0xffff))
+        return true;
+    return false;
+}
+
+//-----------------------------------------------------------------------------

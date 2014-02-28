@@ -81,6 +81,12 @@
 #define IOCTL_AMB_WAIT_DMA_BLOCK		AMB_MAKE_IOCTL(36) // LINUX only
 #define IOCTL_AMB_WAIT_TETRAD_IRQ		AMB_MAKE_IOCTL(37) // LINUX only
 
+#ifdef __linux__
+#define __packed__ __attribute__((packed))
+#else
+#define __packed__
+#endif
+
 #ifdef __KERNEL__
 
 typedef u32 ULONG;
@@ -91,20 +97,13 @@ typedef u16 USHORT;
 typedef void* PVOID;
 typedef void* HANDLE;
 
-//! Описывает параметры для команд управления устройством
 struct ioctl_param {
-    void    *srcBuf;       //!< буфер с данными для устройства (через него передаются данные В драйвер нулевого кольца)
-    size_t  srcSize;        //!< размер буфера с данными для устройства
-    void    *dstBuf;       //!< буфер с данными от устройства  (через него передаются данные ИЗ драйвера нулевого кольца)
-    size_t  dstSize;        //!< dstSize - размер буфера с данными от устройства
-} __attribute__((packed));
+    void    *srcBuf;
+    size_t  srcSize;
+    void    *dstBuf;
+    size_t  dstSize;
+} __packed__;
 
-#endif
-
-#ifdef __linux__
-#define __packed__ __attribute__((packed))
-#else
-#define __packed__
 #endif
 
 // data structure for read/write value from/to register of board

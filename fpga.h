@@ -49,6 +49,8 @@ public:
     void FpgaBarWrite(U32 bar, U32 offset, U32 val);
     void FpgaBlockWrite(U32 nb, U32 reg, U32 val);
     U32  FpgaBlockRead(U32 nb, U32 reg);
+    bool FpgaHwAddress(U08& hwAddr, U08& fpgaNum);
+    bool FpgaDeviceID(U16& device_id);
 
     int allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 DmaChan,

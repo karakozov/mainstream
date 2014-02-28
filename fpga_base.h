@@ -71,7 +71,10 @@ protected:
     u32 core_read_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
     u32 core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
 
+    //bool core_is_opened() {return m_isFpgaOpened;}
+
     IPC_handle              m_fpga;
+    u32                     m_fpgaNumber;
 
 private:
     Mapper*                 m_map;
@@ -80,11 +83,12 @@ private:
     u32*                    m_bar1;
     u32*                    m_bar2;
     u32*                    m_bar[3];
-    u32                     m_fpgaNumber;
+
     bool                    m_ok;
+    //bool                    m_isFpgaOpened;
 
     fpga_base();
-    void openFpga();
+    bool openFpga();
     void closeFpga();
     void infoFpga();
     void mapFpga();

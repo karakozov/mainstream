@@ -1,5 +1,6 @@
 
 #include "stream.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -72,21 +73,18 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
     }
 
     if( IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_MEMIO, m_Descr, m_DescrSize, m_Descr, m_DescrSize) < 0 ) {
-        fprintf(stderr, "%s(): Error allocate memory\n", __FUNCTION__ );
-        throw;
+        throw exception_info("%s, %d: %s() - Error allocate buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_DmaChan);
     }
 
     for(U32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
 
         void *MappedAddress = m_map->mapPhysicalAddress(m_Descr->pBlock[iBlk], m_Descr->BlockSize);
         if(!MappedAddress) {
-            fprintf(stderr, "%s(): Error in mapPhysicalAddress()\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error map physical address: 0x%.8x\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->pBlock[iBlk]);
         }
 
         fprintf(stderr, "%d: %p -> %p\n", iBlk, (void*)m_Descr->pBlock[iBlk], MappedAddress);
 
-        //сохраним отображенный в процесс физический адрес текущего блока
         m_Descr->pBlock[iBlk] = MappedAddress;
         sSCA->ppBlk[iBlk] = MappedAddress;
     }
@@ -96,8 +94,7 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
         void *StubAddress = m_map->mapPhysicalAddress(m_Descr->pStub, sizeof(BRDstrm_Stub));
 
         if(!StubAddress) {
-            fprintf(stderr, "%s(): Error map stub\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error map stub: 0x%.8x\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->pStub);
         }
 
         fprintf(stderr, "Stub: %p -> %p\n", (void*)m_Descr->pStub, StubAddress);
@@ -106,7 +103,6 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
         sSCA->pStub = (BRDstrm_Stub*)m_Descr->pStub;
     }
 
-    //сохраним информацию в буфере пользователя
     sSCA->blkNum = m_Descr->BlockCnt;
 
     return 0;
@@ -138,21 +134,18 @@ int Stream::allocateDmaMemory(void** pBuf,
     }
 
     if( IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_MEMIO, m_Descr, m_DescrSize, m_Descr, m_DescrSize) < 0 ) {
-        fprintf(stderr, "%s(): Error allocate memory\n", __FUNCTION__ );
-        throw;
+        throw exception_info("%s, %d: %s() - Error allocate buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_DmaChan);
     }
 
     for(U32 iBlk = 0; iBlk < m_Descr->BlockCnt; iBlk++) {
 
         void *MappedAddress = m_map->mapPhysicalAddress(m_Descr->pBlock[iBlk], m_Descr->BlockSize);
         if(!MappedAddress) {
-            fprintf(stderr, "%s(): Error in mapPhysicalAddress()\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error map physical address: 0x%.8x\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->pBlock[iBlk]);
         }
 
         fprintf(stderr, "%d: %p -> %p\n", iBlk, (void*)m_Descr->pBlock[iBlk], MappedAddress);
 
-        //сохраним отображенный в процесс физический адрес текущего блока
         m_Descr->pBlock[iBlk] = MappedAddress;
         pBuf[iBlk] = m_Descr->pBlock[iBlk];
     }
@@ -162,8 +155,7 @@ int Stream::allocateDmaMemory(void** pBuf,
         void *StubAddress = m_map->mapPhysicalAddress(m_Descr->pStub, sizeof(BRDstrm_Stub));
 
         if(!StubAddress) {
-            fprintf(stderr, "%s(): Error map stub\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error map stub: 0x%.8x\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->pStub);
         }
 
         fprintf(stderr, "Stub: %p -> %p\n", (void*)m_Descr->pStub, StubAddress);
@@ -181,8 +173,7 @@ int  Stream::freeDmaMemory()
 {
     if(IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0) < 0)
     {
-        fprintf(stderr, "%s(): Error free memory\n", __FUNCTION__ );
-        throw;
+        throw exception_info("%s, %d: %s() - Error free buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
     }
 
     delete m_Descr;
@@ -203,8 +194,7 @@ int  Stream::startDma(int IsCycling)
 
         if (IPC_ioctlDevice(m_fpgaDev,IOCTL_AMB_START_MEMIO,&StartDescrip,sizeof(StartDescrip),0,0) < 0)
         {
-            fprintf(stderr, "%s(): Error start DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error start DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
     return 0;
@@ -245,8 +235,7 @@ int  Stream::stateDma(U32 msTimeout, int& state, U32& blkNum)
 
     if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_STATE_MEMIO,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)))
     {
-        fprintf(stderr, "%s(): Error state DMA\n", __FUNCTION__ );
-        throw;
+        throw exception_info("%s, %d: %s() - Error get DMA %d state\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
     }
     blkNum = StateDescrip.BlockCntTotal;
     state = StateDescrip.DmaChanState;
@@ -286,7 +275,6 @@ int Stream::waitDmaBlock(U32 msTimeout)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_WAIT_DMA_BLOCK,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)))
         {
-            //printf("\n");
             fprintf(stderr, "%s(): Error wait block DMA\n", __FUNCTION__ );
             return -1;
         }
@@ -308,7 +296,7 @@ int Stream::resetDmaFifo()
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_RESET_FIFO, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
             fprintf(stderr, "%s(): Error reset FIFO\n", __FUNCTION__ );
-            throw;
+            return -1;
         }
     }
 
@@ -327,8 +315,7 @@ int Stream::setDmaSource(U32 addr)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_SRC_MEMIO, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
-            fprintf(stderr, "%s(): Error set source for DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error set DMA %d source\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
 
@@ -347,8 +334,7 @@ int Stream::setDmaRequestFlag(U32 flag)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_DRQ_MEMIO, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
-            fprintf(stderr, "%s(): Error set source for DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error set DMA %d request flag\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
 
@@ -369,8 +355,7 @@ int Stream::setDmaDirection(U32 direction)
 
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_SET_DIR_MEMIO, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
-            fprintf(stderr, "%s(): Error set dir for DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error set DMA %d direction\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
 
@@ -389,8 +374,7 @@ int Stream::adjustDma(U32 mode)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_ADJUST, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
-            fprintf(stderr, "%s(): Error adjust DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error adjust DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
 
@@ -409,8 +393,7 @@ int Stream::doneDma(U32 blockNumber)
     {
         if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_DONE, &SetDescrip, sizeof(SetDescrip), 0, 0))
         {
-            fprintf(stderr, "%s(): Error done DMA\n", __FUNCTION__ );
-            throw;
+            throw exception_info("%s, %d: %s() - Error set DMA %d done\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
     }
 
