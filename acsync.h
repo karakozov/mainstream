@@ -76,6 +76,7 @@ private:
     void selclkMode0(U32 FO);
     void selclkMode1(U32 FO);
     void selclkMode2(U32 FO);
+    void selclkMode3(U32 FO);
     void selclkout(U32 sel);
 
     U32 gcd(U32 a, U32 b);

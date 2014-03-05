@@ -173,12 +173,30 @@ void acsync::selclkMode2(U32 FO)
 
 //-----------------------------------------------------------------------------
 
+void acsync::selclkMode3(U32 FO)
+{
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
+    U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
+    mode1 &= ~0x2;
+    RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
+
+    IPC_delay(200);
+
+    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF) & ~0xF;
+    selclk |= (0x8);
+    RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
+}
+
+//-----------------------------------------------------------------------------
+
 void acsync::FreqMultipler1(U32 mode, U32 FO)
 {
     switch(mode) {
     case 0: selclkMode0(FO); break;
     case 1: selclkMode1(FO); break;
     case 2: selclkMode2(FO); break;
+    case 3: selclkMode3(FO); break;
     }
 }
 
@@ -271,6 +289,7 @@ void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
     case 0: getMultCxDxMode0(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
     case 1: getMultCxDxMode1(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
     case 2: getMultCxDxMode2(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    default: return;
     }
 
     fprintf(stderr, "code_c4 = 0x%x\n", code_c4);
@@ -575,6 +594,11 @@ bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
     }
 
     //-----------------------------
+
+    if(mode == 3) {
+        ok = true;
+        goto finished;
+    }
 
 finished:
     if(ok) {
