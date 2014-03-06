@@ -601,9 +601,11 @@ bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
     U32 hw = core_block_read(0, 0x1F);
     hwAddr =  ((hw >> 8) & 0xff);
     fpgaNum = (hw & 0xff);
-    if(((hw >> 16)&0xffff) != 0x4912)
-      return false;
-    return true;
+    if(((hw >> 16)&0xffff) == 0x4912) {
+      return true;
+    }
+    fprintf(stderr, "%s(): Error get geographical address\n", __FUNCTION__);
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -611,9 +613,16 @@ bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
 bool Fpga::FpgaDeviceID(U16& device_id)
 {
     device_id = (core_block_read(0, 2) & 0xffff);
-    if((device_id != 0) && (device_id != 0xffff))
+    if((device_id != 0) && (device_id != 0xffff)) {
         return true;
+    }
+    fprintf(stderr, "%s(): Error get device id\n", __FUNCTION__);
     return false;
 }
 
 //-----------------------------------------------------------------------------
+
+bool Fpga::FpgaTemperature(float &t)
+{
+    return false;
+}
