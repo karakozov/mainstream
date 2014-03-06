@@ -222,17 +222,6 @@ typedef struct pcie_speed_t {
 } pcie_speed_t;
 
 //-----------------------------------------------------------------------------
-/*
-void clearCounters(std::vector<counter_t>& counters)
-{
-    for(unsigned i=0; i<counters.size(); i++) {
-        counter_t& cnt = counters.at(i);
-        cnt.dataVector.clear();
-    }
-    counters.clear();
-}
-*/
-//-----------------------------------------------------------------------------
 
 template <class T>
 void clearCounters(std::vector<T>& param)
@@ -291,8 +280,6 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
 
         pcie_speed_t rateVector;
 
-        //fprintf(stderr, "RX%.2u", i);
-
         for(unsigned j=0; j<rd_cnt0.dataVector.size(); j++) {
 
             u32 c0 = rd_cnt0.dataVector.at(j);
@@ -301,13 +288,9 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
             float rxRate = 1000.0*(((c1-c0)*16.0*32768.0)/(1024.*1024.)/dt);
 
             rateVector.dataVector.push_back(rxRate);
-
-            //fprintf(stderr, "\tTX[%.2u]:\t%.2f ", j, rxRate);
         }
 
         dataRate.push_back(rateVector);
-
-        //fprintf(stderr, "\n");
     }
 }
 
