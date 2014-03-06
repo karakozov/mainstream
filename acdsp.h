@@ -12,6 +12,9 @@
 #include "pe_chn_tx.h"
 #include "pe_chn_rx.h"
 #include "trd_check.h"
+#ifdef __linux__
+#include "nctable.h"
+#endif
 
 #include <vector>
 #include <string>

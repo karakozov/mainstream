@@ -5,18 +5,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-/*
-#include <string.h>
-#include <fcntl.h>
-#include <signal.h>
-#ifdef __linux__
-#include <unistd.h>
-#include <pthread.h>
-#include <sys/time.h>
-#include <sys/mman.h>
-#include <getopt.h>
-#endif
-*/
 
 //-----------------------------------------------------------------------------
 
@@ -29,7 +17,7 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber)
             Fpga *fpga = new Fpga(i);
             fpgaList.push_back(fpga);
         }
-        catch(exception_info_t err) {
+        catch(except_info_t err) {
             fprintf(stderr, "%s", err.info.c_str());
             break;
         }

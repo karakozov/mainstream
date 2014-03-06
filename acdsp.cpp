@@ -885,7 +885,6 @@ unsigned COL = 10;
 
 void acdsp::start_local_pcie_test(struct app_params_t& params)
 {
-#ifdef __linux__
     AMB_CONFIGURATION cfg0;
     AMB_CONFIGURATION cfg1;
     AMB_CONFIGURATION cfg2;
@@ -945,7 +944,7 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     tx2.start_tx(true);
 
     //---------------------------------------
-
+#ifdef __linux__
     table *t = new table(COL,WIDTH,HEIGHT);
     if(!t) {
         exit(-1);
@@ -1025,6 +1024,7 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     }
 
     delete t;
+#endif
 
     check.show_report(0, 0);
     check.show_report(0, 1);
@@ -1032,7 +1032,6 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     tx1.start_tx(false);
     tx2.start_tx(false);
     check.start_check(false);
-#endif
 }
 
 //-----------------------------------------------------------------------------
