@@ -157,5 +157,34 @@ long time_stop(struct timeval start)
 
     return dt.tv_sec*1000 + dt.tv_usec/1000;
 }
+#else
+
+#include <math.h>
+
+void time_start(struct timeval *start)
+{
+	LARGE_INTEGER Frequency, StartPerformCount;
+	int bHighRes = QueryPerformanceFrequency (&Frequency);
+	QueryPerformanceCounter (&StartPerformCount);
+	double msTime = (double)(StartPerformCount.QuadPart) / (double)Frequency.QuadPart * 1.E3;
+	start->tv_sec =  (long)floor(msTime + 0.5); // save msec
+}
+
+//-----------------------------------------------------------------------------
+
+long time_stop(struct timeval start)
+{
+	LARGE_INTEGER Frequency, StopPerformCount;
+	QueryPerformanceCounter (&StopPerformCount);
+	int bHighRes = QueryPerformanceFrequency (&Frequency);
+
+	double msTime = (double)(StopPerformCount.QuadPart) / (double)Frequency.QuadPart * 1.E3;
+
+	long msStopTime = (long)floor(msTime + 0.5);
+	long msStartTime = start.tv_sec;
+
+	return (msStopTime - msStartTime);
+}
+
 #endif
 //-----------------------------------------------------------------------------
