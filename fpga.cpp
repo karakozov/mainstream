@@ -27,6 +27,8 @@ Fpga::Fpga(unsigned id) : fpga_base(id)
     m_strm.clear();
     m_fpga_blocks.clear();
     m_fpga_trd.clear();
+
+    init();
 }
 
 //-----------------------------------------------------------------------------
