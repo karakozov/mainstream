@@ -61,6 +61,9 @@ public:
     U32 RegPeekDir(U32 fpgaNum, S32 trdNo, S32 rgnum);
     void resetFifo(U32 fpgaNum, U32 trd);
 
+    //FPGA INTERFACE
+    bool infoFpga(U32 fpgaNum, AMB_CONFIGURATION& info);
+
     // DMA INTERFACE
     int allocateDmaMemory(U32 fpgaNum, U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 fpgaNum, U32 DmaChan,
@@ -93,6 +96,10 @@ public:
     Fpga *FPGA(unsigned fpgaNum);
     const std::vector<Fpga*>& FPGA_LIST() { return m_fpga; }
 
+    trd_check* get_trd_check() { return m_trd_check; }
+    pe_chn_rx* get_chan_rx() { return m_rx; }
+    pe_chn_tx* get_chan_tx(int id) { return m_tx[id%2]; }
+
 private:
     i2c                     *m_iic;
     Si571                   *m_si571;
@@ -101,6 +108,10 @@ private:
     BRDctrl_StreamCBufAlloc  m_sSCA;
     bool                     m_exit;
     bool                     m_cleanup;
+
+    trd_check*               m_trd_check;
+    pe_chn_rx*               m_rx;
+    pe_chn_tx*               m_tx[0];
 
     void createFpgaMemory();
     void deleteFpgaMemory();

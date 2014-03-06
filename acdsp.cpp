@@ -34,21 +34,48 @@ acdsp::acdsp(std::vector<Fpga*>& fpgaList)
 {
     m_fpga.clear();
     m_exit = false;
+    m_rx = 0;
+    m_trd_check = 0;
+    m_tx[0] = 0;
+    m_tx[1] = 0;
+    m_iic = 0;
+    m_si571 = 0;
+    m_cleanup = false;
+
+    for(unsigned i=0; i<fpgaList.size(); i++) {
+        m_fpga.push_back(0);
+    }
+
 //#ifdef _c6x_
 //    m_iic = new i2c(1);
 //    enableSwitchOut(0x1);
 //    m_si571 = new Si571(m_iic);
-//#else
-    m_iic = 0;
-    m_si571 = 0;
 //#endif
-    m_cleanup = false;
 
+    // sort FPGA list according onboard FPGA number
     for(unsigned i=0; i<fpgaList.size(); i++) {
+
         Fpga *fpga = fpgaList.at(i);
-        fpga->init();
-        m_fpga.push_back(fpga);
+
+        u8 hwAddr = 0xff;
+        u8 fpgaNum = 0xff;
+        bool okhw = fpga->FpgaHwAddress(hwAddr, fpgaNum);
+
+        if(okhw) {
+
+            m_fpga[fpgaNum] = fpga;
+
+            if(fpgaNum == 0x2) {
+                m_trd_check = new trd_check(fpga);
+                m_rx = new pe_chn_rx(fpga);
+            } else if(fpgaNum == 0x1) {
+                m_tx[1] = new pe_chn_tx(fpga);
+            } else if(fpgaNum == 0x0) {
+                m_tx[0] = new pe_chn_tx(fpga);
+            }
+        }
     }
+
     createFpgaMemory();
 }
 
@@ -58,6 +85,10 @@ acdsp::~acdsp()
 {
     deleteFpgaMemory();
 
+    if(m_rx) delete m_rx;
+    if(m_trd_check) delete m_trd_check;
+    if(m_tx[0]) delete m_tx[0];
+    if(m_tx[1]) delete m_tx[1];
     if(m_si571) delete m_si571;
     if(m_iic) delete m_iic;
 }
@@ -189,6 +220,13 @@ void acdsp::RegPokeDir(U32 fpgaNum, S32 TetrNum, S32 RegNum, U32 RegVal)
 U32 acdsp::RegPeekDir(U32 fpgaNum, S32 TetrNum, S32 RegNum)
 {
     return FPGA(fpgaNum)->FpgaRegPeekDir(TetrNum, RegNum);
+}
+
+//-----------------------------------------------------------------------------
+
+bool acdsp::infoFpga(U32 fpgaNum, AMB_CONFIGURATION& info)
+{
+    return FPGA(fpgaNum)->info(info);
 }
 
 //-----------------------------------------------------------------------------
