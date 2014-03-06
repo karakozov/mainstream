@@ -83,7 +83,7 @@ void Fpga::init()
 
     } catch(...) {
 
-        throw exception_info("%s, %d: %s() - Error init FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        throw except_info("%s, %d: %s() - Error init FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 }
 
@@ -130,7 +130,7 @@ void Fpga::FpgaRegPokeInd(S32 TetrNum, S32 RegNum, U32 RegVal)
                 NULL,
                 0);
     if(res < 0){
-        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        throw except_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 #else
     core_reg_poke_ind(TetrNum, RegNum, RegVal);
@@ -152,7 +152,7 @@ U32 Fpga::FpgaRegPeekInd(S32 TetrNum, S32 RegNum)
                 &reg_data,
                 sizeof(AMB_DATA_REG));
     if(res < 0){
-        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        throw except_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     return reg_data.Value;
@@ -176,7 +176,7 @@ void Fpga::FpgaRegPokeDir(S32 TetrNum, S32 RegNum, U32 RegVal)
                 NULL,
                 0);
     if(res < 0){
-        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        throw except_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 #else
     core_reg_poke_dir(TetrNum, RegNum, RegVal);
@@ -198,7 +198,7 @@ U32 Fpga::FpgaRegPeekDir(S32 TetrNum, S32 RegNum)
                 &reg_data,
                 sizeof(AMB_DATA_REG));
     if(res < 0){
-        throw exception_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        throw except_info("%s, %d: %s() - Error ioctl FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
     return reg_data.Value;
@@ -300,7 +300,7 @@ void Fpga::deleteDmaCannels()
 Stream* Fpga::stream(U32 DmaChan)
 {
     if((DmaChan >= m_strm.size()) || !m_strm.at(DmaChan)) {
-        throw exception_info("%s, %d: %s() - Invalid DMA number: %d.\n", __FILE__, __LINE__, __FUNCTION__, DmaChan);
+        throw except_info("%s, %d: %s() - Invalid DMA number: %d.\n", __FILE__, __LINE__, __FUNCTION__, DmaChan);
     }
     return m_strm.at(DmaChan);
 }

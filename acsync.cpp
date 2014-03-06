@@ -39,11 +39,11 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
     try {
       m_fpga->init();
     } catch(...)  {
-        throw exception_info("%s, %d: %s() - Error init AC_SYNC FPGA.\n", __FILE__, __LINE__, __FUNCTION__);
+        throw except_info("%s, %d: %s() - Error init AC_SYNC FPGA.\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if(!FPGA(0)->fpgaTrd(0, 0xB1, m_sync_trd)) {
-        throw exception_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
+        throw except_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     fillCxDx();
@@ -317,7 +317,7 @@ void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
 U08 acsync::getCxDxScale(int code)
 {
     if((code <= 0) || (code > 17)) {
-        throw exception_info("%s, %d: %s() - Invalid divider/multipler code: %d\n\n", __FILE__, __LINE__, __FUNCTION__, code);
+        throw except_info("%s, %d: %s() - Invalid divider/multipler code: %d\n\n", __FILE__, __LINE__, __FUNCTION__, code);
     }
 
     fprintf(stderr, "m_Cx[%d] = 0x%X\n", code-1, m_Cx[code-1]);
