@@ -74,7 +74,7 @@ int acdsp::enableSwitchOut(unsigned mask)
     // check switch settings
     unsigned val = m_iic->read(0x70);
     if(val != mask) {
-        throw exception_info("%s, %d: %s() - Can't set i2c switch: mask = 0x%x\n", __FILE__, __LINE__, __FUNCTION__, mask);
+        throw except_info("%s, %d: %s() - Can't set i2c switch: mask = 0x%x\n", __FILE__, __LINE__, __FUNCTION__, mask);
     }
     return val;
 }
@@ -111,7 +111,7 @@ void acdsp::createFpgaMemory()
 
                 Memory *ddr = new Memory(fpga);
                 if(!ddr) {
-                    throw exception_info("%s, %d: %s() - Error create DDR3 object for FPGA%d\n", __FILE__, __LINE__, __FUNCTION__, i);
+                    throw except_info("%s, %d: %s() - Error create DDR3 object for FPGA%d\n", __FILE__, __LINE__, __FUNCTION__, i);
                 }
                 m_ddr.push_back(ddr);
 
@@ -144,7 +144,7 @@ void acdsp::deleteFpgaMemory()
 Fpga* acdsp::FPGA(unsigned fpgaNum)
 {
     if(fpgaNum >= m_fpga.size()) {
-        throw exception_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
+        throw except_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
     }
     return m_fpga.at(fpgaNum);
 }
@@ -154,7 +154,7 @@ Fpga* acdsp::FPGA(unsigned fpgaNum)
 Memory* acdsp::DDR3(unsigned fpgaNum)
 {
     if(fpgaNum >= m_ddr.size()) {
-        throw exception_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
+        throw except_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
     }
     return m_ddr.at(fpgaNum);
 }
@@ -885,6 +885,7 @@ unsigned COL = 10;
 
 void acdsp::start_local_pcie_test(struct app_params_t& params)
 {
+#ifdef __linux__
     AMB_CONFIGURATION cfg0;
     AMB_CONFIGURATION cfg1;
     AMB_CONFIGURATION cfg2;
@@ -1031,6 +1032,7 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     tx1.start_tx(false);
     tx2.start_tx(false);
     check.start_check(false);
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -22,9 +22,9 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-exception_info_t exception_info(const char *fmt, ...)
+except_info_t except_info(const char *fmt, ...)
 {
-    exception_info_t err;
+    except_info_t err;
     va_list argptr;
     va_start(argptr, fmt);
     char msg[256];

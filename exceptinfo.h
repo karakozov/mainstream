@@ -4,11 +4,11 @@
 
 #include <string>
 
-typedef  struct _exception_info_t {
+typedef  struct _except_info_t {
     std::string info;
-} exception_info_t;
+} except_info_t;
 
-exception_info_t exception_info(const char *fmt, ...);
+except_info_t except_info(const char *fmt, ...);
 
 #endif //__EXCEPTION_INFO_H__
 

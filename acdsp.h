@@ -12,7 +12,6 @@
 #include "pe_chn_tx.h"
 #include "pe_chn_rx.h"
 #include "trd_check.h"
-#include "nctable.h"
 
 #include <vector>
 #include <string>
@@ -99,7 +98,6 @@ private:
     BRDctrl_StreamCBufAlloc  m_sSCA;
     bool                     m_exit;
     bool                     m_cleanup;
-    table*                   m_t;
 
     void createFpgaMemory();
     void deleteFpgaMemory();
