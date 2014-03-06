@@ -38,10 +38,10 @@ LFLAGS += $(TARGET)
 
 $(TARGET_NAME): $(patsubst %.cpp,%.o, $(wildcard *.cpp))
 	$(LD) -o $(TARGET_NAME) $^ $(LIBPATH)/libgipcy.a $(NCURSES) $(LFLAGS)
-ifeq "$(findstring c6x-uclinux-gcc, $(CC))" "c6x-uclinux-gcc"
+ifeq "$(findstring c6x, $(CC))" "c6x"
 	cp $(TARGET_NAME) $(INSTALL_PREFIX)/home/$(TARGETFS_USER)/bardy/bin
 endif
-	rm -f *.o *~ core
+#	rm -f *.o *~ core
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c -MD $<
