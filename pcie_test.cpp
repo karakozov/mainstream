@@ -10,6 +10,8 @@
 
 unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber)
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     fpgaList.clear();
 
     for(unsigned i=0; i<fpgaNumber; i++) {
@@ -46,6 +48,8 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber)
 
 void delete_fpga_list(std::vector<Fpga*>& fpgaList)
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     for(unsigned i=0; i<fpgaList.size(); i++) {
         Fpga *fpga = fpgaList.at(i);
         delete fpga;
@@ -57,6 +61,8 @@ void delete_fpga_list(std::vector<Fpga*>& fpgaList)
 
 unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync)
 {
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
     U16 ID = 0;
     U08 hwAddr = 0;
     U08 fpgaNum = 0;
@@ -120,23 +126,17 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
 
 void delete_board_list(std::vector<acdsp*>& boardList, acsync* sync)
 {
-    if(sync)
+    fprintf(stderr, "%s()\n", __FUNCTION__);
+
+    if(sync) {
         delete sync;
+    }
 
     for(unsigned i=0; i<boardList.size(); i++) {
         acdsp *brd = boardList.at(i);
         delete brd;
     }
     boardList.clear();
-}
-
-//-----------------------------------------------------------------------------
-
-void prepare_adc_fpga(Fpga* fpga, struct app_params_t& params)
-{
-    fpga->FpgaRegPokeInd(ADC_TRD, 0x10, params.adcMask);
-    fpga->FpgaRegPokeInd(ADC_TRD, 0x17, (0x3 << 4));
-    fpga->FpgaRegPokeInd(ADC_TRD, 0, 0x2038);
 }
 
 //-----------------------------------------------------------------------------
@@ -349,7 +349,7 @@ void show_test_result(std::vector<trd_check*>& check_fpga, std::vector<pe_chn_rx
     }
 
 #ifdef __linux__
-/*
+    /*
     table *t = create_display_table(rx_fpga, tx_fpga);
     if(!t) {
         return;
@@ -405,98 +405,110 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     std::vector<trd_check*> check_fpga;
     std::vector<pe_chn_rx*> rx_fpga;
     std::vector<pe_chn_tx*> tx_fpga;
+    std::vector<u32> sign;
 
     //-----------------------------------------------------------------------------
     // Prepare all configuration and related objects
+    AMB_CONFIGURATION cfg;
     for(unsigned brdIndex=0; brdIndex<boardList.size(); brdIndex++) {
 
         acdsp* brd = boardList.at(brdIndex);
-        if(!brd) {
-            continue;
-        }
 
-        std::vector<Fpga*> fpgaList = brd->FPGA_LIST();
-
-        for(unsigned j=0; j<fpgaList.size(); j++) {
-
-            Fpga* fpga = fpgaList.at(j);
-
-            AMB_CONFIGURATION cfg;
-            memset(&cfg, 0, sizeof(AMB_CONFIGURATION));
-            fpga->fpgaInfo(cfg);
-
-            if(cfg.PhysAddress[2] && cfg.Size[2]) {
-
-                pe_chn_rx *chn_rx = new pe_chn_rx(fpga);
-                trd_check *trd_chk = new trd_check(fpga);
-
-                dsp_cfg.push_back(cfg);
-                dsp_fpga.push_back(fpga);
-                rx_fpga.push_back(chn_rx);
-                check_fpga.push_back(trd_chk);
-
-            } else {
-
-                pe_chn_tx *chn_tx = new pe_chn_tx(fpga);
-
-                adc_cfg.push_back(cfg);
-                adc_fpga.push_back(fpga);
-                tx_fpga.push_back(chn_tx);
-            }
-        }
-
-        brd->setSi57xFreq(params.adcFreq);
+        brd->infoFpga(2, cfg);
+        dsp_cfg.push_back(cfg);
+        dsp_fpga.push_back(brd->FPGA(2));
+        rx_fpga.push_back(brd->get_chan_rx());
+        check_fpga.push_back(brd->get_trd_check());
+        brd->infoFpga(0, cfg);
+        adc_cfg.push_back(cfg);
+        brd->infoFpga(1, cfg);
+        adc_cfg.push_back(cfg);
+        adc_fpga.push_back(brd->FPGA(0));
+        adc_fpga.push_back(brd->FPGA(1));
+        tx_fpga.push_back(brd->get_chan_tx(0));
+        tx_fpga.push_back(brd->get_chan_tx(1));
     }
-
-    //-----------------------------------------------------------------------------
 
     fprintf(stderr, "DSP_FPGA: %d\n", dsp_fpga.size());
     fprintf(stderr, "ADC_FPGA: %d\n", adc_fpga.size());
 
     //-----------------------------------------------------------------------------
-    // Configure all objects for transmit and receive data
+    // form SIGN for all TX channels
+    for(unsigned txIndex=0; txIndex<tx_fpga.size(); txIndex++) {
+        u8 hwAddr = 0xff;
+        u8 fpgaNum = 0xff;
+        adc_fpga.at(txIndex)->FpgaHwAddress(hwAddr, fpgaNum);
+        sign.push_back(make_sign(txIndex, hwAddr, fpgaNum));
+    }
+
+    //-----------------------------------------------------------------------------
+    // program RX channels
     for(unsigned rxIndex=0; rxIndex<dsp_fpga.size(); rxIndex++) {
 
         AMB_CONFIGURATION cfg0 = dsp_cfg.at(rxIndex);
 
-        Fpga* dsp = adc_fpga.at(rxIndex);
-        pe_chn_rx* rx = rx_fpga.at(rxIndex);
         trd_check* check = check_fpga.at(rxIndex);
+        pe_chn_rx* rx = rx_fpga.at(rxIndex);
 
-        dsp->FpgaRegPokeInd(4, 0, 0x2038);
-        check->start_check(true);
+        fprintf(stderr, "===== RX %d =====\n", rxIndex);
 
         for(unsigned txIndex=0; txIndex<adc_fpga.size(); txIndex++) {
 
-            Fpga* adc = adc_fpga.at(txIndex);
-            pe_chn_tx* tx = tx_fpga.at(txIndex);
-
-            prepare_adc_fpga(adc, params);
-
             u32 rx_fpga_addr = cfg0.PhysAddress[2] + 0x1000*txIndex + 0x1000;
-
-            u8 hwAddr = 0xff;
-            u8 fpgaNum = 0xff;
-            adc->FpgaHwAddress(hwAddr, fpgaNum);
-            u32 channel_sign = make_sign(txIndex, hwAddr, fpgaNum);
-
-            fprintf(stderr, "RX%d --- TX%d --- SRC_ADDR 0x%X --- SIGN 0x%X\n", rxIndex, txIndex, rx_fpga_addr|0x1, channel_sign);
-            rx->set_fpga_addr(txIndex, rx_fpga_addr, channel_sign);
-
-            fprintf(stderr, "RX%d --- TX%d --- DST_ADDR 0x%X --- SIGN 0x%X\n", rxIndex, txIndex, rx_fpga_addr|0x1, channel_sign);
-            tx->set_fpga_addr(rxIndex, rx_fpga_addr, channel_sign);
+            fprintf(stderr, "TX%d\t\t SRC_ADDR 0x%X\t\t SIGN 0x%X\n", txIndex, rx_fpga_addr|0x1, sign.at(txIndex));
+            rx->set_fpga_addr(txIndex, rx_fpga_addr, sign.at(txIndex));
         }
 
+        check->start_check(true);
         rx->start_rx(true);
     }
 
     //-----------------------------------------------------------------------------
+    // program TX channels (first approach)
+    for(unsigned txIndex=0, rx_idx = 0; txIndex < adc_fpga.size(); txIndex++) {
 
-    for(unsigned txIndex=0; txIndex<adc_fpga.size(); txIndex++) {
+        fprintf(stderr, "===== TX %d =====\n", txIndex);
 
-        tx_fpga.at(txIndex)->start_tx(true);
+        pe_chn_tx* tx = tx_fpga.at(txIndex);
+
+        for(unsigned rxIndex = 0; rxIndex < dsp_fpga.size(); rxIndex++) {
+
+            AMB_CONFIGURATION cfg0 = dsp_cfg.at((rxIndex + rx_idx) % dsp_fpga.size());
+            u32 rx_fpga_addr = cfg0.PhysAddress[2] + 0x1000*txIndex + 0x1000;
+            fprintf(stderr, "RX%d\t\t DST_ADDR 0x%X\t\t SIGN 0x%X\n", rxIndex, rx_fpga_addr|0x1, sign.at(txIndex));
+            tx->set_fpga_addr(rxIndex, rx_fpga_addr, sign.at(txIndex));
+        }
+
+        ++rx_idx;
+
+        tx->start_tx(true);
     }
+/*
+    //-----------------------------------------------------------------------------
+    // program TX channels (second approach)
+    for(unsigned txIndex=0, rx_idx = 0; txIndex < adc_fpga.size(); txIndex++) {
 
+        fprintf(stderr, "===== TX %d =====\n", txIndex);
+
+        pe_chn_tx* tx = tx_fpga.at(txIndex);
+
+        if((txIndex%2) == 0) {
+            if(txIndex) {
+                ++rx_idx;
+            }
+        }
+
+        for(unsigned rxIndex = 0; rxIndex < dsp_fpga.size(); rxIndex++) {
+
+            AMB_CONFIGURATION cfg0 = dsp_cfg.at((rxIndex + rx_idx) % dsp_fpga.size());
+            u32 rx_fpga_addr = cfg0.PhysAddress[2] + 0x1000*txIndex + 0x1000;
+            fprintf(stderr, "RX%d\t\t DST_ADDR 0x%X\t\t SIGN 0x%X\n", rxIndex, rx_fpga_addr|0x1, sign.at(txIndex));
+            tx->set_fpga_addr(rxIndex, rx_fpga_addr, sign.at(txIndex));
+        }
+
+        tx->start_tx(true);
+    }
+*/
     //-----------------------------------------------------------------------------
 
     fprintf(stderr, "Press any key to see result...\n");
@@ -507,34 +519,23 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     // Deconfigure and delete all objects
     for(unsigned rxIndex=0; rxIndex<dsp_fpga.size(); rxIndex++) {
 
-        Fpga* dsp = adc_fpga.at(rxIndex);
         pe_chn_rx* rx = rx_fpga.at(rxIndex);
         trd_check* check = check_fpga.at(rxIndex);
 
         rx->start_rx(false);
         check->start_check(false);
-        dsp->FpgaRegPokeInd(4, 0, 0);
-
-        delete rx;
-        delete check;
     }
 
-    fprintf(stderr, "Press any key...\n");
+    fprintf(stderr, "Press any key...1\n");
     IPC_getch();
 
     for(unsigned txIndex=0; txIndex<adc_fpga.size(); txIndex++) {
 
-        Fpga* adc = adc_fpga.at(txIndex);
         pe_chn_tx* tx = tx_fpga.at(txIndex);
-
         tx->start_tx(false);
-        adc->FpgaRegPokeInd(ADC_TRD, 0x17, 0x0);
-        adc->FpgaRegPokeInd(ADC_TRD, 0x0, 0x0);
-
-        delete tx;
     }
 
-    fprintf(stderr, "Press any key...\n");
+    fprintf(stderr, "Press any key...2\n");
     IPC_getch();
 
     rx_fpga.clear();
@@ -544,8 +545,9 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     adc_cfg.clear();
     dsp_fpga.clear();
     adc_fpga.clear();
+    sign.clear();
 
-    fprintf(stderr, "Press any key...\n");
+    fprintf(stderr, "Press any key...3\n");
     IPC_getch();
 
     fprintf(stderr, "Stop PCIE test\n");

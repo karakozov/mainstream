@@ -20,7 +20,7 @@ public:
     u32 tx_block_number();
     u32 tx_overflow();
 
-    void start_tx(bool start);
+    void start_tx(bool start, unsigned adcMask = 0xf);
 
 private:
     Fpga            *m_fpga;

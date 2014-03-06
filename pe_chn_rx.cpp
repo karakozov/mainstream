@@ -8,8 +8,7 @@
 pe_chn_rx::pe_chn_rx(Fpga *fpga) : m_fpga(fpga)
 {
     if(!m_fpga->fpgaBlock(0, 0x1D, m_rx)) {
-        fprintf(stderr, "Not found PE_CHN_RX! ID: 0x%x", 0x1D);
-        throw;
+        throw except_info("%s, %d: %s() - Not found PE_CHN_RX! ID: 0x%x\n", __FILE__, __LINE__, __FUNCTION__, 0x1D);
     }
     reset();
 }

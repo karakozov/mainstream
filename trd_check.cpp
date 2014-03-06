@@ -1,4 +1,5 @@
 #include "trd_check.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +9,7 @@
 trd_check::trd_check(Fpga *fpga) : m_fpga(fpga)
 {
     if(!m_fpga->fpgaTrd(0, 0xB0, m_check)) {
-        fprintf(stderr, "Not found TRD_CHN_CHECK! ID: 0x%x", 0xB0);
-        throw;
+        throw except_info("%s, %d: %s() - Not found TRD_CHN_CHECK! ID: 0x%x\n", __FILE__, __LINE__, __FUNCTION__, 0xB0);
     }
 }
 

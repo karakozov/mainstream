@@ -8,8 +8,7 @@
 pe_chn_tx::pe_chn_tx(Fpga *fpga) : m_fpga(fpga)
 {
     if(!m_fpga->fpgaBlock(0, 0x1C, m_tx)) {
-        fprintf(stderr, "Not found PE_CHN_TX! ID: 0x%x", 0x1C);
-        throw;
+        throw except_info("%s, %d: %s() - Not found PE_CHN_TX! ID: 0x%x\n", __FILE__, __LINE__, __FUNCTION__, 0x1C);
     }
     reset();
 }
@@ -50,16 +49,31 @@ u32 pe_chn_tx::tx_overflow()
 
 //-------------------------------------------------------------------
 
-void pe_chn_tx::start_tx(bool start)
+void pe_chn_tx::start_tx(bool start, unsigned adcMask)
 {
     u32 ctrl = m_fpga->FpgaBlockRead(m_tx.number, 0x8);
 
     ctrl |= 0x10; //TX_CHN_ON
 
     if(start) {
+
+        // start ADC tetrade
+        m_fpga->FpgaRegPokeInd(4, 0x10, adcMask);
+        m_fpga->FpgaRegPokeInd(4, 0x17, (0x3 << 4));
+        m_fpga->FpgaRegPokeInd(4, 0, 0x2038);
+
+        // start TX channel
         m_fpga->FpgaBlockWrite(m_tx.number, 0x8, (ctrl | (0x3 << 5)));
+
     } else {
+
+        // stop TX channel
         m_fpga->FpgaBlockWrite(m_tx.number, 0x8, (ctrl & (~(0x3 << 5))));
+
+        // stop ADC tetrade
+        m_fpga->FpgaRegPokeInd(4, 0x10, 0x0);
+        m_fpga->FpgaRegPokeInd(4, 0x17, 0x0);
+        m_fpga->FpgaRegPokeInd(4, 0, 0x0);
     }
 }
 
