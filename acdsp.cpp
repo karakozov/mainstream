@@ -34,14 +34,14 @@ acdsp::acdsp(std::vector<Fpga*>& fpgaList)
 {
     m_fpga.clear();
     m_exit = false;
-#ifdef _c6x_
-    m_iic = new i2c(1);
-    enableSwitchOut(0x1);
-    m_si571 = new Si571(m_iic);
-#else
+//#ifdef _c6x_
+//    m_iic = new i2c(1);
+//    enableSwitchOut(0x1);
+//    m_si571 = new Si571(m_iic);
+//#else
     m_iic = 0;
     m_si571 = 0;
-#endif
+//#endif
     m_cleanup = false;
 
     for(unsigned i=0; i<fpgaList.size(); i++) {
