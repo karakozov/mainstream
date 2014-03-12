@@ -8,13 +8,13 @@
 
 //-----------------------------------------------------------------------------
 
-unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber)
+unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, unsigned from)
 {
     fprintf(stderr, "%s()\n", __FUNCTION__);
 
     fpgaList.clear();
 
-    for(unsigned i=0; i<fpgaNumber; i++) {
+    for(unsigned i=from; i<from+fpgaNumber; i++) {
         try {
             Fpga *fpga = new Fpga(i);
             fpgaList.push_back(fpga);
@@ -59,7 +59,7 @@ void delete_fpga_list(std::vector<Fpga*>& fpgaList)
 
 //-----------------------------------------------------------------------------
 
-unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync)
+unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync_board)
 {
     fprintf(stderr, "%s()\n", __FUNCTION__);
 
@@ -75,8 +75,8 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
         bool okhw = fpga->FpgaHwAddress(hwAddr, fpgaNum);
         if(okid && okhw) {
             if(ID == 0x5514) {
-                if(sync) {
-                    *sync = new acsync(fpga);
+                if(sync_board) {
+                    *sync_board = new acsync(fpga);
                     break;
                 }
             }
@@ -84,9 +84,9 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
     }
 
     // scan geographical addresses
+    std::vector<Fpga*> fpgaLocal;
     for(unsigned slotIndex=1; slotIndex<=6; slotIndex++) {
 
-        std::vector<Fpga*> fpgaLocal;
         for(unsigned i=0; i<fpgaList.size(); i++) {
 
             Fpga *fpga = fpgaList.at(i);
@@ -96,8 +96,9 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
             if(okid && okhw) {
 
                 // skip AC_SYNC
-                if(ID == 0x5514)
+                if(ID == 0x5514) {
                     continue;
+                }
 
                 // use only fpga with the same hwAddr
                 if(hwAddr == slotIndex) {
@@ -106,37 +107,42 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
             }
         }
 
-        if(!fpgaLocal.empty()) {
-            boardList.push_back(new acdsp(fpgaLocal));
+        if(fpgaLocal.size() == 3) {
+            acdsp* brd = new acdsp(fpgaLocal);
+            boardList.push_back(brd);
             fpgaLocal.clear();
         }
     }
 
     unsigned boards = boardList.size();
-    if(sync) {
-        if(*sync) boards++;
+    if(sync_board) {
+        if(*sync_board) boards++;
     }
 
     fprintf(stderr, "Found %d boards\n", boards);
 
-    return boardList.size();
+    return boards;
 }
 
 //-----------------------------------------------------------------------------
 
-void delete_board_list(std::vector<acdsp*>& boardList, acsync* sync)
+void delete_board_list(std::vector<acdsp*>& boardList, acsync* sync_board)
 {
     fprintf(stderr, "%s()\n", __FUNCTION__);
 
-    if(sync) {
-        delete sync;
+    if(sync_board) {
+        delete sync_board;
     }
 
     for(unsigned i=0; i<boardList.size(); i++) {
         acdsp *brd = boardList.at(i);
         delete brd;
+        fprintf(stderr, "%s(): delete ACDSP: %p\n", __FUNCTION__, brd);
     }
+
     boardList.clear();
+
+    fprintf(stderr, "%s(): clear brd list\n", __FUNCTION__);
 }
 
 //-----------------------------------------------------------------------------
@@ -171,14 +177,14 @@ table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn
     if(!t) {
         exit(-1);
     }
-
     t->create_table(ROW, COL);
 
     if(t->create_header())
         t->set_header_text("%s", "TEST PCIE EXCHANGE");
 
     if(t->create_status())
-        t->set_status_text("%s", "Format [A / B / C / D]  A - trd check ok, B - rx sign err, C - rx block err, D - trd check err");
+        //t->set_status_text("%s", "Format [A / B / C / D]  A - trd check ok, B - rx sign err, C - rx block err, D - trd check err");
+        t->set_status_text("%s", "");
 
     //---------------------------------------
 
@@ -197,7 +203,7 @@ table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn
     t->set_cell_text(rx_fpga.size() + 1, 0, "%s", "CHANNEL");
 
     for(unsigned i=1; i<COL; i++) {
-        t->set_cell_text(rx_fpga.size() + 1, i, "TX_CHN%d SPEED MB/s", i-1);
+        t->set_cell_text(rx_fpga.size() + 1, i, "TX_CHN%d MB/s", i-1);
     }
 
     for(unsigned i=1; i<ROW/2; i++) {
@@ -255,15 +261,23 @@ void getCounters(std::vector<trd_check*>& check_fpga, std::vector<counter_t>& co
 
 //-----------------------------------------------------------------------------
 
-void showCounters(std::vector<counter_t>& counters)
+void showCounters(std::vector<counter_t>& counters, table* t)
 {
     for(unsigned i=0; i<counters.size(); i++) {
         counter_t& rd_cnt = counters.at(i);
-        fprintf(stderr, "RX%.2u", i);
-        for(unsigned j=0; j<rd_cnt.dataVector.size(); j++) {
-            fprintf(stderr, "\tTX[%.2u]:\t%.2u ", j, rd_cnt.dataVector.at(j));
+        if(!t) {
+            fprintf(stderr, "RX%.2u", i);
         }
-        fprintf(stderr, "\n");
+        for(unsigned j=0; j<rd_cnt.dataVector.size(); j++) {
+            if(!t) {
+                fprintf(stderr, "\tTX[%.2u]:\t%d ", j, rd_cnt.dataVector.at(j));
+            } else {
+                t->set_cell_text(i+1, j+1, "%d", rd_cnt.dataVector.at(j));
+            }
+        }
+        if(!t) {
+            fprintf(stderr, "\n");
+        }
     }
 }
 
@@ -296,20 +310,28 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
 
 //-----------------------------------------------------------------------------
 
-void showSpeed(std::vector<pcie_speed_t>& dataRate)
+void showSpeed(std::vector<pcie_speed_t>& dataRate, table *t)
 {
     for(unsigned i=0; i<dataRate.size(); i++) {
 
         pcie_speed_t& rateVector = dataRate.at(i);
 
-        fprintf(stderr, "RX%.2u", i);
+        if(!t) {
+            fprintf(stderr, "RX%.2d", i);
+        }
 
         for(unsigned j=0; j<rateVector.dataVector.size(); j++) {
 
             float rxRate = rateVector.dataVector.at(j);
-            fprintf(stderr, "\tTX[%.2u]:\t%.2f ", j, rxRate);
+            if(!t) {
+                fprintf(stderr, "\tTX[%.2d]:\t%.2f ", j, rxRate);
+            } else {
+                t->set_cell_text(i+dataRate.size()+2, j+1, "%.2f ", rxRate);
+            }
         }
-        fprintf(stderr, "\n");
+        if(!t) {
+            fprintf(stderr, "\n");
+        }
     }
 }
 
@@ -322,6 +344,7 @@ void show_test_result(std::vector<trd_check*>& check_fpga, std::vector<pe_chn_rx
     std::vector<pcie_speed_t>   dataRate;
 
     bool stop_flag = false;
+/*
     while(!stop_flag) {
 
         struct timeval start0;
@@ -344,38 +367,41 @@ void show_test_result(std::vector<trd_check*>& check_fpga, std::vector<pe_chn_rx
         getCounters(check_fpga, counters1, tx_fpga.size());
         calculateSpeed(dataRate, counters0, counters1, time_stop(start0));
         showSpeed(dataRate);
-        fprintf(stderr, "SPEED\n");
-        fprintf(stderr, "\n");
     }
-
+*/
 #ifdef __linux__
-    /*
     table *t = create_display_table(rx_fpga, tx_fpga);
     if(!t) {
         return;
     }
+    //table *t = 0;
+    struct timeval start0;
+    time_start(&start0);
 
     while(!stop_flag) {
 
-        struct timeval start0;
-        time_start(&start0);
+        struct timeval start1;
+        time_start(&start1);
 
         getCounters(check_fpga, counters0, tx_fpga.size());
 
-        fprintf(stderr, "working time:");
-        for(unsigned tt=0; tt<10; ++tt) {
-            IPC_delay(1000);
-            fprintf(stderr, " %.2f", time_stop(start0)/1000.);
-            if(IPC_kbhit()) {
-                stop_flag = true;
-            }
-            if(stop_flag)
-                break;
+        IPC_delay(2000);
+
+        if(!t) {
+            fprintf(stderr, "Working time: %.2f\n", time_stop(start0)/1000.);
+        } else {
+            t->set_status_text("Working time: %.2f", time_stop(start0)/1000.);
         }
-        fprintf(stderr, "\n");
 
         getCounters(check_fpga, counters1, tx_fpga.size());
+        calculateSpeed(dataRate, counters0, counters1, time_stop(start1));
+        showCounters(counters1, t);
+        showSpeed(dataRate, t);
 
+        if(IPC_kbhit()) {
+            stop_flag = true;
+        }
+/*
         for(unsigned i=0; i<rx_fpga.size(); i++) {
 
             pe_chn_rx* rx = rx_fpga.at(i);
@@ -387,10 +413,9 @@ void show_test_result(std::vector<trd_check*>& check_fpga, std::vector<pe_chn_rx
                 t->set_cell_text(rx_fpga.size()+i+2, j+1, "%.2f / %.2f", average_speed, instant_speed);
             }
         }
-    }
-
-    if(t) delete t;
 */
+    }
+    if(t) delete t;
 #endif
 }
 
@@ -516,27 +541,28 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     show_test_result(check_fpga, rx_fpga, tx_fpga);
 
     //-----------------------------------------------------------------------------
-    // Deconfigure and delete all objects
-    for(unsigned rxIndex=0; rxIndex<dsp_fpga.size(); rxIndex++) {
-
-        pe_chn_rx* rx = rx_fpga.at(rxIndex);
-        trd_check* check = check_fpga.at(rxIndex);
-
-        rx->start_rx(false);
-        check->start_check(false);
-    }
-
-    fprintf(stderr, "Press any key...1\n");
-    IPC_getch();
-
-    for(unsigned txIndex=0; txIndex<adc_fpga.size(); txIndex++) {
+    // Deconfigure TX and RX
+    fprintf(stderr, "STOP TX...\n");
+    for(unsigned txIndex=0; txIndex<tx_fpga.size(); txIndex++) {
 
         pe_chn_tx* tx = tx_fpga.at(txIndex);
         tx->start_tx(false);
     }
 
-    fprintf(stderr, "Press any key...2\n");
-    IPC_getch();
+    IPC_delay(500);
+    fprintf(stderr, "STOP RX and CHECK...\n");
+
+    for(unsigned rxIndex=0; rxIndex<dsp_fpga.size(); rxIndex++) {
+
+        pe_chn_rx* rx = rx_fpga.at(rxIndex);
+        trd_check* check = check_fpga.at(rxIndex);
+
+        check->start_check(false);
+        rx->start_rx(false);
+    }
+
+    IPC_delay(500);
+    fprintf(stderr, "Clear resources...\n");
 
     rx_fpga.clear();
     tx_fpga.clear();
@@ -546,9 +572,6 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     dsp_fpga.clear();
     adc_fpga.clear();
     sign.clear();
-
-    fprintf(stderr, "Press any key...3\n");
-    IPC_getch();
 
     fprintf(stderr, "Stop PCIE test\n");
 

@@ -1,14 +1,12 @@
 #ifndef __FPGA_H__
 #define __FPGA_H__
 
-#ifndef __GIPCY_H__
 #include "gipcy.h"
-#endif
-
 #include "fpga_base.h"
 #include "utypes.h"
 #include "ddwambpex.h"
 #include "ctrlstrm.h"
+#include "memory.h"
 
 #include <vector>
 #include <string>
@@ -35,7 +33,7 @@ public:
     void init();
     void resetFifo(unsigned trd);
     void resetTrd(unsigned trd);
-    int trd_number(unsigned trdID);
+    bool trd_number(unsigned trdID, unsigned& number);
 
     void FpgaRegPokeInd(S32 trdNo, S32 rgnum, U32 val);
     U32  FpgaRegPeekInd(S32 trdNo, S32 rgnum);
@@ -80,16 +78,19 @@ public:
     bool fpgaInfo(AMB_CONFIGURATION &info);
     bool fpgaBlock(unsigned startSearch, u16 id, fpga_block_t& block);
     bool fpgaTrd(unsigned startSearch, u16 id, fpga_trd_t& trd);
+    Memory* ddr3() {return m_ddr;}
 
 private:
     std::vector<Stream*>         m_strm;
     std::vector<fpga_block_t>    m_fpga_blocks;
     std::vector<fpga_trd_t>      m_fpga_trd;
+    Memory*                      m_ddr;
 
     void createDmaChannels();
     void deleteDmaCannels();
     void scanFpgaBlocks();
     void scanFpgaTetrades();
+    void createDDR3();
 
     bool dmaChannelInfo(U32 DmaChan, U32& dir, U32& FifoSize, U32& MaxDmaSize);
     Stream* stream(U32 DmaChan);

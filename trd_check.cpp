@@ -11,6 +11,7 @@ trd_check::trd_check(Fpga *fpga) : m_fpga(fpga)
     if(!m_fpga->fpgaTrd(0, 0xB0, m_check)) {
         throw except_info("%s, %d: %s() - Not found TRD_CHN_CHECK! ID: 0x%x\n", __FILE__, __LINE__, __FUNCTION__, 0xB0);
     }
+    reset();
 }
 
 //-------------------------------------------------------------------
@@ -154,6 +155,14 @@ void trd_check::start_check(bool start)
     } else {
         m_fpga->FpgaRegPokeInd(m_check.number, 0x0, 0x0);
     }
+}
+
+//-------------------------------------------------------------------
+
+void trd_check::reset()
+{
+    m_fpga->resetTrd(m_check.number);
+    m_fpga->resetFifo(m_check.number);
 }
 
 //-------------------------------------------------------------------

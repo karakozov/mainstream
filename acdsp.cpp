@@ -32,7 +32,7 @@ using namespace std;
 
 acdsp::acdsp(std::vector<Fpga*>& fpgaList)
 {
-    m_fpga.clear();
+    fprintf(stderr, "====================== Open ACDSP ======================\n");
     m_exit = false;
     m_rx = 0;
     m_trd_check = 0;
@@ -40,55 +40,51 @@ acdsp::acdsp(std::vector<Fpga*>& fpgaList)
     m_tx[1] = 0;
     m_iic = 0;
     m_si571 = 0;
-    m_cleanup = false;
+    m_fpga.clear();
 
     for(unsigned i=0; i<fpgaList.size(); i++) {
         m_fpga.push_back(0);
     }
 
-//#ifdef _c6x_
-//    m_iic = new i2c(1);
-//    enableSwitchOut(0x1);
-//    m_si571 = new Si571(m_iic);
-//#endif
+    //#ifdef _c6x_
+    //    m_iic = new i2c(1);
+    //    enableSwitchOut(0x1);
+    //    m_si571 = new Si571(m_iic);
+    //#endif
 
     // sort FPGA list according onboard FPGA number
     for(unsigned i=0; i<fpgaList.size(); i++) {
 
         Fpga *fpga = fpgaList.at(i);
 
-        u8 hwAddr = 0xff;
-        u8 fpgaNum = 0xff;
+        U08 hwAddr = 0xff;
+        U08 fpgaNum = 0xff;
         bool okhw = fpga->FpgaHwAddress(hwAddr, fpgaNum);
-
         if(okhw) {
 
-            m_fpga[fpgaNum] = fpga;
+            m_fpga.at(fpgaNum) = fpga;
 
-            if(fpgaNum == 0x2) {
-                m_trd_check = new trd_check(fpga);
-                m_rx = new pe_chn_rx(fpga);
-            } else if(fpgaNum == 0x1) {
-                m_tx[1] = new pe_chn_tx(fpga);
-            } else if(fpgaNum == 0x0) {
-                m_tx[0] = new pe_chn_tx(fpga);
+            if(fpgaNum == (U08)2) {
+                m_trd_check = new trd_check(m_fpga.at(fpgaNum));
+                m_rx = new pe_chn_rx(m_fpga.at(fpgaNum));
+            } else if(fpgaNum == (U08)1) {
+                m_tx[1] = new pe_chn_tx(m_fpga.at(fpgaNum));
+            } else if(fpgaNum == (U08)0) {
+                m_tx[0] = new pe_chn_tx(m_fpga.at(fpgaNum));
             }
         }
     }
-
-    createFpgaMemory();
+    fprintf(stderr, "========================================================\n");
 }
 
 //-----------------------------------------------------------------------------
 
 acdsp::~acdsp()
 {
-    deleteFpgaMemory();
-
-    if(m_rx) delete m_rx;
-    if(m_trd_check) delete m_trd_check;
     if(m_tx[0]) delete m_tx[0];
     if(m_tx[1]) delete m_tx[1];
+    if(m_rx) delete m_rx;
+    if(m_trd_check) delete m_trd_check;
     if(m_si571) delete m_si571;
     if(m_iic) delete m_iic;
 }
@@ -129,53 +125,13 @@ int acdsp::setSi57xFreq(float freq)
 
 //-----------------------------------------------------------------------------
 
-void acdsp::createFpgaMemory()
-{
-    try {
-
-        for(unsigned i=0; i<m_fpga.size(); i++) {
-
-            Fpga *fpga = m_fpga.at(i);
-            fpga_trd_t memTrd;
-
-            if(fpga->fpgaTrd(0, 0x9B, memTrd)) {
-
-                Memory *ddr = new Memory(fpga);
-                if(!ddr) {
-                    throw except_info("%s, %d: %s() - Error create DDR3 object for FPGA%d\n", __FILE__, __LINE__, __FUNCTION__, i);
-                }
-                m_ddr.push_back(ddr);
-
-            } else {
-
-                fprintf(stderr, "FPGA%d: DDR3 tetrade not found\n", i);
-            }
-        }
-
-    } catch(...)  {
-
-        deleteFpgaMemory();
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-void acdsp::deleteFpgaMemory()
-{
-    for(unsigned i=0; i<m_ddr.size(); i++) {
-        Memory *ddr = m_ddr.at(i);
-        m_ddr.at(i) = 0;
-        delete ddr;
-    }
-    m_ddr.clear();
-}
-
-//-----------------------------------------------------------------------------
-
 Fpga* acdsp::FPGA(unsigned fpgaNum)
 {
     if(fpgaNum >= m_fpga.size()) {
         throw except_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
+    }
+    if(!m_fpga.at(fpgaNum)) {
+        throw except_info("%s, %d: %s() - Invalid FPGA%d pointer!\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
     }
     return m_fpga.at(fpgaNum);
 }
@@ -184,10 +140,7 @@ Fpga* acdsp::FPGA(unsigned fpgaNum)
 
 Memory* acdsp::DDR3(unsigned fpgaNum)
 {
-    if(fpgaNum >= m_ddr.size()) {
-        throw except_info("%s, %d: %s() - Invalid FPGA number: %d\n", __FILE__, __LINE__, __FUNCTION__, fpgaNum);
-    }
-    return m_ddr.at(fpgaNum);
+    return FPGA(fpgaNum)->ddr3();
 }
 
 //-----------------------------------------------------------------------------

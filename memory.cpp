@@ -31,14 +31,16 @@ Memory::Memory(Fpga *fpga) : m_fpga(fpga)
 
     memset(&m_DDR3, 0, sizeof m_DDR3);
 
-    m_DDR3.Mode = 0x01;
-    m_MemTetrNum = m_fpga->trd_number(SDRAMFMC106P_TETR_ID);
-    if(m_MemTetrNum == (U32)-1)
+    m_DDR3.Mode = 1;
+    bool found = m_fpga->trd_number(SDRAMFMC106P_TETR_ID, m_MemTetrNum);
+    if(!found)
     {
-        m_MemTetrNum = m_fpga->trd_number(SDRAMDDR3X_TETR_ID);
-        m_DDR3.Mode = 3;
-        if(m_MemTetrNum == (U32)-1)
+        found = m_fpga->trd_number(SDRAMDDR3X_TETR_ID, m_MemTetrNum);
+        if(found) {
+            m_DDR3.Mode = 3;
+        } else {
             m_DDR3.Mode = 0;
+        }
     }
 
     if(GetCfgFromSpd()) {
@@ -73,12 +75,13 @@ bool Memory::GetCfgFromSpd()
     SpdCtrl.AsWhole = 0;
     SpdCtrl.ByBits.Read = 1;
 
-    int flg_3x = m_fpga->trd_number(SDRAMDDR3X_TETR_ID);
+    unsigned tmpNum = 0;
+    bool found = m_fpga->trd_number(SDRAMDDR3X_TETR_ID, tmpNum);
 
     UCHAR mem_type[SDRAM_MAXSLOTS];
     SpdCtrl.ByBits.Slot = 0;
     mem_type[0] = ReadSpdByte(SDRAMspd_MEMTYPE, SpdCtrl.AsWhole);
-    if(flg_3x == -1)
+    if(!found)
     {
         SpdCtrl.ByBits.Slot = 1;
         mem_type[1] = ReadSpdByte(SDRAMspd_MEMTYPE, SpdCtrl.AsWhole);

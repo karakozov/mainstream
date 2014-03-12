@@ -101,23 +101,20 @@ public:
     pe_chn_tx* get_chan_tx(int id) { return m_tx[id%2]; }
 
 private:
+    std::vector<Fpga*>       m_fpga;
     i2c                     *m_iic;
     Si571                   *m_si571;
-    std::vector<Fpga*>       m_fpga;
-    std::vector<Memory*>     m_ddr;
     BRDctrl_StreamCBufAlloc  m_sSCA;
     bool                     m_exit;
-    bool                     m_cleanup;
 
     trd_check*               m_trd_check;
     pe_chn_rx*               m_rx;
-    pe_chn_tx*               m_tx[0];
+    pe_chn_tx*               m_tx[2];
 
     void createFpgaMemory();
     void deleteFpgaMemory();
 
     Memory *DDR3(unsigned fpgaNum);
-    //Fpga *FPGA(unsigned fpgaNum);
 };
 
 #endif // __ACDSP_H__

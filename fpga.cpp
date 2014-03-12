@@ -27,6 +27,7 @@ Fpga::Fpga(unsigned id) : fpga_base(id)
     m_strm.clear();
     m_fpga_blocks.clear();
     m_fpga_trd.clear();
+    m_ddr = 0;
 
     init();
 }
@@ -38,6 +39,7 @@ Fpga::~Fpga()
     m_fpga_blocks.clear();
     m_fpga_trd.clear();
     deleteDmaCannels();
+    if(m_ddr) delete m_ddr;
 }
 
 //-----------------------------------------------------------------------------
@@ -82,6 +84,7 @@ void Fpga::init()
         scanFpgaBlocks();
         scanFpgaTetrades();
         createDmaChannels();
+        //createDDR3();
 
     } catch(...) {
 
@@ -267,6 +270,23 @@ U32  Fpga::FpgaBlockRead( U32 nb, U32 reg )
 
 //-----------------------------------------------------------------------------
 
+void Fpga::createDDR3()
+{
+    fpga_trd_t memTrd;
+    if(fpgaTrd(0, 0x9B, memTrd)) {
+
+        m_ddr = new Memory(this);
+        if(!m_ddr) {
+            throw except_info("%s, %d: %s() - FPGA%d: Error create DDR3 object!\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+        }
+
+    } else {
+
+        fprintf(stderr, "FPGA%d: DDR3 tetrade not found\n", m_fpgaNumber);
+    }
+}
+//-----------------------------------------------------------------------------
+
 void Fpga::createDmaChannels()
 {
     for(unsigned i=0; i<DMA_CHANNEL_NUM; i++) {
@@ -320,16 +340,16 @@ void Fpga::scanFpgaBlocks()
 
         if((id != 0x7ff) && (id != 0x0)) {
 
-            unsigned ver = core_block_read(i, 0x1);
+            u32 ver = core_block_read(i, 0x1);
 
             block.number = i;
-            block.id = id;
-            block.ver = ver;
+            block.id = id & 0xffff;
+            block.ver = ver & 0xffff;
 
             if(id == 0x13) {
 
-                unsigned did = core_block_read(i, 0x2);
-                block.device_id = did;
+                u32 did = core_block_read(i, 0x2);
+                block.device_id = (did & 0xffff);
                 //fprintf(stderr, "BLOCK%d: ID 0x%.4x  DID 0x%.4x  VER 0x%.4x\n", i, id, did, ver);
 
             } else {
@@ -386,17 +406,18 @@ void Fpga::scanFpgaTetrades()
 
 //-----------------------------------------------------------------------------
 
-int Fpga::trd_number(unsigned trdID)
+bool Fpga::trd_number(unsigned trdID, unsigned& number)
 {
     for(unsigned i=0; i<m_fpga_trd.size(); i++) {
 
         fpga_trd_t trd = m_fpga_trd.at(i);
 
         if(trd.id == trdID) {
-            return trd.number;
+            number = trd.number;
+            return true;
         }
     }
-    return -1;
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -591,35 +612,23 @@ bool Fpga::writeBuffer(U32 DmaChan, IPC_handle file, int fpos)
 
 //-----------------------------------------------------------------------------
 
-bool Fpga::fpgaInfo(AMB_CONFIGURATION& info)
+bool Fpga::fpgaInfo(AMB_CONFIGURATION& cfgInfo)
 {
-    return fpga_base::info(info);
+    return info(cfgInfo);
 }
 
 //-----------------------------------------------------------------------------
 
 bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
 {
-    U32 hw = core_block_read(0, 0x1F);
-    hwAddr =  ((hw >> 8) & 0xff);
-    fpgaNum = (hw & 0xff);
-    if(((hw >> 16)&0xffff) == 0x4912) {
-      return true;
-    }
-    fprintf(stderr, "%s(): Error get geographical address\n", __FUNCTION__);
-    return false;
+    return core_hw_address(hwAddr, fpgaNum);
 }
 
 //-----------------------------------------------------------------------------
 
 bool Fpga::FpgaDeviceID(U16& device_id)
 {
-    device_id = (core_block_read(0, 2) & 0xffff);
-    if((device_id != 0) && (device_id != 0xffff)) {
-        return true;
-    }
-    fprintf(stderr, "%s(): Error get device id\n", __FUNCTION__);
-    return false;
+    return core_device_id(device_id);
 }
 
 //-----------------------------------------------------------------------------

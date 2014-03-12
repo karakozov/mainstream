@@ -36,23 +36,20 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
     m_adf_regs.reg3 = 0;
     m_FVCO_ADF4002 = 56;
 
-    //try {
-    //  m_fpga->init();
-    //} catch(...)  {
-    //    throw except_info("%s, %d: %s() - Error init AC_SYNC FPGA.\n", __FILE__, __LINE__, __FUNCTION__);
-    //}
-
-    if(!FPGA(0)->fpgaTrd(0, 0xB1, m_sync_trd)) {
+    if(!m_fpga->fpgaTrd(0, 0xB1, m_sync_trd)) {
         throw except_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
     }
 
     fillCxDx();
+
+    fprintf(stderr, "%s(): %p\n", __FUNCTION__, this);
 }
 
 //-----------------------------------------------------------------------------
 
 acsync::~acsync()
 {
+    fprintf(stderr, "%s(): %p\n", __FUNCTION__, this);
 }
 
 //-----------------------------------------------------------------------------

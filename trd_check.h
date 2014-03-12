@@ -61,6 +61,7 @@ public:
     bool show_report(u32 chan, u32 chx_data);
     bool read_report_word(u32 chan, u32 chx_data, u32 word_num, report_word_t& word);
     void start_check(bool start);
+    void reset();
 
 private:
     Fpga            *m_fpga;

@@ -26,7 +26,7 @@
 
 bool start_pcie_test(std::vector<acdsp*>& boards, struct app_params_t& params);
 unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync);
-unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber);
+unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, unsigned from = 0);
 void delete_board_list(std::vector<acdsp*>& boardList, acsync* sync);
 void delete_fpga_list(std::vector<Fpga*>& fpgaList);
 

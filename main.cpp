@@ -36,12 +36,6 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-IPC_handle createDataFile(const char *fname);
-bool createFlagFile(const char *fname);
-bool lockDataFile(const char* fname, int counter);
-
-//-----------------------------------------------------------------------------
-
 #if USE_SIGNAL
 acdsp *boardPtr = 0;
 static int g_StopFlag = 0;
@@ -52,6 +46,12 @@ void stop_exam(int sig)
     if(boardPtr) boardPtr->setExitFlag(true);
 }
 #endif
+
+//-----------------------------------------------------------------------------
+
+std::vector<Fpga*> fpgaList;
+std::vector<acdsp*> boardList;
+acsync *sync_board = 0;
 
 //-----------------------------------------------------------------------------
 
@@ -81,22 +81,19 @@ int main(int argc, char *argv[])
 
 #if 1
     try {
+        create_fpga_list(fpgaList, 10, 0);
+        create_board_list(fpgaList, boardList, &sync_board);
 
-        std::vector<Fpga*> fpgaList;
-        std::vector<acdsp*> boardList;
-        acsync *sync = 0;
-
-        create_fpga_list(fpgaList, 10);
-        create_board_list(fpgaList, boardList, &sync);
-
-        if(sync) {
-            sync->PowerON(true);
-            sync->progFD(sync_params.sync_mode, sync_params.sync_selclkout, sync_params.sync_fd, sync_params.sync_fo);
+        if(sync_board) {
+            sync_board->PowerON(true);
+            sync_board->progFD(sync_params.sync_mode, sync_params.sync_selclkout, sync_params.sync_fd, sync_params.sync_fo);
         }
 
         start_pcie_test(boardList, params);
 
-        delete_board_list(boardList,sync);
+        IPC_delay(1000);
+
+        delete_board_list(boardList,sync_board);
         delete_fpga_list(fpgaList);
     }
     catch(...) {

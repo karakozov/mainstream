@@ -39,6 +39,13 @@ fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
     infoFpga();
     mapFpga();
     initBar();
+    U16 ID = 0;
+    U08 hwAddr = 0;
+    U08 fpgaNum = 0;
+    core_device_id(ID);
+    core_hw_address(hwAddr, fpgaNum);
+    fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", hwAddr, ID, fpgaNum );
+    fprintf(stderr, "=========================================================\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -75,23 +82,21 @@ void fpga_base::closeFpga()
 
 void fpga_base::infoFpga()
 {
-    AMB_CONFIGURATION fpgaInfo;
+    //AMB_CONFIGURATION fpgaInfo;
+    //memset(&fpgaInfo, 0, sizeof(AMB_CONFIGURATION));
+    memset(&m_info, 0, sizeof(m_info));
 
-    memset(&fpgaInfo, 0, sizeof(fpgaInfo));
-
-    int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &fpgaInfo, sizeof(AMB_CONFIGURATION), &fpgaInfo, sizeof(AMB_CONFIGURATION));
+    int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &m_info, sizeof(AMB_CONFIGURATION), &m_info, sizeof(AMB_CONFIGURATION));
     if(res < 0) {
         throw except_info("%s, %d: %s() - Error get FPGA%d information.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
-
-    m_info = fpgaInfo;
 }
 
 //-----------------------------------------------------------------------------
 
-bool fpga_base::info(AMB_CONFIGURATION& info)
+bool fpga_base::info(AMB_CONFIGURATION& cfgInfo)
 {
-    info = m_info;
+    cfgInfo = m_info;
     return m_ok;
 }
 
@@ -119,7 +124,6 @@ void fpga_base::mapFpga()
     }
 
     if(map_count != res_count) {
-        fprintf(stderr, "Not all resources was mapped\n");
         throw except_info("%s, %d: %s() - Error map all BARs for FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
     }
 
@@ -382,3 +386,34 @@ u32 fpga_base::core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 
 }
 
 //-----------------------------------------------------------------------------
+
+bool fpga_base::core_hw_address(U08& hwAddr, U08& fpgaNum)
+{
+    U32 hw = core_block_read(0, 0x1F);
+    hwAddr =  ((hw >> 8) & 0xff);
+    fpgaNum = (hw & 0xff);
+    if(((hw >> 16)&0xffff) == 0x4912) {
+      return true;
+    }
+    fprintf(stderr, "%s(): Error get geographical address\n", __FUNCTION__);
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+
+bool fpga_base::core_device_id(U16& device_id)
+{
+    device_id = (core_block_read(0, 2) & 0xffff);
+    if((device_id != 0) && (device_id != 0xffff)) {
+        return true;
+    }
+    fprintf(stderr, "%s(): Error get device id\n", __FUNCTION__);
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+
+bool fpga_base::core_temperature(float &t)
+{
+    return false;
+}
