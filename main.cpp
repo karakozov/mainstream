@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
     IPC_initKeyboard();
 #endif
 
-#if 1
     try {
+
         create_fpga_list(fpgaList, 10, 0);
         create_board_list(fpgaList, boardList, &sync_board);
 
@@ -89,105 +89,104 @@ int main(int argc, char *argv[])
             sync_board->progFD(sync_params.sync_mode, sync_params.sync_selclkout, sync_params.sync_fd, sync_params.sync_fo);
         }
 
-        start_pcie_test(boardList, params);
+        if(params.testMode == 3) {
 
-        IPC_delay(1000);
+            start_pcie_test(boardList, params);
+            IPC_delay(1000);
+
+        } else {
+
+            acdsp* brd = boardList.at(params.boardNumber);
+
+    #if USE_SIGNAL
+            boardPtr = &brd;
+    #endif
+
+            fprintf(stderr, "Start testing DMA: %d\n", params.dmaChannel);
+            fprintf(stderr, "DMA information:\n" );
+            brd->infoDma(params.fpgaNumber);
+
+            vector<void*> Buffers(params.dmaBlockCount, NULL);
+
+    #ifndef ALLOCATION_TYPE_1
+            BRDctrl_StreamCBufAlloc sSCA = {BRDstrm_DIR_IN, 1, params.dmaBlockCount, params.dmaBlockSize, Buffers.data(), NULL, };
+            fprintf(stderr, "Allocate DMA memory\n");
+            brd->allocateDmaMemory(params.fpgaNumber, params.dmaChannel, &sSCA);
+    #else
+            BRDstrm_Stub *pStub = 0;
+            fprintf(stderr, "Allocate DMA memory\n");
+            brd->allocateDmaMemory(params.fpgaNumber, params.dmaChannel, Buffers.data(), params.dmaBlockSize, params.dmaBlockCount, 1, BRDstrm_DIR_IN, 0x1000, &pStub);
+    #endif
+            IPC_delay(100);
+
+            char fname[64];
+            snprintf(fname, sizeof(fname), "data_%d.bin", params.fpgaNumber);
+            IPC_handle isviFile = createDataFile(fname);
+
+            char flgname[64];
+            snprintf(flgname, sizeof(flgname), "data_%d.flg", params.fpgaNumber);
+            createFlagFile(flgname);
+
+            //---------------------------------------------------- DATA FROM STREAM ADC
+
+            if(params.fpgaNumber != 0) {
+
+                if(params.testMode == 0)
+                    brd->dataFromAdc(params, isviFile, flgname, sSCA);
+
+                //---------------------------------------------------- DDR3 FPGA AS MEMORY
+
+                if(params.testMode == 1)
+                    brd->dataFromMemAsMem(params, isviFile, flgname, sSCA);
+
+                //---------------------------------------------------- DDR3 FPGA AS FIFO
+
+                if(params.testMode == 2)
+                    brd->dataFromMemAsFifo(params, isviFile, flgname, sSCA);
+
+                //----------------------------------------------------
+
+            } else {
+
+                //---------------------------------------------------- DATA FROM MAIN STREAM
+
+                if(params.testMode == 0)
+                    brd->dataFromMain(params, isviFile, flgname, sSCA);
+
+                //---------------------------------------------------- DDR3 FPGA AS MEMORY
+
+                if(params.testMode == 1)
+                    brd->dataFromMainToMemAsMem(params, isviFile, flgname, sSCA);
+
+                //---------------------------------------------------- DDR3 FPGA AS FIFO
+
+                if(params.testMode == 2)
+                    brd->dataFromMainToMemAsFifo(params, isviFile, flgname, sSCA);
+
+                //----------------------------------------------------
+            }
+
+            fprintf(stderr, "Free DMA memory\n");
+            brd->freeDmaMemory(params.fpgaNumber, params.dmaChannel);
+
+            Buffers.clear();
+
+            IPC_closeFile(isviFile);
+        }
 
         delete_board_list(boardList,sync_board);
         delete_fpga_list(fpgaList);
     }
-    catch(...) {
-
-        fprintf(stderr, "Exception was generated in the program. Exit from application.\n");
-    }
-#else
-    try {
-
-        acdsp brd;
-
-        brd.setSi57xFreq(params.adcFreq);
-
-#if USE_SIGNAL
-        boardPtr = &brd;
-#endif
-
-        fprintf(stderr, "Start testing DMA: %d\n", params.dmaChannel);
-        fprintf(stderr, "DMA information:\n" );
-        brd.infoDma(params.fpgaNumber);
-
-        vector<void*> Buffers(params.dmaBlockCount, NULL);
-
-#ifndef ALLOCATION_TYPE_1
-        BRDctrl_StreamCBufAlloc sSCA = {BRDstrm_DIR_IN, 1, params.dmaBlockCount, params.dmaBlockSize, Buffers.data(), NULL, };
-        fprintf(stderr, "Allocate DMA memory\n");
-        brd.allocateDmaMemory(params.fpgaNumber, params.dmaChannel, &sSCA);
-#else
-        BRDstrm_Stub *pStub = 0;
-        fprintf(stderr, "Allocate DMA memory\n");
-        brd.allocateDmaMemory(params.fpgaNumber, params.dmaChannel, Buffers.data(), params.dmaBlockSize, params.dmaBlockCount, 1, BRDstrm_DIR_IN, 0x1000, &pStub);
-#endif
-        IPC_delay(100);
-
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d.bin", params.fpgaNumber);
-        IPC_handle isviFile = createDataFile(fname);
-
-        char flgname[64];
-        snprintf(flgname, sizeof(flgname), "data_%d.flg", params.fpgaNumber);
-        createFlagFile(flgname);
-
-        //---------------------------------------------------- DATA FROM STREAM ADC
-
-        if(params.fpgaNumber != 0) {
-
-            if(params.testMode == 0)
-                brd.dataFromAdc(params, isviFile, flgname, sSCA);
-
-            //---------------------------------------------------- DDR3 FPGA AS MEMORY
-
-            if(params.testMode == 1)
-                brd.dataFromMemAsMem(params, isviFile, flgname, sSCA);
-
-            //---------------------------------------------------- DDR3 FPGA AS FIFO
-
-            if(params.testMode == 2)
-                brd.dataFromMemAsFifo(params, isviFile, flgname, sSCA);
-
-            //----------------------------------------------------
-
-        } else {
-
-            //---------------------------------------------------- DATA FROM MAIN STREAM
-
-            if(params.testMode == 0)
-                brd.dataFromMain(params, isviFile, flgname, sSCA);
-
-            //---------------------------------------------------- DDR3 FPGA AS MEMORY
-
-            if(params.testMode == 1)
-                brd.dataFromMainToMemAsMem(params, isviFile, flgname, sSCA);
-
-            //---------------------------------------------------- DDR3 FPGA AS FIFO
-
-            if(params.testMode == 2)
-                brd.dataFromMainToMemAsFifo(params, isviFile, flgname, sSCA);
-
-            //----------------------------------------------------
-        }
-
-        fprintf(stderr, "Free DMA memory\n");
-        brd.freeDmaMemory(params.fpgaNumber, params.dmaChannel);
-
-        Buffers.clear();
-
-        IPC_closeFile(isviFile);
-
+    catch(except_info_t err) {
+        fprintf(stderr, "%s", err.info.c_str());
+        delete_board_list(boardList,sync_board);
+        delete_fpga_list(fpgaList);
     }
     catch(...) {
-
         fprintf(stderr, "Exception was generated in the program. Exit from application.\n");
+        delete_board_list(boardList,sync_board);
+        delete_fpga_list(fpgaList);
     }
-#endif
 
 #if !USE_SIGNAL
     IPC_cleanupKeyboard();

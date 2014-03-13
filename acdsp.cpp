@@ -927,8 +927,11 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     pe_chn_tx tx1(FPGA(1));
     pe_chn_tx tx2(FPGA(2));
 
-    tx1.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x111111);
-    tx2.set_fpga_addr(0, cfg0.PhysAddress[2]+0x20000, 0x222222);
+    tx1.set_fpga_wait(512);
+    tx1.set_fpga_addr(0, cfg0.PhysAddress[2]+0x10000, 0x111111, false);
+
+    tx2.set_fpga_wait(512);
+    tx2.set_fpga_addr(0, cfg0.PhysAddress[2]+0x20000, 0x222222, true);
 
     fprintf(stderr, "Start TX trd\n");
     tx1.start_tx(true);

@@ -370,11 +370,11 @@ void show_test_result(std::vector<trd_check*>& check_fpga, std::vector<pe_chn_rx
     }
 */
 #ifdef __linux__
-    table *t = create_display_table(rx_fpga, tx_fpga);
-    if(!t) {
-        return;
-    }
-    //table *t = 0;
+    //table *t = create_display_table(rx_fpga, tx_fpga);
+    //if(!t) {
+    //    return;
+    //}
+    table *t = 0;
     struct timeval start0;
     time_start(&start0);
 
@@ -489,19 +489,21 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     }
 
     //-----------------------------------------------------------------------------
-    // program TX channels (first approach)
+    // program TX channels (first approach - optimal tx distribution)
     for(unsigned txIndex=0, rx_idx = 0; txIndex < adc_fpga.size(); txIndex++) {
 
         fprintf(stderr, "===== TX %d =====\n", txIndex);
 
         pe_chn_tx* tx = tx_fpga.at(txIndex);
 
+        tx->set_fpga_wait(512);
+
         for(unsigned rxIndex = 0; rxIndex < dsp_fpga.size(); rxIndex++) {
 
             AMB_CONFIGURATION cfg0 = dsp_cfg.at((rxIndex + rx_idx) % dsp_fpga.size());
             u32 rx_fpga_addr = cfg0.PhysAddress[2] + 0x1000*txIndex + 0x1000;
             fprintf(stderr, "RX%d\t\t DST_ADDR 0x%X\t\t SIGN 0x%X\n", rxIndex, rx_fpga_addr|0x1, sign.at(txIndex));
-            tx->set_fpga_addr(rxIndex, rx_fpga_addr, sign.at(txIndex));
+            tx->set_fpga_addr(rxIndex, rx_fpga_addr, sign.at(txIndex), (txIndex & 0x1));
         }
 
         ++rx_idx;
@@ -510,7 +512,7 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     }
 /*
     //-----------------------------------------------------------------------------
-    // program TX channels (second approach)
+    // program TX channels (second approach - sequential tx distribution)
     for(unsigned txIndex=0, rx_idx = 0; txIndex < adc_fpga.size(); txIndex++) {
 
         fprintf(stderr, "===== TX %d =====\n", txIndex);

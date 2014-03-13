@@ -16,6 +16,7 @@ struct app_params_t {
     unsigned dmaBlockCount;
     unsigned dmaBuffersCount;
     unsigned testMode;
+    unsigned boardNumber;
 };
 
 struct sync_params_t {

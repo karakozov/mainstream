@@ -22,15 +22,28 @@ pe_chn_tx::~pe_chn_tx()
 
 //-------------------------------------------------------------------
 
-void pe_chn_tx::set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign)
+void pe_chn_tx::set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign, bool reverse)
 {
     // set TX signature and channel number
     m_fpga->FpgaBlockWrite(m_tx.number, 0x9, sign);
 
     // set TX address
-    m_fpga->FpgaBlockWrite(m_tx.number, 0xC + chan, (dst_fpga_addr|0x1));
+    if(reverse) {
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan,     (dst_fpga_addr|0x1));
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan + 1, (dst_fpga_addr|0x3));
+    } else {
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan,     (dst_fpga_addr|0x3));
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan + 1, (dst_fpga_addr|0x1));
+    }
 
     //fprintf(stderr, "TX: CHAN%d --- DST_ADDR 0x%X --- SIGN 0x%X\n", chan, dst_fpga_addr | 0x1, sign);
+}
+
+//-------------------------------------------------------------------
+
+void pe_chn_tx::set_fpga_wait(u32 wait)
+{
+    m_fpga->FpgaBlockWrite(m_tx.number, 0xB, wait);
 }
 
 //-------------------------------------------------------------------

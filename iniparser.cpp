@@ -63,7 +63,7 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
     }
     param.adcMask = strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "adcFreq", "350000000", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, "adcFreq", "250000000", Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: adcFreq - not found. Use default value\n");
     }
@@ -92,6 +92,11 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
         fprintf(stderr, "Parameter: testMode - not found. Use default value\n");
     }
     param.testMode = strtol(Buffer,0,16);
+    res = IPC_getPrivateProfileString(SECTION_NAME, "boardNumber", "0x2", Buffer, sizeof(Buffer), iniFilePath);
+    if(!res) {
+        fprintf(stderr, "Parameter: testMode - not found. Use default value\n");
+    }
+    param.boardNumber = strtol(Buffer,0,16);
 
     return true;
 }
