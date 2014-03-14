@@ -70,6 +70,7 @@ private:
     U08                      m_Cx[17];
     U32                      m_FVCO_ADF4002;
     bool                     m_cleanup;
+    U32                      m_slotNumber;
 
     bool initFpga();
 

@@ -35,9 +35,19 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
     m_adf_regs.reg2 = 0;
     m_adf_regs.reg3 = 0;
     m_FVCO_ADF4002 = 56;
+    m_slotNumber = 0;
 
     if(!m_fpga->fpgaTrd(0, 0xB1, m_sync_trd)) {
         throw except_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
+    }
+
+    U08 hwAddr = 0xff;
+    U08 fpgaNum = 0xff;
+    bool okhw = m_fpga->FpgaHwAddress(hwAddr, fpgaNum);
+    if(okhw) {
+        if(!m_slotNumber) {
+            m_slotNumber = hwAddr;
+        }
     }
 
     fillCxDx();

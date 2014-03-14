@@ -59,7 +59,7 @@ void delete_fpga_list(std::vector<Fpga*>& fpgaList)
 
 //-----------------------------------------------------------------------------
 
-unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync_board)
+unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& boardList, acsync** sync_board, u32 boradMask)
 {
     fprintf(stderr, "%s()\n", __FUNCTION__);
 
@@ -68,6 +68,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
     U08 fpgaNum = 0;
     boardList.clear();
 
+    // AC_SYNC always in use if it presents
     for(unsigned i=0; i<fpgaList.size(); i++) {
 
         Fpga *fpga = fpgaList.at(i);
@@ -83,9 +84,12 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
         }
     }
 
-    // scan geographical addresses
+    // scan geographical addresses for non masked boards
     std::vector<Fpga*> fpgaLocal;
-    for(unsigned slotIndex=1; slotIndex<=6; slotIndex++) {
+    for(unsigned slotIndex=2; slotIndex<=6; slotIndex++) {
+
+        if(!(boradMask & (0x1 << slotIndex)))
+            continue;
 
         for(unsigned i=0; i<fpgaList.size(); i++) {
 
@@ -116,7 +120,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
 
     unsigned boards = boardList.size();
     if(sync_board) {
-        if(*sync_board) boards++;
+        if(*sync_board) ++boards;
     }
 
     fprintf(stderr, "Found %d boards\n", boards);

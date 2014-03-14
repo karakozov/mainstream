@@ -22,7 +22,8 @@
 
 //-----------------------------------------------------------------------------
 
-#define ACDSP_FPGA_COUNT          3
+#define DSP_FPGA_COUNT            1
+#define ADC_FPGA_COUNT            2
 #define DMA_CHANNEL_NUM           4
 
 //-----------------------------------------------------------------------------
@@ -43,12 +44,12 @@ public:
     int enableSwitchOut(unsigned mask);
 
     // DATA INTERFACE
-    void dataFromAdc(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
-    void dataFromMemAsFifo(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
-    void dataFromMemAsMem(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
-    void dataFromMain(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
-    void dataFromMainToMemAsFifo(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
-    void dataFromMainToMemAsMem(struct app_params_t& params, IPC_handle isviFile, const char *flgName, BRDctrl_StreamCBufAlloc& sSCA);
+    void dataFromAdc(struct app_params_t& params);
+    void dataFromMemAsFifo(struct app_params_t& params);
+    void dataFromMemAsMem(struct app_params_t& params);
+    void dataFromMain(struct app_params_t& params);
+    void dataFromMainToMemAsFifo(struct app_params_t& params);
+    void dataFromMainToMemAsMem(struct app_params_t& params);
 
     // EXIT
     void setExitFlag(bool exit);
@@ -106,6 +107,7 @@ private:
     Si571                   *m_si571;
     BRDctrl_StreamCBufAlloc  m_sSCA;
     bool                     m_exit;
+    U32                      m_slotNumber;
 
     trd_check*               m_trd_check;
     pe_chn_rx*               m_rx;
