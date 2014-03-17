@@ -68,25 +68,28 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
     U08 fpgaNum = 0;
     boardList.clear();
 
-    // AC_SYNC always in use if it presents
-    for(unsigned i=0; i<fpgaList.size(); i++) {
+    // AC_SYNC
+    if(boradMask & 0x1) {
 
-        Fpga *fpga = fpgaList.at(i);
-        bool okid = fpga->FpgaDeviceID(ID);
-        bool okhw = fpga->FpgaHwAddress(hwAddr, fpgaNum);
-        if(okid && okhw) {
-            if(ID == 0x5514) {
-                if(sync_board) {
-                    *sync_board = new acsync(fpga);
-                    break;
+        for(unsigned i=0; i<fpgaList.size(); i++) {
+
+            Fpga *fpga = fpgaList.at(i);
+            bool okid = fpga->FpgaDeviceID(ID);
+            bool okhw = fpga->FpgaHwAddress(hwAddr, fpgaNum);
+            if(okid && okhw) {
+                if(ID == 0x5514) {
+                    if(sync_board) {
+                        *sync_board = new acsync(fpga);
+                        break;
+                    }
                 }
             }
         }
     }
 
-    // scan geographical addresses for non masked boards
+    // scan geographical addresses for non masked AC_DSP boards
     std::vector<Fpga*> fpgaLocal;
-    for(unsigned slotIndex=2; slotIndex<=6; slotIndex++) {
+    for(unsigned slotIndex=0; slotIndex<6; slotIndex++) {
 
         if(!(boradMask & (0x1 << slotIndex)))
             continue;
@@ -105,7 +108,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
                 }
 
                 // use only fpga with the same hwAddr
-                if(hwAddr == slotIndex) {
+                if(hwAddr == (slotIndex+1)) {
                     fpgaLocal.push_back(fpga);
                 }
             }

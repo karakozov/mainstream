@@ -45,7 +45,7 @@ fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
     core_device_id(ID);
     core_hw_address(hwAddr, fpgaNum);
     fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", hwAddr, ID, fpgaNum );
-    fprintf(stderr, "=========================================================\n");
+    fprintf(stderr, "========================================================\n");
 }
 
 //-----------------------------------------------------------------------------

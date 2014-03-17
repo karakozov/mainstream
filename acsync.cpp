@@ -37,6 +37,8 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
     m_FVCO_ADF4002 = 56;
     m_slotNumber = 0;
 
+    fprintf(stderr, "====================== Open ACSYNC =====================\n");
+
     if(!m_fpga->fpgaTrd(0, 0xB1, m_sync_trd)) {
         throw except_info("%s, %d: %s() - Error AC_SYNC tetrade not found.\n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -52,14 +54,13 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
 
     fillCxDx();
 
-    fprintf(stderr, "%s(): %p\n", __FUNCTION__, this);
+    fprintf(stderr, "========================================================\n");
 }
 
 //-----------------------------------------------------------------------------
 
 acsync::~acsync()
 {
-    fprintf(stderr, "%s(): %p\n", __FUNCTION__, this);
 }
 
 //-----------------------------------------------------------------------------
@@ -182,8 +183,6 @@ void acsync::selclkMode2(U32 FO)
 
 void acsync::selclkMode3(U32 FO)
 {
-    fprintf(stderr, "%s()\n", __FUNCTION__);
-
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
     mode1 &= ~0x2;
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
@@ -636,6 +635,8 @@ bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
     FreqMultiplerDivider(mode, FD, FO);
 
     selclkout(selout);
+
+    fprintf(stderr, "%s(): MODE = 0x%x, SELOUT = 0x%x, FO = %f, FD = %f\n", __FUNCTION__, mode, selout, FO, FD);
 
     return true;
 }
