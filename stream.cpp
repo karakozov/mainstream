@@ -36,7 +36,7 @@ Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaCh
     m_logErr = true;
     m_Descr = 0;
 
-#ifdef __linux__
+#ifdef _c6x_
     m_map = new Mapper();
 #else
     m_map = new Mapper(m_fpgaDev);
