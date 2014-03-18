@@ -84,7 +84,7 @@ void Fpga::init()
         scanFpgaBlocks();
         scanFpgaTetrades();
         createDmaChannels();
-        //createDDR3();
+        createDDR3();
 
     } catch(...) {
 

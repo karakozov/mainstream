@@ -500,110 +500,116 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
         createFlagFile(flgName[i].c_str());
     }
 
-    // prepare and start ADC and MEM for non masked FPGA
-    for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
+    while(1) {
+        // prepare and start ADC and MEM for non masked FPGA
+        for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
-        if(!(params.fpgaMask & (0x1 << i)))
-            continue;
+            if(!(params.fpgaMask & (0x1 << i)))
+                continue;
 
-        DDR3(i)->setMemory(1, 0, PostTrigSize, MemBufSize);
-        DDR3(i)->Enable(true);
+            DDR3(i)->setMemory(1, 0, PostTrigSize, MemBufSize);
+            DDR3(i)->Enable(true);
 
-        fprintf(stderr, "setDmaSource(MEM_TRD)\n");
-        setDmaSource(i, params.dmaChannel, MEM_TRD);
+            fprintf(stderr, "setDmaSource(MEM_TRD)\n");
+            setDmaSource(i, params.dmaChannel, MEM_TRD);
 
-        fprintf(stderr, "setDmaRequestFlag(BRDstrm_DRQ_HALF)\n");
-        setDmaRequestFlag(i, params.dmaChannel, BRDstrm_DRQ_HALF);
+            fprintf(stderr, "setDmaRequestFlag(BRDstrm_DRQ_HALF)\n");
+            setDmaRequestFlag(i, params.dmaChannel, BRDstrm_DRQ_HALF);
 
-        fprintf(stderr, "resetFifo(ADC_TRD)\n");
-        resetFifo(i, ADC_TRD);
+            fprintf(stderr, "resetFifo(ADC_TRD)\n");
+            resetFifo(i, ADC_TRD);
 
-        fprintf(stderr, "resetFifo(MEM_TRD)\n");
-        resetFifo(i, MEM_TRD);
+            fprintf(stderr, "resetFifo(MEM_TRD)\n");
+            resetFifo(i, MEM_TRD);
 
-        fprintf(stderr, "resetDmaFifo()\n");
-        resetDmaFifo(i, params.dmaChannel);
+            fprintf(stderr, "resetDmaFifo()\n");
+            resetDmaFifo(i, params.dmaChannel);
 
-        fprintf(stderr, "setAdcMask(0x%x)\n", params.adcMask);
-        RegPokeInd(i, ADC_TRD, 0x10, params.adcMask);
+            fprintf(stderr, "setAdcMask(0x%x)\n", params.adcMask);
+            RegPokeInd(i, ADC_TRD, 0x10, params.adcMask);
 
-        fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
-        RegPokeInd(i, ADC_TRD, 0x17, (0x3 << 4));
+            fprintf(stderr, "setAdcStartMode(0x%x)\n", (0x3 << 4));
+            RegPokeInd(i, ADC_TRD, 0x17, (0x3 << 4));
 
-        fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
-        RegPokeInd(i, MEM_TRD, 0x0, 0x2038);
-        IPC_delay(10);
-
-        fprintf(stderr, "ADC_TRD: MODE0 = 0x2038\n");
-        RegPokeInd(i, ADC_TRD, 0x0, 0x2038);
-        IPC_delay(10);
-    }
-
-    // Wait MEM data for non masked FPGA
-    for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
-
-        if(!(params.fpgaMask & (0x1 << i)))
-            continue;
-
-        fprintf(stderr, "Waiting data DDR3...");
-        bool ok = true;
-        while(!DDR3(i)->AcqComplete()) {
-            if(exitFlag()) {
-                ok = false;
-                break;
-            }
-        }
-        if(ok) {
-            fprintf(stderr, "OK\n");
-        } else {
-            fprintf(stderr, "ERROR\n");
-            return;
-        }
-
-        fprintf(stderr, "MEM_TRD: MODE0 = 0x0\n");
-        RegPokeInd(i, MEM_TRD, 0x0, 0x0);
-
-        fprintf(stderr, "ADC_TRD: MODE0 = 0x0");
-        RegPokeInd(i, ADC_TRD, 0x0, 0x0);
-
-        DDR3(i)->Enable(false);
-    }
-
-    // Save MEM data in ISVI file for non masked FPGA
-    for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
-
-        if(!(params.fpgaMask & (0x1 << i)))
-            continue;
-
-        unsigned counter = 0;
-
-        fprintf(stderr, "\n");
-        for(counter = 0; counter < params.dmaBuffersCount; counter++) {
-
-            startDma(i, params.dmaChannel, 0x0);
-
+            fprintf(stderr, "MEM_TRD: MODE0 = 0x2038\n");
+            RegPokeInd(i, MEM_TRD, 0x0, 0x2038);
             IPC_delay(10);
 
-            if( waitDmaBuffer(i, params.dmaChannel, 2000) < 0 ) {
-
-                u32 status_adc = RegPeekDir(i, ADC_TRD, 0x0);
-                u32 status_mem = RegPeekDir(i, MEM_TRD, 0x0);
-                fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
-                break;
-
-            } else {
-
-                writeBuffer(i, params.dmaChannel, isviFile[i], counter * params.dmaBlockSize * params.dmaBlockCount);
-                lockDataFile(flgName[i].c_str(), counter);
-                fprintf(stderr, "Write DMA buffer: %d\r", counter);
-                //sync();
-            }
+            fprintf(stderr, "ADC_TRD: MODE0 = 0x2038\n");
+            RegPokeInd(i, ADC_TRD, 0x0, 0x2038);
+            IPC_delay(10);
         }
-        fprintf(stderr, "\n");
 
-        RegPokeInd(i, MEM_TRD, 0x0, 0x0);
-        RegPokeInd(i, ADC_TRD, 0x0, 0x0);
-        stopDma(i, params.dmaChannel);
+        // Wait MEM data for non masked FPGA
+        for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
+
+            if(!(params.fpgaMask & (0x1 << i)))
+                continue;
+
+            fprintf(stderr, "Waiting data DDR3...");
+            bool ok = true;
+            while(!DDR3(i)->AcqComplete()) {
+                if(exitFlag()) {
+                    ok = false;
+                    break;
+                }
+            }
+            if(ok) {
+                fprintf(stderr, "OK\n");
+            } else {
+                fprintf(stderr, "ERROR\n");
+                return;
+            }
+
+            fprintf(stderr, "MEM_TRD: MODE0 = 0x0\n");
+            RegPokeInd(i, MEM_TRD, 0x0, 0x0);
+
+            fprintf(stderr, "ADC_TRD: MODE0 = 0x0");
+            RegPokeInd(i, ADC_TRD, 0x0, 0x0);
+
+            DDR3(i)->Enable(false);
+        }
+
+        // Save MEM data in ISVI file for non masked FPGA
+        for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
+
+            if(!(params.fpgaMask & (0x1 << i)))
+                continue;
+
+            unsigned counter = 0;
+
+            fprintf(stderr, "\n");
+            for(counter = 0; counter < params.dmaBuffersCount; counter++) {
+
+                startDma(i, params.dmaChannel, 0x0);
+
+                IPC_delay(10);
+
+                if( waitDmaBuffer(i, params.dmaChannel, 2000) < 0 ) {
+
+                    u32 status_adc = RegPeekDir(i, ADC_TRD, 0x0);
+                    u32 status_mem = RegPeekDir(i, MEM_TRD, 0x0);
+                    fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
+                    break;
+
+                } else {
+
+                    writeBuffer(i, params.dmaChannel, isviFile[i], counter * params.dmaBlockSize * params.dmaBlockCount);
+                    lockDataFile(flgName[i].c_str(), counter);
+                    fprintf(stderr, "Write DMA buffer: %d\r", counter);
+                    //sync();
+                }
+            }
+            fprintf(stderr, "\n");
+
+            RegPokeInd(i, MEM_TRD, 0x0, 0x0);
+            RegPokeInd(i, ADC_TRD, 0x0, 0x0);
+            stopDma(i, params.dmaChannel);
+        }
+        if(exitFlag()) {
+            fprintf(stderr, "\n");
+            break;
+        }
     }
 
     // stop ADC, MEM and DMA channels for non masked FPGA
