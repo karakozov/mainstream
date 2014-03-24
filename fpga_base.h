@@ -78,6 +78,10 @@ protected:
     IPC_handle              m_fpga;
     u32                     m_fpgaNumber;
 
+    U16                     m_hwID;
+    U08                     m_hwAddr;
+    U08                     m_hwFpgaNum;
+
 private:
     Mapper*                 m_map;
     AMB_CONFIGURATION       m_info;

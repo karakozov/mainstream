@@ -16,7 +16,7 @@ public:
     pe_chn_rx(Fpga *fpga);
     virtual ~pe_chn_rx();
 
-    void set_fpga_addr(u32 chan, u32 src_fpga_addr, u32 sign);
+    void set_fpga_addr(u32 chan, u32 tx_addr, u32 tx_sign);
 
     u32 rx_block_number(u32 chan);
     u32 sign_err_number(u32 chan);

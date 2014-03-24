@@ -410,11 +410,12 @@ void acdsp::dataFromAdc(struct app_params_t& params)
             } else {
 
                 writeBuffer(i, params.dmaChannel, isviFile[i], 0);
-                lockDataFile(flgName[i].c_str(), counter);
             }
 
+            lockDataFile(flgName[i].c_str(), counter);
+
             //display 1-st element of each block
-            fprintf(stderr, "%d: STATUS = 0x%.4X [", ++counter, (u16)RegPeekDir(i,ADC_TRD,0x0));
+            fprintf(stderr, "%d: STATUS = 0x%.4X [", counter, (u16)RegPeekDir(i,ADC_TRD,0x0));
             for(unsigned j=0; j<Buffers[i].size(); j++) {
                 u32* value = (u32*)Buffers[i].at(j);
                 fprintf(stderr, " 0x%.8x ", value[0]);
@@ -429,6 +430,8 @@ void acdsp::dataFromAdc(struct app_params_t& params)
             IPC_delay(10);
             RegPokeInd(i,ADC_TRD,0,0x2038);
         }
+
+        ++counter;
 
         if(exitFlag()) {
             fprintf(stderr, "\n");
@@ -447,6 +450,7 @@ void acdsp::dataFromAdc(struct app_params_t& params)
 
         RegPokeInd(i,ADC_TRD,0,0x0);
         stopDma(i, params.dmaChannel);
+        resetDmaFifo(i, params.dmaChannel);
 
         IPC_delay(10);
 
@@ -500,7 +504,10 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
         createFlagFile(flgName[i].c_str());
     }
 
+    unsigned pass_count = 0;
+
     while(1) {
+
         // prepare and start ADC and MEM for non masked FPGA
         for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
@@ -576,10 +583,8 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
             if(!(params.fpgaMask & (0x1 << i)))
                 continue;
 
-            unsigned counter = 0;
-
             fprintf(stderr, "\n");
-            for(counter = 0; counter < params.dmaBuffersCount; counter++) {
+            for(unsigned counter = 0; counter < params.dmaBuffersCount; counter++) {
 
                 startDma(i, params.dmaChannel, 0x0);
 
@@ -589,23 +594,26 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
 
                     u32 status_adc = RegPeekDir(i, ADC_TRD, 0x0);
                     u32 status_mem = RegPeekDir(i, MEM_TRD, 0x0);
-                    fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
+                    fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\r", status_adc, status_mem);
                     break;
 
                 } else {
 
                     writeBuffer(i, params.dmaChannel, isviFile[i], counter * params.dmaBlockSize * params.dmaBlockCount);
-                    lockDataFile(flgName[i].c_str(), counter);
                     fprintf(stderr, "Write DMA buffer: %d\r", counter);
-                    //sync();
                 }
-            }
-            fprintf(stderr, "\n");
 
-            RegPokeInd(i, MEM_TRD, 0x0, 0x0);
-            RegPokeInd(i, ADC_TRD, 0x0, 0x0);
+                stopDma(i, params.dmaChannel);
+            }
+
+            fprintf(stderr, "\n");
+            lockDataFile(flgName[i].c_str(), pass_count);
             stopDma(i, params.dmaChannel);
+            resetDmaFifo(i, params.dmaChannel);
         }
+
+        ++pass_count;
+
         if(exitFlag()) {
             fprintf(stderr, "\n");
             break;
@@ -622,6 +630,7 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
         RegPokeInd(i, MEM_TRD, 0x0, 0x0);
         RegPokeInd(i, ADC_TRD, 0x0, 0x0);
         stopDma(i, params.dmaChannel);
+        resetDmaFifo(i, params.dmaChannel);
 
         IPC_delay(10);
 
@@ -741,7 +750,7 @@ void acdsp::dataFromMemAsFifo(struct app_params_t& params)
 
             u32 status_adc = RegPeekDir(i, ADC_TRD, 0x0);
             u32 status_mem = RegPeekDir(i, MEM_TRD, 0x0);
-            fprintf(stderr, "%d: ADC: 0x%.4X - MEM: 0x%.4X [", ++counter, (u16)status_adc, (u16)status_mem);
+            fprintf(stderr, "%d: ADC: 0x%.4X - MEM: 0x%.4X [", counter, (u16)status_adc, (u16)status_mem);
             for(unsigned j=0; j<Buffers[i].size(); j++) {
                 u32* value = (u32*)Buffers[i].at(j);
                 fprintf(stderr, " 0x%.8x ", value[0]);
@@ -760,6 +769,8 @@ void acdsp::dataFromMemAsFifo(struct app_params_t& params)
             RegPokeInd(i, ADC_TRD, 0x0, 0x2038);
             RegPokeInd(i, MEM_TRD, 0x0, 0x2038);
         }
+
+        ++counter;
 
         if(exitFlag()) {
             fprintf(stderr, "\n");

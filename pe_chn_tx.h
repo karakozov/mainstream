@@ -17,7 +17,7 @@ public:
     virtual ~pe_chn_tx();
 
     void set_fpga_wait(u32 wait);
-    void set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign, bool reverse);
+    void set_fpga_addr(u32 chan, u32 dst_fpga_addr, u32 sign, u32 flag);
     u32 tx_block_number();
     u32 tx_overflow();
 

@@ -39,12 +39,12 @@ fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
     infoFpga();
     mapFpga();
     initBar();
-    U16 ID = 0;
-    U08 hwAddr = 0;
-    U08 fpgaNum = 0;
-    core_device_id(ID);
-    core_hw_address(hwAddr, fpgaNum);
-    fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", hwAddr, ID, fpgaNum );
+    m_hwID = 0;
+    m_hwAddr = 0;
+    m_hwFpgaNum = 0;
+    core_device_id(m_hwID);
+    core_hw_address(m_hwAddr, m_hwFpgaNum);
+    fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", m_hwAddr, m_hwID, m_hwFpgaNum );
     fprintf(stderr, "========================================================\n");
 }
 

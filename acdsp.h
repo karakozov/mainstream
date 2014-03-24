@@ -88,6 +88,7 @@ public:
     int adjustDma(U32 fpgaNum, U32 DmaChan, U32 adjust);
     int doneDma(U32 fpgaNum, U32 DmaChan, U32 done);
     void infoDma(U32 fpgaNum);
+    U32 slotNumber() { return m_slotNumber; }
 
     // ISVI INTERFACE
     bool writeBlock(U32 fpgaNum, U32 DmaChan, IPC_handle file, int blockNumber);

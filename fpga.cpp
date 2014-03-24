@@ -621,14 +621,17 @@ bool Fpga::fpgaInfo(AMB_CONFIGURATION& cfgInfo)
 
 bool Fpga::FpgaHwAddress(U08& hwAddr, U08& fpgaNum)
 {
-    return core_hw_address(hwAddr, fpgaNum);
+    hwAddr = m_hwAddr;
+    fpgaNum = m_hwFpgaNum;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
 
 bool Fpga::FpgaDeviceID(U16& device_id)
 {
-    return core_device_id(device_id);
+    device_id = m_hwID;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
