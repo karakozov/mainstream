@@ -501,6 +501,8 @@ bool acsync::checkFrequencyParam(U32 mode, float FD, float FO)
     bool ok = false;
 
     //-----------------------------
+    fprintf(stderr, "%s(): MODE = 0x%x, FO = %f, FD = %f\n", __FUNCTION__, mode, FO, FD);
+    //-----------------------------
 
     if(mode == 0) {
 
