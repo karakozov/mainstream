@@ -455,6 +455,49 @@ void program_rx(vector<acdsp*>& boardList)
 
 void program_tx(vector<acdsp*>& boardList)
 {
+    unsigned N = boardList.size();
+    unsigned M = 2;
+    unsigned index = 0;
+
+    for(unsigned i=0; i<N; i++) {
+
+        acdsp *Brdi = boardList.at(i);
+
+        for(unsigned j=0; j<M; j++) {
+
+            pe_chn_tx* TX = Brdi->get_chan_tx(j);
+
+            fprintf(stderr, "TX%d: ", j);
+
+            U32 signTXj = make_sign(Brdi->slotNumber(), j);
+
+            for(unsigned k=0; k<N; k++) {
+
+                index = ((k + i*(N-1)) % N);
+
+                acdsp *Brdk = boardList.at(index);
+                AMB_CONFIGURATION cfgRXk;
+                Brdk->infoFpga(2, cfgRXk);
+
+                U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
+
+                if((j%2) == 0) {
+
+                    fprintf(stderr, "0x%.8X  --------  ", addrTXj);
+                    TX->set_fpga_addr(k, addrTXj, signTXj, 0);
+
+                } else {
+
+                    fprintf(stderr, "--------  0x%.8X  ", addrTXj);
+                    TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                }
+            }
+
+            fprintf(stderr, "\n");
+        }
+    }
+
+/*
     for(unsigned i=0; i<boardList.size(); i++) {
 
         acdsp *Brdi = boardList.at(i);
@@ -472,12 +515,14 @@ void program_tx(vector<acdsp*>& boardList)
         pe_chn_tx* TX0i = Brdi->get_chan_tx(0);
         U32 signTX0i = make_sign(Brdi->slotNumber(), 0);
         U32 addrTX0i = make_addr(cfgRXi.PhysAddress[2], Brdi->slotNumber(), 0);
+
         TX0i->set_fpga_addr(entryNumber, addrTX0i, signTX0i, 0);
 
         // send packets from local FPGA1 to local FPGA2
         pe_chn_tx* TX1i = Brdi->get_chan_tx(1);
         U32 signTX1i = make_sign(Brdi->slotNumber(), 1);
         U32 addrTX1i = make_addr(cfgRXi.PhysAddress[2], Brdi->slotNumber(), 1);
+
         TX1i->set_fpga_addr(entryNumber, addrTX1i, signTX1i,  1);
 
         entryNumber++;
@@ -507,6 +552,7 @@ void program_tx(vector<acdsp*>& boardList)
         TX0i->start_tx(true);
         TX1i->start_tx(true);
     }
+*/
 }
 
 //-----------------------------------------------------------------------------
