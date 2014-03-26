@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
     try {
 
-        create_fpga_list(fpgaList, 10, 0);
+        create_fpga_list(fpgaList, 16, 0);
         create_board_list(fpgaList, boardList, &sync_board, params.boardMask);
 
         if(sync_board) {

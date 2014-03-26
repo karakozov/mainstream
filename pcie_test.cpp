@@ -152,12 +152,13 @@ void delete_board_list(std::vector<acdsp*>& boardList, acsync* sync_board)
 //-----------------------------------------------------------------------------
 
 #ifdef __linux__
-table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn_tx*>& tx_fpga)
+table* create_display_table(std::vector<acdsp*>& boardList)
 {
-    unsigned WIDTH = 25;
+    unsigned N = boardList.size();
+    unsigned WIDTH = 17;
     unsigned HEIGHT = 3;
-    unsigned ROW = 2*rx_fpga.size() + 2;
-    unsigned COL = tx_fpga.size() + 1;
+    unsigned ROW = 2*N + 2;
+    unsigned COL = 2*N + 1;
 
     //-----------------------------------------------------------------------------
 
@@ -171,7 +172,6 @@ table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn
         t->set_header_text("%s", "TEST PCIE EXCHANGE");
 
     if(t->create_status())
-        //t->set_status_text("%s", "Format [A / B / C / D]  A - trd check ok, B - rx sign err, C - rx block err, D - trd check err");
         t->set_status_text("%s", "");
 
     //---------------------------------------
@@ -188,14 +188,14 @@ table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn
 
     //---------------------------------------
 
-    t->set_cell_text(rx_fpga.size() + 1, 0, "%s", "CHANNEL");
+    t->set_cell_text(N + 1, 0, "%s", "CHANNEL");
 
     for(unsigned i=1; i<COL; i++) {
-        t->set_cell_text(rx_fpga.size() + 1, i, "TX_CHN%d MB/s", i-1);
+        t->set_cell_text(N + 1, i, "TX_CHN%d MB/s", i-1);
     }
 
     for(unsigned i=1; i<ROW/2; i++) {
-        t->set_cell_text(rx_fpga.size() + 1 + i, 0, "RX_CHN%d", i-1);
+        t->set_cell_text(N + 1 + i, 0, "RX_CHN%d", i-1);
     }
 
     //---------------------------------------
@@ -206,13 +206,15 @@ table* create_display_table(std::vector<pe_chn_rx*>& rx_fpga, std::vector<pe_chn
 //-----------------------------------------------------------------------------
 
 typedef struct counter_t {
-    std::vector<u32>    dataVector;
+    std::vector<u32>    dataVector0;
+    std::vector<u32>    dataVector1;
 } counter_t;
 
 //-----------------------------------------------------------------------------
 
 typedef struct pcie_speed_t {
-    std::vector<float>  dataVector;
+    std::vector<float>  dataVector0;
+    std::vector<u32>    dataVector1;
 } pcie_speed_t;
 
 //-----------------------------------------------------------------------------
@@ -222,7 +224,8 @@ void clearCounters(std::vector<T>& param)
 {
     for(unsigned i=0; i<param.size(); i++) {
         T& entry = param.at(i);
-        entry.dataVector.clear();
+        entry.dataVector0.clear();
+        entry.dataVector1.clear();
     }
     param.clear();
 }
@@ -241,7 +244,8 @@ void getCounters(vector<acdsp*>& boardList, std::vector<counter_t>& counters, un
 
         for(unsigned j=0; j<tx_number; j++) {
 
-            rd_cnt.dataVector.push_back(check->rd_block_number(j));
+            rd_cnt.dataVector0.push_back(check->rd_block_number(j));
+            rd_cnt.dataVector1.push_back(check->err_block_number(j));
         }
 
         counters.push_back(rd_cnt);
@@ -257,11 +261,11 @@ void showCounters(std::vector<counter_t>& counters, table* t)
         if(!t) {
             fprintf(stderr, "RX%.2u", i);
         }
-        for(unsigned j=0; j<rd_cnt.dataVector.size(); j++) {
+        for(unsigned j=0; j<rd_cnt.dataVector0.size(); j++) {
             if(!t) {
-                fprintf(stderr, "\tTX[%.2u]:\t%d ", j, rd_cnt.dataVector.at(j));
+                fprintf(stderr, "\tTX[%.2u]:\t%d\t%d", j, rd_cnt.dataVector0.at(j), rd_cnt.dataVector1.at(j) );
             } else {
-                t->set_cell_text(i+1, j+1, "%d", rd_cnt.dataVector.at(j));
+                t->set_cell_text(i+1, j+1, "%d / %d", rd_cnt.dataVector0.at(j), rd_cnt.dataVector1.at(j));
             }
         }
         if(!t) {
@@ -283,14 +287,14 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
 
         pcie_speed_t rateVector;
 
-        for(unsigned j=0; j<rd_cnt0.dataVector.size(); j++) {
+        for(unsigned j=0; j<rd_cnt0.dataVector0.size(); j++) {
 
-            u32 c0 = rd_cnt0.dataVector.at(j);
-            u32 c1 = rd_cnt1.dataVector.at(j);
+            u32 c0 = rd_cnt0.dataVector0.at(j);
+            u32 c1 = rd_cnt1.dataVector0.at(j);
 
             float rxRate = 1000.0*(((c1-c0)*16.0*32768.0)/(1024.*1024.)/dt);
 
-            rateVector.dataVector.push_back(rxRate);
+            rateVector.dataVector0.push_back(rxRate);
         }
 
         dataRate.push_back(rateVector);
@@ -309,9 +313,9 @@ void showSpeed(std::vector<pcie_speed_t>& dataRate, table *t)
             fprintf(stderr, "RX%.2d", i);
         }
 
-        for(unsigned j=0; j<rateVector.dataVector.size(); j++) {
+        for(unsigned j=0; j<rateVector.dataVector0.size(); j++) {
 
-            float rxRate = rateVector.dataVector.at(j);
+            float rxRate = rateVector.dataVector0.at(j);
             if(!t) {
                 fprintf(stderr, "\tTX[%.2d]:\t%.2f ", j, rxRate);
             } else {
@@ -333,13 +337,14 @@ void show_test_result(vector<acdsp*>& boardList)
     std::vector<pcie_speed_t>   dataRate;
 
     bool stop_flag = false;
+    unsigned N = boardList.size();
 
 #ifdef __linux__
-    //table *t = create_display_table(rx_fpga, tx_fpga);
-    //if(!t) {
-    //    return;
-    //}
-    table *t = 0;
+    table *t = create_display_table(boardList);
+    if(!t) {
+        return;
+    }
+    //table *t = 0;
     struct timeval start0;
     time_start(&start0);
 
@@ -348,7 +353,7 @@ void show_test_result(vector<acdsp*>& boardList)
         struct timeval start1;
         time_start(&start1);
 
-        getCounters(boardList, counters0, 2*boardList.size());
+        getCounters(boardList, counters0, 2*N);
 
         IPC_delay(2000);
 
@@ -358,7 +363,7 @@ void show_test_result(vector<acdsp*>& boardList)
             t->set_status_text("Working time: %.2f", time_stop(start0)/1000.);
         }
 
-        getCounters(boardList, counters1, 2*boardList.size());
+        getCounters(boardList, counters1, 2*N);
         calculateSpeed(dataRate, counters0, counters1, time_stop(start1));
         showCounters(counters1, t);
         showSpeed(dataRate, t);
@@ -496,17 +501,19 @@ void program_tx(vector<acdsp*>& boardList)
 
                 if((j%2) == 0) {
 
-                    fprintf(stderr, "0x%.8X  --------  ", addrTXj);
+                    fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
                     TX->set_fpga_addr(k, addrTXj, signTXj, 0);
 
                 } else {
 
-                    fprintf(stderr, "  --------  0x%.8X  ", addrTXj);
+                    fprintf(stderr, "----------  0x%.8X ", addrTXj);
                     TX->set_fpga_addr(k, addrTXj, signTXj, 1);
                 }
             }
 
             fprintf(stderr, "\n");
+            TX->set_fpga_wait(0);
+            TX->start_tx(true);
         }
     }
 }
