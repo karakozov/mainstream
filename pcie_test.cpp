@@ -6,6 +6,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 //-----------------------------------------------------------------------------
 
@@ -371,19 +373,6 @@ void show_test_result(vector<acdsp*>& boardList)
         if(IPC_kbhit()) {
             stop_flag = true;
         }
-        /*
-        for(unsigned i=0; i<rx_fpga.size(); i++) {
-
-            pe_chn_rx* rx = rx_fpga.at(i);
-            trd_check* check = check_fpga.at(i);
-
-            for(unsigned j=0; j<tx_fpga.size(); j++) {
-
-                t->set_cell_text(i+1, j+1, "%d / %d / %d / %d", read_block_number, sign_err_number, block_err_number, check_err_number);
-                t->set_cell_text(rx_fpga.size()+i+2, j+1, "%.2f / %.2f", average_speed, instant_speed);
-            }
-        }
-*/
     }
     if(t) delete t;
 #endif
@@ -466,8 +455,82 @@ void program_rx(vector<acdsp*>& boardList)
 
 //-----------------------------------------------------------------------------
 
-void program_tx(vector<acdsp*>& boardList)
+typedef struct board_tx {
+    vector<u32> tx[2];
+} board_tx;
+
+//-----------------------------------------------------------------------------
+
+static int parse_line(string &str, vector<u32> &data)
 {
+    data.clear();
+
+    // заменяем символы табуляции в строке на пробелы
+    for(unsigned i=0; i<str.length(); i++) {
+        if(str.at(i) == '\t' || str.at(i) == '\n')
+            str[i] = ' ';
+    }
+
+    int start = 0;
+    int stop = 0;
+
+    do {
+
+        start = str.find_first_not_of(" ", stop);
+        stop = str.find_first_of(" ", start);
+
+        if(start == -1)
+            break;
+
+        char *offset = 0;
+        string s = str.substr(start,stop - start);
+        u32 value = strtod(s.c_str(), &offset);
+
+        data.push_back(value);
+
+    } while (1);
+
+    return data.size();
+}
+
+//------------------------------------------------------------------------------
+
+bool read_tx_config(string fileName, unsigned N, vector<board_tx>& boardTxList)
+{
+    boardTxList.clear();
+
+    ifstream ifs(fileName.c_str());
+    if(!ifs.is_open()) {
+        return false;
+    }
+
+    for(unsigned i=0; i<N; i++) {
+
+        board_tx brdTx;
+
+        for(unsigned j=0; j<2; j++) {
+            string str = "";
+            getline(ifs, str);
+            vector<u32> data;
+            if(parse_line(str, data)) {
+                brdTx.tx[j] = data;
+            }
+        }
+
+        boardTxList.push_back(brdTx);
+
+        if(!ifs)
+            break;
+    }
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+
+void program_tx(vector<acdsp*>& boardList, string fileName)
+{
+    vector<board_tx> boardTxList;
     unsigned N = boardList.size();
     unsigned M = 2;
     unsigned index = 0;
@@ -477,43 +540,89 @@ void program_tx(vector<acdsp*>& boardList)
     fprintf(stderr, "|                         SYSTEM TX CHANNELS                          |\n");
     fprintf(stderr, "|_____________________________________________________________________|\n");
 
-    for(unsigned i=0; i<N; i++) {
+    if( read_tx_config(fileName, N, boardTxList) ) {
 
-        acdsp *Brdi = boardList.at(i);
+        for(unsigned i=0; i<N; i++) {
 
-        for(unsigned j=0; j<M; j++) {
+            acdsp *Brdi = boardList.at(i);
+            board_tx& brdTXi = boardTxList.at(i);
 
-            pe_chn_tx* TX = Brdi->get_chan_tx(j);
+            for(unsigned j=0; j<M; j++) {
 
-            fprintf(stderr, "TX%d: ", j);
+                pe_chn_tx* TX = Brdi->get_chan_tx(j);
+                U32 signTXj = make_sign(Brdi->slotNumber(), j);
+                vector<u32>& indexTX = brdTXi.tx[j];
 
-            U32 signTXj = make_sign(Brdi->slotNumber(), j);
+                fprintf(stderr, "TX%d: ", j);
 
-            for(unsigned k=0; k<N; k++) {
+                for(unsigned k=0; k<N; k++) {
 
-                index = ((k + i*(N-1)) % N);
+                    index = indexTX.at(k);
 
-                acdsp *Brdk = boardList.at(index);
-                AMB_CONFIGURATION cfgRXk;
-                Brdk->infoFpga(2, cfgRXk);
+                    acdsp *Brdk = boardList.at(index);
+                    AMB_CONFIGURATION cfgRXk;
+                    Brdk->infoFpga(2, cfgRXk);
 
-                U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
+                    U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
 
-                if((j%2) == 0) {
+                    if((j%2) == 0) {
 
-                    fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
-                    TX->set_fpga_addr(k, addrTXj, signTXj, 0);
+                        fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 0);
 
-                } else {
+                    } else {
 
-                    fprintf(stderr, "----------  0x%.8X ", addrTXj);
-                    TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                        fprintf(stderr, "----------  0x%.8X ", addrTXj);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                    }
                 }
-            }
 
-            fprintf(stderr, "\n");
-            TX->set_fpga_wait(0);
-            TX->start_tx(true);
+                fprintf(stderr, "\n");
+                TX->set_fpga_wait(0);
+                TX->start_tx(true);
+            }
+        }
+
+    } else {
+
+        for(unsigned i=0; i<N; i++) {
+
+            acdsp *Brdi = boardList.at(i);
+
+            for(unsigned j=0; j<M; j++) {
+
+                pe_chn_tx* TX = Brdi->get_chan_tx(j);
+
+                fprintf(stderr, "TX%d: ", j);
+
+                U32 signTXj = make_sign(Brdi->slotNumber(), j);
+
+                for(unsigned k=0; k<N; k++) {
+
+                    index = ((k + i*(N-1)) % N);
+
+                    acdsp *Brdk = boardList.at(index);
+                    AMB_CONFIGURATION cfgRXk;
+                    Brdk->infoFpga(2, cfgRXk);
+
+                    U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
+
+                    if((j%2) == 0) {
+
+                        fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 0);
+
+                    } else {
+
+                        fprintf(stderr, "----------  0x%.8X ", addrTXj);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                    }
+                }
+
+                fprintf(stderr, "\n");
+                TX->set_fpga_wait(0);
+                TX->start_tx(true);
+            }
         }
     }
 }
@@ -553,7 +662,7 @@ bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params
     fprintf(stderr, "ADC_FPGA: %d\n", 2*boardList.size());
 
     program_rx(boardList);
-    program_tx(boardList);
+    program_tx(boardList, "tx.channels");
 
     show_test_result(boardList);
 
