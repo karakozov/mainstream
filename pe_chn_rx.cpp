@@ -36,9 +36,9 @@ void pe_chn_rx::set_fpga_addr(u32 chan, u32 tx_addr, u32 tx_sign)
     //fprintf(stderr, "REG: 0x9 DATA 0x%x\n", sign);
     m_fpga->FpgaBlockWrite(m_rx.number, 0x9, tx_sign);
 
-    fprintf(stderr, "\n");
-    fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", chan, tx_addr | 3, tx_sign);
-    fprintf(stderr, "_____________________________________________________________________\n");
+    //fprintf(stderr, "\n");
+    //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", chan, tx_addr | 3, tx_sign);
+    //fprintf(stderr, "_____________________________________________________________________\n");
 }
 
 //-------------------------------------------------------------------

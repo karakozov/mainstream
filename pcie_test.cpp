@@ -417,7 +417,14 @@ u32 make_sign(u8 hwAddr, u8 fpgaNum)
 
 void program_rx(vector<acdsp*>& boardList)
 {
-    for(unsigned i=0; i<boardList.size(); ++i) {
+    unsigned N = boardList.size();
+
+    fprintf(stderr, " _____________________________________________________________________ \n");
+    fprintf(stderr, "|                                                                     |\n");
+    fprintf(stderr, "|                         SYSTEM RX CHANNELS                          |\n");
+    fprintf(stderr, "|_____________________________________________________________________|\n");
+
+    for(unsigned i=0; i<N; ++i) {
 
         acdsp *Brdi = boardList.at(i);
         pe_chn_rx* RXi = Brdi->get_chan_rx();
@@ -426,25 +433,26 @@ void program_rx(vector<acdsp*>& boardList)
         AMB_CONFIGURATION cfgRXi;
         Brdi->infoFpga(2, cfgRXi);
 
-        fprintf(stderr, "_____________________________________________________________________\n");
-        fprintf(stderr, "\n");
-        fprintf(stderr, "BOARD %d RX CHANNELS\n", i);
-        fprintf(stderr, "_____________________________________________________________________\n");
-
-        for(unsigned j=0; j<boardList.size(); ++j) {
+        for(unsigned j=0; j<N; ++j) {
 
             acdsp *Brdj = boardList.at(j);
 
             U32 signTX0j = make_sign(Brdj->slotNumber(), 0);
             U32 addrTX0j = make_addr(cfgRXi.PhysAddress[2], Brdj->slotNumber(), 0);
 
+            fprintf(stderr, "0x%.8X  ", addrTX0j);
+
             RXi->set_fpga_addr(2*j, addrTX0j, signTX0j);
 
             U32 signTX1j = make_sign(Brdj->slotNumber(), 1);
             U32 addrTX1j = make_addr(cfgRXi.PhysAddress[2], Brdj->slotNumber(), 1);
 
+            fprintf(stderr, "0x%.8X  ", addrTX1j);
+
             RXi->set_fpga_addr(2*j+1, addrTX1j, signTX1j);
         }
+
+        fprintf(stderr, "\n");
 
         CHECKi->start_check(true);
         RXi->start_rx(true);
@@ -458,6 +466,11 @@ void program_tx(vector<acdsp*>& boardList)
     unsigned N = boardList.size();
     unsigned M = 2;
     unsigned index = 0;
+
+    fprintf(stderr, " _____________________________________________________________________ \n");
+    fprintf(stderr, "|                                                                     |\n");
+    fprintf(stderr, "|                         SYSTEM TX CHANNELS                          |\n");
+    fprintf(stderr, "|_____________________________________________________________________|\n");
 
     for(unsigned i=0; i<N; i++) {
 
@@ -488,7 +501,7 @@ void program_tx(vector<acdsp*>& boardList)
 
                 } else {
 
-                    fprintf(stderr, "--------  0x%.8X  ", addrTXj);
+                    fprintf(stderr, "  --------  0x%.8X  ", addrTXj);
                     TX->set_fpga_addr(k, addrTXj, signTXj, 1);
                 }
             }
@@ -496,63 +509,6 @@ void program_tx(vector<acdsp*>& boardList)
             fprintf(stderr, "\n");
         }
     }
-
-/*
-    for(unsigned i=0; i<boardList.size(); i++) {
-
-        acdsp *Brdi = boardList.at(i);
-        AMB_CONFIGURATION cfgRXi;
-        Brdi->infoFpga(2, cfgRXi);
-
-        unsigned entryNumber = 0;
-
-        fprintf(stderr, "_____________________________________________________________________\n");
-        fprintf(stderr, "\n");
-        fprintf(stderr, " BOARD %d TX CHANNELS\n", i);
-        fprintf(stderr, "_____________________________________________________________________\n");
-
-        // send packets from local FPGA0 to local FPGA2
-        pe_chn_tx* TX0i = Brdi->get_chan_tx(0);
-        U32 signTX0i = make_sign(Brdi->slotNumber(), 0);
-        U32 addrTX0i = make_addr(cfgRXi.PhysAddress[2], Brdi->slotNumber(), 0);
-
-        TX0i->set_fpga_addr(entryNumber, addrTX0i, signTX0i, 0);
-
-        // send packets from local FPGA1 to local FPGA2
-        pe_chn_tx* TX1i = Brdi->get_chan_tx(1);
-        U32 signTX1i = make_sign(Brdi->slotNumber(), 1);
-        U32 addrTX1i = make_addr(cfgRXi.PhysAddress[2], Brdi->slotNumber(), 1);
-
-        TX1i->set_fpga_addr(entryNumber, addrTX1i, signTX1i,  1);
-
-        entryNumber++;
-
-        for(unsigned j=0; j<boardList.size(); j++) {
-
-            if(j == i) continue;
-
-            acdsp *Brdj = boardList.at(j);
-            AMB_CONFIGURATION cfgRXj;
-            Brdj->infoFpga(2, cfgRXj);
-
-            // send packets from local FPGA0 to remote FPGA2
-            U32 addrTX0j = make_addr(cfgRXj.PhysAddress[2], Brdi->slotNumber(), 0);
-            TX0i->set_fpga_addr(entryNumber, addrTX0j, signTX0i, 0);
-
-            // send packets from local FPGA1 to remote FPGA2
-            U32 addrTX1j = make_addr(cfgRXj.PhysAddress[2], Brdi->slotNumber(), 1);
-            TX1i->set_fpga_addr(entryNumber, addrTX1j, signTX1i, 1);
-
-            entryNumber++;
-        }
-
-        TX0i->set_fpga_wait(512);
-        TX1i->set_fpga_wait(512);
-
-        TX0i->start_tx(true);
-        TX1i->start_tx(true);
-    }
-*/
 }
 
 //-----------------------------------------------------------------------------
