@@ -115,6 +115,9 @@ void pe_chn_tx::reset()
 {
     m_fpga->resetTrd(m_tx.number);
     m_fpga->resetFifo(m_tx.number);
+    for(unsigned i=0; i<8; i++) {
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC+i, 0);
+    }
 }
 
 //-------------------------------------------------------------------
