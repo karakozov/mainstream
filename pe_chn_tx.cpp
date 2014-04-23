@@ -28,31 +28,16 @@ void pe_chn_tx::set_fpga_addr(u32 chan, u32 tx_addr, u32 tx_sign, u32 flag)
     m_fpga->FpgaBlockWrite(m_tx.number, 0x9, tx_sign);
 
     // set TX address
-    if(flag == 0) {
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan,     (tx_addr|0x3));
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan + 1, (tx_addr|0x1));
-        //fprintf(stderr, "\n");
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan, tx_addr|3, tx_sign);
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan+1, tx_addr|1, tx_sign);
-        //fprintf(stderr, "_____________________________________________________________________\n");
+    if(flag == 3) {
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + chan, (tx_addr|0x3));
     }
 
     if(flag == 1) {
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan,     (tx_addr|0x1));
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan + 1, (tx_addr|0x3));
-        //fprintf(stderr, "\n");
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan, tx_addr|1, tx_sign);
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan+1, tx_addr|3, tx_sign);
-        //fprintf(stderr, "_____________________________________________________________________\n");
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + chan, 0x1);
     }
 
-    if(flag == 3) {
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan,     (tx_addr|0x3));
-        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + 2*chan + 1, 0);
-        //fprintf(stderr, "\n");
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan, tx_addr|3, tx_sign);
-        //fprintf(stderr, "ENTRY %.2d: | ADDR 0x%.8X\t | SIGN 0x%.8X\n", 2*chan+1, 0, tx_sign);
-        //fprintf(stderr, "_____________________________________________________________________\n");
+    if(flag == 0) {
+        m_fpga->FpgaBlockWrite(m_tx.number, 0xC + chan, 0x0);
     }
 }
 

@@ -34,7 +34,7 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, uns
         }
     }
 
-    fprintf(stderr, "Found %d FPGA\n", fpgaList.size());
+    fprintf(stderr, "Found %ld FPGA\n", fpgaList.size());
 
     for(unsigned i=0; i<fpgaList.size(); i++) {
         U16 ID = 0;
@@ -248,6 +248,8 @@ void getCounters(vector<acdsp*>& boardList, std::vector<counter_t>& counters, un
 
             rd_cnt.dataVector0.push_back(check->rd_block_number(j));
             rd_cnt.dataVector1.push_back(check->err_block_number(j));
+            //rd_cnt.dataVector0.push_back(1000);
+            //rd_cnt.dataVector1.push_back(1000);
         }
 
         counters.push_back(rd_cnt);
@@ -376,6 +378,14 @@ void show_test_result(vector<acdsp*>& boardList)
     }
     if(t) delete t;
 #endif
+//    for(unsigned i=0; i<N; ++i) {
+//
+//        acdsp *Brdi = boardList.at(i);
+//        trd_check* CHECKi = Brdi->get_trd_check();
+//        CHECKi->show_report(0, 0);
+//        CHECKi->show_report(0, 1);
+//    }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -484,7 +494,16 @@ static int parse_line(string &str, vector<u32> &data)
 
         char *offset = 0;
         string s = str.substr(start,stop - start);
-        u32 value = strtod(s.c_str(), &offset);
+
+        u32 value = 0;
+
+        if(strstr(s.c_str(), "*")) {
+          value = 254;
+        } else if(strstr(s.c_str(), "-")) {
+          value = 255;
+        } else {
+          value = strtod(s.c_str(), &offset);
+        }
 
         data.push_back(value);
 
@@ -555,30 +574,35 @@ void program_tx(vector<acdsp*>& boardList, string fileName)
 
                 fprintf(stderr, "TX%d: ", j);
 
-                for(unsigned k=0; k<N; k++) {
+                for(unsigned k=0; k<indexTX.size(); k++) {
 
                     index = indexTX.at(k);
 
-                    acdsp *Brdk = boardList.at(index);
-                    AMB_CONFIGURATION cfgRXk;
-                    Brdk->infoFpga(2, cfgRXk);
+                    if(index == 255) {
 
-                    U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
+                      fprintf(stderr, " ---------- " );
+                      TX->set_fpga_addr(k, 0, 0, 1);
 
-                    if((j%2) == 0) {
+                    } else if(index == 254) {
 
-                        fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
-                        TX->set_fpga_addr(k, addrTXj, signTXj, 0);
+                      fprintf(stderr, " ********** " );
+                      TX->set_fpga_addr(k, 0, 0, 0);
 
                     } else {
 
-                        fprintf(stderr, "----------  0x%.8X ", addrTXj);
-                        TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                      acdsp *Brdk = boardList.at(index);
+                      AMB_CONFIGURATION cfgRXk;
+                      Brdk->infoFpga(2, cfgRXk);
+
+                      U32 addrTXj = make_addr(cfgRXk.PhysAddress[2], Brdi->slotNumber(), j);
+
+                      fprintf(stderr, " 0x%.8X ", addrTXj);
+                      TX->set_fpga_addr(k, addrTXj, signTXj, 3);
                     }
                 }
 
                 fprintf(stderr, "\n");
-                TX->set_fpga_wait(0);
+                TX->set_fpga_wait(1*900);
                 TX->start_tx(true);
             }
         }
@@ -620,7 +644,7 @@ void program_tx(vector<acdsp*>& boardList, string fileName)
                 }
 
                 fprintf(stderr, "\n");
-                TX->set_fpga_wait(0);
+                TX->set_fpga_wait(1*900);
                 TX->start_tx(true);
             }
         }
@@ -658,8 +682,8 @@ void stop_all_fpga(vector<acdsp*>& boardList)
 
 bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params)
 {
-    fprintf(stderr, "DSP_FPGA: %d\n", boardList.size());
-    fprintf(stderr, "ADC_FPGA: %d\n", 2*boardList.size());
+    fprintf(stderr, "DSP_FPGA: %ld\n", boardList.size());
+    fprintf(stderr, "ADC_FPGA: %ld\n", 2*boardList.size());
 
     program_rx(boardList);
     program_tx(boardList, "tx.channels");
