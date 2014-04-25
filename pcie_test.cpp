@@ -634,12 +634,12 @@ void program_tx(vector<acdsp*>& boardList, string fileName)
                     if((j%2) == 0) {
 
                         fprintf(stderr, "0x%.8X  ---------- ", addrTXj);
-                        TX->set_fpga_addr(k, addrTXj, signTXj, 0);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 3);
 
                     } else {
 
                         fprintf(stderr, "----------  0x%.8X ", addrTXj);
-                        TX->set_fpga_addr(k, addrTXj, signTXj, 1);
+                        TX->set_fpga_addr(k, addrTXj, signTXj, 3);
                     }
                 }
 
