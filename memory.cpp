@@ -627,7 +627,7 @@ void Memory::PrepareDDR3()
         U32 ranks;
         U32 size;
         U32 primary_bus;
-        U32 sdram_widht;
+        U32 sdram_width = 0;
 
         switch( (spd_data[0]>>4) & 0x7 )
         {
@@ -682,10 +682,10 @@ void Memory::PrepareDDR3()
 
         switch( (spd_data[2]) & 0x7 )
         {
-        case 0: sdram_widht=4; break;
-        case 1: sdram_widht=8; break;
-        case 2: sdram_widht=16; break;
-        case 3: sdram_widht=32; break;
+        case 0: sdram_width=4; break;
+        case 1: sdram_width=8; break;
+        case 2: sdram_width=16; break;
+        case 3: sdram_width=32; break;
         default: ranks=0; break;
         }
         switch( (spd_data[3]) & 0x7 )
@@ -705,9 +705,9 @@ void Memory::PrepareDDR3()
 
         m_fpga->FpgaRegPokeInd(DDR2_trdNo, TRDIND_MODE1, mode1);	// CONF_REG
 
-        U32 total_size=size/8*primary_bus/sdram_widht*ranks;
+        U32 total_size=size/8*primary_bus/sdram_width*ranks;
         fprintf(stderr, "\nCOLUMNS \t\t%d\nROWS    \t\t%d\nBANKS   \t\t%d\nRANKS   \t\t%d\nSDRAM SIZE   \t\t%d \nSDRAM WITH \t\t%d\nPRIMARY BUS \t\t%d\nTOTAL SIZE \t\t%d [MB]\n",
-                    columns, rows, banks, ranks, size, sdram_widht, primary_bus, total_size );
+                    columns, rows, banks, ranks, size, sdram_width, primary_bus, total_size );
 
         fprintf(stderr, "\nMODE1 :\t\t0x%X\n\n", mode1);
     }

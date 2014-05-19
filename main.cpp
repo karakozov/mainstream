@@ -11,6 +11,7 @@
 #include "exceptinfo.h"
 #include "fpga.h"
 #include "isvi.h"
+#include "sysconfig.h"
 
 #include <stdio.h>
 #include <stdarg.h>

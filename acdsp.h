@@ -1,10 +1,7 @@
 #ifndef __ACDSP_H__
 #define __ACDSP_H__
 
-#ifndef __GIPCY_H__
 #include "gipcy.h"
-#endif
-
 #include "utypes.h"
 #include "ddwambpex.h"
 #include "ctrlstrm.h"
@@ -12,7 +9,8 @@
 #include "pe_chn_tx.h"
 #include "pe_chn_rx.h"
 #include "trd_check.h"
-#ifdef __linux__
+
+#ifndef USE_GUI
 #include "nctable.h"
 #endif
 
@@ -93,7 +91,9 @@ public:
     // ISVI INTERFACE
     bool writeBlock(U32 fpgaNum, U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos = 0);
+#ifndef USE_GUI
     void start_local_pcie_test(struct app_params_t& params);
+#endif
 
     Fpga *FPGA(unsigned fpgaNum);
     const std::vector<Fpga*>& FPGA_LIST() { return m_fpga; }

@@ -17,11 +17,6 @@
 using namespace std;
 
 //-----------------------------------------------------------------------------
-/*
-    float syncFd;
-    float syncFo;
-*/
-//-----------------------------------------------------------------------------
 
 bool getParams(int argc, char *argv[], struct app_params_t& param)
 {
@@ -30,7 +25,7 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
     char iniFilePath[1024];
 
     if(argc > 2) {
-        fprintf(stderr, "usage: mainstream [alternate ini file name. mainstream.ini by default]\n");
+        fprintf(stderr, "usage: %s [alternate ini file name. mainstream.ini by default]\n", argv[0]);
         return false;
     }
 

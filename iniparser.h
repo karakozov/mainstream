@@ -1,9 +1,7 @@
 #ifndef __INIPARSER_H__
 #define __INIPARSER_H__
 
-#ifndef __GIPCY_H__
 #include "gipcy.h"
-#endif
 
 #define SECTION_NAME "VARIABLE"
 

@@ -415,5 +415,6 @@ bool fpga_base::core_device_id(U16& device_id)
 
 bool fpga_base::core_temperature(float &t)
 {
+    t = 0;
     return false;
 }

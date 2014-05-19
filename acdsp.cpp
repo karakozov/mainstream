@@ -1242,16 +1242,16 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params)
 }
 
 //-----------------------------------------------------------------------------
-
-unsigned WIDTH = 11;
-unsigned HEIGHT = 3;
-unsigned ROW = 3;
-unsigned COL = 10;
-
-//-----------------------------------------------------------------------------
-
+#ifndef USE_GUI
 void acdsp::start_local_pcie_test(struct app_params_t& params)
 {
+    unsigned WIDTH = 11;
+    unsigned HEIGHT = 3;
+    unsigned ROW = 3;
+    unsigned COL = 10;
+
+    //-----------------------------------------------------------------------------
+
     AMB_CONFIGURATION cfg0;
     AMB_CONFIGURATION cfg1;
     AMB_CONFIGURATION cfg2;
@@ -1403,5 +1403,5 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
     tx2.start_tx(false);
     check.start_check(false);
 }
-
+#endif
 //-----------------------------------------------------------------------------
