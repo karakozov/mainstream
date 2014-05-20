@@ -16,7 +16,7 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-#ifdef __linux__
+#ifndef USE_GUI
 table* create_display_table(std::vector<acdsp*>& boardList)
 {
     unsigned N = boardList.size();
