@@ -2,14 +2,7 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include <vector>
-#include <string>
-#include <sstream>
-
-#ifndef __GIPCY_H__
 #include "gipcy.h"
-#endif
-
 #include "utypes.h"
 #include "sdramregs.h"
 

@@ -6,8 +6,12 @@
 #include "acdsp.h"
 #include "sysconfig.h"
 #include "iniparser.h"
+#include "pcie_test.h"
 
 #include <QMainWindow>
+#include <QAbstractItemModel>
+#include <QTableWidget>
+#include <QTimer>
 #include <vector>
 
 namespace Ui {
@@ -31,8 +35,25 @@ private:
     std::vector<acdsp*> m_boardList;
     acsync* m_sync;
 
+    QTimer* m_timer;
+    unsigned m_timer_counter;
+
+    QAbstractItemModel *m_modelError;
+    QTableWidget *m_tableError;
+    QAbstractItemModel *m_modelRate;
+    QTableWidget *m_tableRate;
+
+    void init_display_table(QTableWidget *table);
+
 private slots:
     void startSystemConfiguration();
+    void startPciExpressTest();
+    void stopPciExpressTest();
+    void startAdcTest();
+    void stopAdcTest();
+    void timerIsr();
+    void showCountersGUI(std::vector<counter_t>& counters);
+    void showRateGUI(std::vector<pcie_speed_t>& dataRate);
 };
 
 #endif // MAINWINDOW_H

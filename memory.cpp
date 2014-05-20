@@ -142,7 +142,7 @@ bool Memory::GetCfgFromSpd()
     m_DDR3.PrimWidth = 8 << module_width[0];
     m_DDR3.ChipBanks = 8 << chip_banks[0];
     m_DDR3.ChipWidth = 4 << chip_width[0];
-    m_DDR3.CapacityMbits = __int64(1 << capacity[0]) * 256 * 1024 * 1024;
+    m_DDR3.CapacityMbits = U64(1 << capacity[0]) * 256 * 1024 * 1024;
 
     return true;
 }

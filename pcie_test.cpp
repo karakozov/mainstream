@@ -70,33 +70,6 @@ table* create_display_table(std::vector<acdsp*>& boardList)
 #endif
 //-----------------------------------------------------------------------------
 
-typedef struct counter_t {
-    std::vector<u32>    dataVector0;
-    std::vector<u32>    dataVector1;
-} counter_t;
-
-//-----------------------------------------------------------------------------
-
-typedef struct pcie_speed_t {
-    std::vector<float>  dataVector0;
-    std::vector<u32>    dataVector1;
-} pcie_speed_t;
-
-//-----------------------------------------------------------------------------
-
-template <class T>
-void clearCounters(std::vector<T>& param)
-{
-    for(unsigned i=0; i<param.size(); i++) {
-        T& entry = param.at(i);
-        entry.dataVector0.clear();
-        entry.dataVector1.clear();
-    }
-    param.clear();
-}
-
-//-----------------------------------------------------------------------------
-
 void getCounters(vector<acdsp*>& boardList, std::vector<counter_t>& counters, unsigned tx_number)
 {
     clearCounters(counters);
@@ -111,8 +84,6 @@ void getCounters(vector<acdsp*>& boardList, std::vector<counter_t>& counters, un
 
             rd_cnt.dataVector0.push_back(check->rd_block_number(j));
             rd_cnt.dataVector1.push_back(check->err_block_number(j));
-            //rd_cnt.dataVector0.push_back(1000);
-            //rd_cnt.dataVector1.push_back(1000);
         }
 
         counters.push_back(rd_cnt);
@@ -120,7 +91,7 @@ void getCounters(vector<acdsp*>& boardList, std::vector<counter_t>& counters, un
 }
 
 //-----------------------------------------------------------------------------
-
+#ifndef USE_GUI
 void showCounters(std::vector<counter_t>& counters, table* t)
 {
     for(unsigned i=0; i<counters.size(); i++) {
@@ -140,7 +111,7 @@ void showCounters(std::vector<counter_t>& counters, table* t)
         }
     }
 }
-
+#endif
 //-----------------------------------------------------------------------------
 
 void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>& counters0, std::vector<counter_t>& counters1, float dt)
@@ -169,7 +140,7 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
 }
 
 //-----------------------------------------------------------------------------
-
+#ifndef USE_GUI
 void showSpeed(std::vector<pcie_speed_t>& dataRate, table *t)
 {
     for(unsigned i=0; i<dataRate.size(); i++) {
@@ -194,9 +165,11 @@ void showSpeed(std::vector<pcie_speed_t>& dataRate, table *t)
         }
     }
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
+#ifndef USE_GUI
 void show_test_result(vector<acdsp*>& boardList)
 {
     std::vector<counter_t>      counters0;
@@ -206,12 +179,11 @@ void show_test_result(vector<acdsp*>& boardList)
     bool stop_flag = false;
     unsigned N = boardList.size();
 
-#ifdef __linux__
     table *t = create_display_table(boardList);
     if(!t) {
         return;
     }
-    //table *t = 0;
+
     struct timeval start0;
     time_start(&start0);
 
@@ -240,7 +212,6 @@ void show_test_result(vector<acdsp*>& boardList)
         }
     }
     if(t) delete t;
-#endif
 //    for(unsigned i=0; i<N; ++i) {
 //
 //        acdsp *Brdi = boardList.at(i);
@@ -248,19 +219,19 @@ void show_test_result(vector<acdsp*>& boardList)
 //        CHECKi->show_report(0, 0);
 //        CHECKi->show_report(0, 1);
 //    }
-
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
-u32 make_addr(u32 bar, u8 hwAddr, u8 fpgaNum)
+static u32 make_addr(u32 bar, u8 hwAddr, u8 fpgaNum)
 {
     return (bar + hwAddr*0x10000 + fpgaNum*0x1000);
 }
 
 //-----------------------------------------------------------------------------
 
-u32 make_sign(u8 hwAddr, u8 fpgaNum)
+static u32 make_sign(u8 hwAddr, u8 fpgaNum)
 {
     u32 chan = (2*(hwAddr-2) + fpgaNum);
 
@@ -377,7 +348,7 @@ static int parse_line(string &str, vector<u32> &data)
 
 //------------------------------------------------------------------------------
 
-bool read_tx_config(string fileName, unsigned N, vector<board_tx>& boardTxList)
+static bool read_tx_config(string fileName, unsigned N, vector<board_tx>& boardTxList)
 {
     boardTxList.clear();
 
@@ -516,6 +487,14 @@ void program_tx(vector<acdsp*>& boardList, string fileName)
 
 //-----------------------------------------------------------------------------
 
+void start_all_fpga(vector<acdsp*>& boardList)
+{
+    program_rx(boardList);
+    program_tx(boardList, "tx.channels");
+}
+
+//-----------------------------------------------------------------------------
+
 void stop_all_fpga(vector<acdsp*>& boardList)
 {
     for(unsigned i=0; i<boardList.size(); i++) {
@@ -542,22 +521,19 @@ void stop_all_fpga(vector<acdsp*>& boardList)
 }
 
 //-----------------------------------------------------------------------------
-
+#ifndef USE_GUI
 bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params)
 {
     fprintf(stderr, "DSP_FPGA: %ld\n", boardList.size());
     fprintf(stderr, "ADC_FPGA: %ld\n", 2*boardList.size());
 
-    program_rx(boardList);
-    program_tx(boardList, "tx.channels");
-
+    start_all_fpga(boardList);
     show_test_result(boardList);
-
     stop_all_fpga(boardList);
 
     IPC_delay(500);
 
     return true;
 }
-
+#endif
 //-----------------------------------------------------------------------------

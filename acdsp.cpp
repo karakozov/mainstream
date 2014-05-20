@@ -594,7 +594,6 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
                 } else {
 
                     writeBuffer(i, params.dmaChannel, isviFile[i], counter * params.dmaBlockSize * params.dmaBlockCount);
-                    sync();
                     fprintf(stderr, "Write DMA buffer: %d\r", counter);
                 }
 

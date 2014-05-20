@@ -13,6 +13,14 @@ TEMPLATE = app
 
 DEFINES += USE_GUI
 
+win32 {
+DEFINES += __IPC_WIN__
+}
+
+linux-g++ {
+DEFINES += __IPC_LIN__
+}
+
 INCLUDEPATH += .. ../gipcy/include
 
 
@@ -33,10 +41,22 @@ SOURCES += main.cpp\
     ../mapper.cpp \
     ../isvi.cpp \
     ../iniparser.cpp \
-    ../../mainstream/sysconfig.cpp
+    ../sysconfig.cpp \
+    ../pcie_test.cpp
+
+win32 {
+    SOURCES += ../gipcy/windows/winipc.cpp
+    SOURCES += ../gipcy/windows/devipc.cpp
+    SOURCES += ../gipcy/windows/sysipc.cpp
+    SOURCES += ../gipcy/windows/fileipc.cpp
+}
+
 
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
+linux-g++ {
 LIBS += ../gipcy/lib/libgipcy.so
+}
+
