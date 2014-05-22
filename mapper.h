@@ -10,8 +10,6 @@
 
 #ifdef __linux__
 #include <stdint.h>
-#else
-typedef ULONG uint32_t;
 #endif
 #include <vector>
 #include <string>

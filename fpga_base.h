@@ -1,21 +1,10 @@
 #ifndef __FPGA_BASE_H__
 #define __FPGA_BASE_H__
 
-#ifndef __GIPCY_H__
-    #include "gipcy.h"
-#endif
-#ifndef _UTYPES_H_
-    #include "utypes.h"
-#endif
-#ifndef _UTYPES_LINUX_H_
-    #include "utypes_linux.h"
-#endif
-#ifndef _DDWAMBPEX_H_
-    #include "ddwambpex.h"
-#endif
-#ifndef __MAPPER_H__
-    #include "mapper.h"
-#endif
+#include "gipcy.h"
+#include "utypes.h"
+#include "ddwambpex.h"
+#include "mapper.h"
 
 #include <vector>
 #include <string>

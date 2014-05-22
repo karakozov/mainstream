@@ -308,6 +308,8 @@ void MainWindow::init_display_table(QTableWidget *table)
     }
 
     table->setHorizontalHeaderLabels(hList1);
+    table->verticalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setStretchLastSection(true);
 }
 
 //-----------------------------------------------------------------------------
