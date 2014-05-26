@@ -309,7 +309,9 @@ void MainWindow::init_display_table(QTableWidget *table)
 
     table->setHorizontalHeaderLabels(hList1);
     table->verticalHeader()->setStretchLastSection(true);
+    table->verticalHeader()->setResizeMode(QHeaderView::Stretch);
     table->horizontalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 }
 
 //-----------------------------------------------------------------------------
