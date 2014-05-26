@@ -286,7 +286,7 @@ void MainWindow::stopAdcTest()
 
 void MainWindow::init_display_table(QTableWidget *table)
 {
-    unsigned N = 4;//m_boardList.size();
+    unsigned N = m_boardList.size();
     unsigned ROW = N;
     unsigned COL = 2*N;
 
