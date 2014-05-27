@@ -26,6 +26,7 @@ INCLUDEPATH += .. ../gipcy/include
 
 SOURCES += main.cpp\
         mainwindow.cpp \
+        test_thread.cpp \
     ../i2c.cpp \
     ../fpga_base.cpp \
     ../fpga.cpp \
@@ -52,7 +53,9 @@ win32 {
 }
 
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    ../test_thread.h \
+    test_thread.h
 
 FORMS    += mainwindow.ui
 

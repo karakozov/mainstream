@@ -7,6 +7,8 @@
 #include "sysconfig.h"
 #include "iniparser.h"
 #include "pcie_test.h"
+#include "isvi.h"
+#include "test_thread.h"
 
 #include <QMainWindow>
 #include <QAbstractItemModel>
@@ -37,6 +39,7 @@ private:
 
     QTimer* m_timer;
     unsigned m_timer_counter;
+    pcie_test_thread *m_thread;
 
     QAbstractItemModel *m_modelError;
     QTableWidget *m_tableError;
@@ -52,8 +55,8 @@ private slots:
     void startAdcTest();
     void stopAdcTest();
     void timerIsr();
-    void showCountersGUI(std::vector<counter_t>& counters);
-    void showRateGUI(std::vector<pcie_speed_t>& dataRate);
+    void showCountersGUI(std::vector<counter_t>* counters);
+    void showRateGUI(std::vector<pcie_speed_t>* dataRate);
 };
 
 #endif // MAINWINDOW_H
