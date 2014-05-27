@@ -31,7 +31,8 @@ fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
     fprintf(stderr, "====================== Open FPGA%d ======================\n", m_fpgaNumber);
 
 #ifdef __linux__
-    m_map = new Mapper();
+    //m_map = new Mapper();
+    m_map = new Mapper(m_fpga);
 #else
     m_map = new Mapper(m_fpga);
 #endif
