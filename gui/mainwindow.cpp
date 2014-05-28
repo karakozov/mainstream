@@ -66,7 +66,7 @@ void MainWindow::startSystemConfiguration()
     m_params.syncMode = ui->leSyncMode->text().toInt(&ok, 16);
     m_params.syncSelClkOut = ui->leSyncSelClkOut->text().toInt(&ok, 16);
     m_params.syncFd = ui->leSyncFD->text().toFloat(&ok);
-    m_params.syncFd = ui->leSyncFO->text().toFloat(&ok);
+    m_params.syncFo = ui->leSyncFO->text().toFloat(&ok);
 
     unsigned brdCount = 0;
     unsigned fpgaCount = create_fpga_list(m_fpgaList, 16, 0);
