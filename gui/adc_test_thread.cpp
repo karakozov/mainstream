@@ -48,6 +48,8 @@ typedef vector<datafiles_t> isvidata_t;
 
 typedef vector<string> flgnames_t;
 typedef vector<flgnames_t> isviflg_t;
+typedef vector<string> hdr_t;
+typedef vector<hdr_t> isvihdr_t;
 
 typedef vector<unsigned> cnt_t;
 typedef vector<cnt_t> count_t;
@@ -92,6 +94,7 @@ void adc_test_thread::run()
     count_t counters;
     isvidata_t isviFiles;
     isviflg_t  flgNames;
+    isvihdr_t isviHdrs;
     for(unsigned i=0; i<N; ++i) {
 
         // Take one board from list
@@ -100,6 +103,7 @@ void adc_test_thread::run()
         datafiles_t isviFile;
         flgnames_t flgName;
         cnt_t count;
+        hdr_t hdr;
 
         for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
 
@@ -115,12 +119,17 @@ void adc_test_thread::run()
                 flgName.push_back(tmpflg);
 
                 count.push_back(0);
+
+                string s;
+                createIsviHeader(s, brd->slotNumber(), j, m_params);
+                hdr.push_back(s);
             }
         }
 
         isviFiles.push_back(isviFile);
         flgNames.push_back(flgName);
         counters.push_back(count);
+        isviHdrs.push_back(hdr);
     }
 
     //---------------------------------------------------------------
@@ -166,6 +175,7 @@ void adc_test_thread::run()
             datafiles_t isviFile = isviFiles.at(i);
             flgnames_t flgName = flgNames.at(i);
             cnt_t count = counters.at(i);
+            hdr_t hdrs = isviHdrs.at(i);
 
             // save ADC data into ISVI files for non masked FPGA
             for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
@@ -182,6 +192,10 @@ void adc_test_thread::run()
                 } else {
 
                     brd->writeBuffer(j, m_params.dmaChannel, isviFile.at(j), 0);
+
+                    string h = hdrs.at(j);
+                    IPC_writeFile(isviFile.at(j), (void*)h.c_str(), h.size());
+
                     lockDataFile(flgName.at(j).c_str(), count.at(j));
                 }
 

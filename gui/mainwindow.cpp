@@ -9,6 +9,39 @@
 using namespace std;
 
 //-----------------------------------------------------------------------------
+/*
+bool CreateIsviHeader(string& hdr, U08 hwAddr, U08 hwFpgaNum, struct app_params_t& params)
+{
+    char str[128];
+    hdr.clear();
+
+    unsigned BufSize = params.dmaBlockSize * params.dmaBlockCount;
+    unsigned NumOfChannel = 0;
+    for(int i=0; i<4; i++) {
+        if( params.adcMask & (0x1 << i)) {
+            NumOfChannel += 1;
+        }
+    }
+
+    snprintf(str, sizeof(str), "DEVICE_NAME_________ AC_ADC_%d%d\r\n", hwAddr, hwFpgaNum);            hdr += str;
+    snprintf(str, sizeof(str), "NUMBER_OF_CHANNELS__ %d\r\n", NumOfChannel);                    hdr += str;
+    snprintf(str, sizeof(str), "NUMBERS_OF_CHANNELS_ 0,1,2,3\r\n");                             hdr += str;
+    snprintf(str, sizeof(str), "NUMBER_OF_SAMPLES___ %d\r\n", BufSize / 4 / 2);                 hdr += str;
+    snprintf(str, sizeof(str), "SAMPLING_RATE_______ %d\r\n", (int)((1.0e+6)*params.syncFd));   hdr += str;
+    snprintf(str, sizeof(str), "BYTES_PER_SAMPLES___ 2\r\n");                                   hdr += str;
+    snprintf(str, sizeof(str), "SAMPLES_PER_BYTES___ 1\r\n");                                   hdr += str;
+    snprintf(str, sizeof(str), "IS_COMPLEX_SIGNAL?__ NO\r\n");                                  hdr += str;
+
+    snprintf(str, sizeof(str), "SHIFT_FREQUENCY_____ 0.0,0.0,0.0,0.0\r\n");                     hdr += str;
+    snprintf(str, sizeof(str), "GAINS_______________ 1.0,1.0,1.0,1.0\r\n");                     hdr += str;
+    snprintf(str, sizeof(str), "VOLTAGE_OFFSETS_____ 0.0,0.0,0.0,0.0\r\n");                     hdr += str;
+    snprintf(str, sizeof(str), "VOLTAGE_RANGE_______ 1\r\n");                                   hdr += str;
+    snprintf(str, sizeof(str), "BIT_RANGE___________ 16\r\n");                                  hdr += str;
+
+    return true;
+}
+*/
+//-----------------------------------------------------------------------------
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -33,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pbStopAdcTest, SIGNAL(clicked()), this, SLOT(stopAdcTest()));
     connect(m_timer, SIGNAL(timeout()), this, SLOT(timerIsr()));
 }
+
 
 //-----------------------------------------------------------------------------
 
@@ -72,6 +106,11 @@ void MainWindow::startSystemConfiguration()
     m_params.syncSelClkOut = ui->leSyncSelClkOut->text().toInt(&ok, 16);
     m_params.syncFd = ui->leSyncFD->text().toFloat(&ok);
     m_params.syncFo = ui->leSyncFO->text().toFloat(&ok);
+
+    //std::string hdr;
+    //CreateIsviHeader(hdr, 0x1, 0x2, m_params);
+    //fprintf(stderr, "%s", hdr.c_str());
+    //return ;
 
     unsigned brdCount = 0;
     unsigned fpgaCount = create_fpga_list(m_fpgaList, 16, 0);
