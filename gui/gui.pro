@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     ../isvi.cpp \
     ../iniparser.cpp \
     ../sysconfig.cpp \
-    ../pcie_test.cpp
+    ../pcie_test.cpp \
+    adc_test_thread.cpp
 
 win32 {
     SOURCES += ../gipcy/windows/winipc.cpp
@@ -55,7 +56,8 @@ win32 {
 
 HEADERS  += mainwindow.h \
     ../test_thread.h \
-    test_thread.h
+    test_thread.h \
+    adc_test_thread.h
 
 FORMS    += mainwindow.ui
 

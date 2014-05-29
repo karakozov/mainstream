@@ -29,7 +29,7 @@ struct exception_t {
 class Stream {
 
 public:
-    explicit Stream(IPC_handle fpga, unsigned channel);
+    explicit Stream(IPC_handle fpga, U08 hwAddr, U08 hwFpgaNum, unsigned channel);
     virtual ~Stream();
 
     void start();
@@ -62,6 +62,8 @@ public:
 private:
 
     IPC_handle      m_fpgaDev;
+    U08             m_hwAddr;
+    U08             m_hwFpgaNum;
     Mapper*         m_map;
     unsigned        m_DmaChan;
     unsigned        m_CMD;
@@ -71,6 +73,11 @@ private:
 
     AMB_MEM_DMA_CHANNEL          *m_Descr;
     U32                          m_DescrSize;
+
+#ifdef _WIN32
+    OVERLAPPED  m_OvlStartStream;        // DMA buffer end event
+    HANDLE      m_hBlockEndEvent;        // DMA block end event
+#endif
 
     static thread_value __IPC_API stream_thread(void *params);
 };

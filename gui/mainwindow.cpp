@@ -23,11 +23,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_sync = 0;
     m_timer = new QTimer();
     m_timer_counter = 0;
-    m_thread = 0;
+    m_pcie_thread = 0;
+    m_adc_thread = 0;
 
     connect(ui->pbStartConfiguration, SIGNAL(clicked()), this, SLOT(startSystemConfiguration()));
     connect(ui->pbStartPcieTest, SIGNAL(clicked()), this, SLOT(startPciExpressTest()));
     connect(ui->pbStopPcieTest, SIGNAL(clicked()), this, SLOT(stopPciExpressTest()));
+    connect(ui->pbStartAdcTest, SIGNAL(clicked()), this, SLOT(startAdcTest()));
+    connect(ui->pbStopAdcTest, SIGNAL(clicked()), this, SLOT(stopAdcTest()));
     connect(m_timer, SIGNAL(timeout()), this, SLOT(timerIsr()));
 }
 
@@ -35,7 +38,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete m_thread;
+    delete m_pcie_thread;
+    delete m_adc_thread;
+
     m_timer->stop();
     delete m_timer;
 
@@ -83,9 +88,11 @@ void MainWindow::startSystemConfiguration()
 
     if(brdCount) {
         ui->tab_2->setEnabled(true);
-        m_thread = new pcie_test_thread(m_boardList);
-        connect(m_thread,SIGNAL(updateCounters(std::vector<counter_t>*)),this,SLOT(showCountersGUI(std::vector<counter_t>*)));
-        connect(m_thread,SIGNAL(updateDataRate(std::vector<pcie_speed_t>*)),this,SLOT(showRateGUI(std::vector<pcie_speed_t>*)));
+        m_pcie_thread = new pcie_test_thread(m_boardList);
+        connect(m_pcie_thread,SIGNAL(updateCounters(std::vector<counter_t>*)),this,SLOT(showCountersGUI(std::vector<counter_t>*)));
+        connect(m_pcie_thread,SIGNAL(updateDataRate(std::vector<pcie_speed_t>*)),this,SLOT(showRateGUI(std::vector<pcie_speed_t>*)));
+
+        m_adc_thread = new adc_test_thread(m_boardList);
     }
 
     init_display_table(m_tableError);
@@ -103,16 +110,16 @@ void MainWindow::startPciExpressTest()
     m_timer->setInterval(period);
     m_timer->start();
 
-    if(m_thread)
-        m_thread->start_pcie_test(true);
+    if(m_pcie_thread)
+        m_pcie_thread->start_pcie_test(true);
 }
 
 //-----------------------------------------------------------------------------
 
 void MainWindow::stopPciExpressTest()
 {
-    if(m_thread)
-        m_thread->start_pcie_test(false);
+    if(m_pcie_thread)
+        m_pcie_thread->start_pcie_test(false);
 
     m_timer->stop();
     m_timer_counter = 0;
@@ -123,12 +130,27 @@ void MainWindow::stopPciExpressTest()
 
 void MainWindow::startAdcTest()
 {
+    unsigned period = ui->leUpdateInfoPeriodAdc->text().toInt();
+
+    m_timer->stop();
+    m_timer_counter = 0;
+    m_timer->setInterval(period);
+    m_timer->start();
+
+    if(m_adc_thread)
+        m_adc_thread->start_adc_test(true, m_params);
 }
 
 //-----------------------------------------------------------------------------
 
 void MainWindow::stopAdcTest()
 {
+    if(m_adc_thread)
+        m_adc_thread->start_adc_test(false, m_params);
+
+    m_timer->stop();
+    m_timer_counter = 0;
+    m_timer->setInterval(0);
 }
 
 //-----------------------------------------------------------------------------
@@ -171,7 +193,7 @@ void MainWindow::init_display_table(QTableWidget *table)
 void MainWindow::timerIsr()
 {
     ++m_timer_counter;
-    statusBar()->showMessage("PCIE teset working time: " + QString::number(m_timer_counter * m_timer->interval()) + " ms");
+    statusBar()->showMessage("Test working time: " + QString::number(m_timer_counter * m_timer->interval()) + " ms");
 }
 
 //-----------------------------------------------------------------------------

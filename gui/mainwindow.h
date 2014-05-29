@@ -9,6 +9,7 @@
 #include "pcie_test.h"
 #include "isvi.h"
 #include "test_thread.h"
+#include "adc_test_thread.h"
 
 #include <QMainWindow>
 #include <QAbstractItemModel>
@@ -39,7 +40,8 @@ private:
 
     QTimer* m_timer;
     unsigned m_timer_counter;
-    pcie_test_thread *m_thread;
+    pcie_test_thread *m_pcie_thread;
+    adc_test_thread  *m_adc_thread;
 
     QAbstractItemModel *m_modelError;
     QTableWidget *m_tableError;

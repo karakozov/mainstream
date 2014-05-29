@@ -300,7 +300,7 @@ void Fpga::createDmaChannels()
             continue;
         }
 
-        Stream *strm = new Stream(m_fpga, i);
+        Stream *strm = new Stream(m_fpga, m_hwAddr, m_hwFpgaNum, i);
         m_strm.push_back(strm);
     }
 }

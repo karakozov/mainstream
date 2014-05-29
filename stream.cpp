@@ -30,7 +30,8 @@ string toString ( T Number )
 
 //-----------------------------------------------------------------------------
 
-Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaChan(channel)
+Stream::Stream(IPC_handle handle, U08 hwAddr, U08 hwFpgaNum, unsigned channel) :
+    m_fpgaDev(handle), m_hwAddr(hwAddr), m_hwFpgaNum(hwFpgaNum), m_DmaChan(channel)
 {
     m_logInfo = false;
     m_logErr = true;
@@ -42,6 +43,13 @@ Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaCh
     m_map = new Mapper(m_fpgaDev);
 #endif
 
+#ifdef _WIN32
+    char nameEvent[MAX_PATH];
+    snprintf(nameEvent, sizeof(nameEvent), "event_DmaChan_%x_%x_%d", m_hwAddr, m_hwFpgaNum, m_DmaChan);
+    m_hBlockEndEvent = CreateEventA(0, true, true, nameEvent);
+    m_OvlStartStream.hEvent = CreateEventA(0, true, true, 0);
+#endif
+
     stopDma();
     resetDmaFifo();
 }
@@ -50,6 +58,11 @@ Stream::Stream(IPC_handle handle, unsigned channel) : m_fpgaDev(handle), m_DmaCh
 
 Stream::~Stream()
 {
+#ifdef _WIN32
+    CloseHandle(m_hBlockEndEvent);
+    CloseHandle(m_OvlStartStream.hEvent);
+#endif
+
     if(m_map) delete m_map;
 }
 
@@ -67,6 +80,11 @@ int Stream::allocateDmaMemory(BRDctrl_StreamCBufAlloc* sSCA)
     m_Descr->BlockCnt = sSCA->blkNum;
     m_Descr->BlockSize = sSCA->blkSize;
     m_Descr->pStub = NULL;
+#ifdef _WIN32
+    m_Descr->hBlockEndEvent = m_hBlockEndEvent;
+#else
+    m_Descr->hBlockEndEvent = 0;
+#endif
 
     for(U32 iBlk = 0; iBlk < sSCA->blkNum; iBlk++) {
         m_Descr->pBlock[iBlk] = NULL;
@@ -128,6 +146,11 @@ int Stream::allocateDmaMemory(void** pBuf,
     m_Descr->BlockCnt = blkNum;
     m_Descr->BlockSize = blkSize;
     m_Descr->pStub = NULL;
+#ifdef _WIN32
+    m_Descr->hBlockEndEvent = m_hBlockEndEvent;
+#else
+    m_Descr->hBlockEndEvent = 0;
+#endif
 
     for(U32 iBlk = 0; iBlk < blkNum; iBlk++) {
         m_Descr->pBlock[iBlk] = NULL;
@@ -171,13 +194,20 @@ int Stream::allocateDmaMemory(void** pBuf,
 
 int  Stream::freeDmaMemory()
 {
-    if(IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0) < 0)
-    {
-        throw except_info("%s, %d: %s() - Error free buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
-    }
+    if(m_Descr) {
 
-    delete m_Descr;
-    m_Descr = NULL;
+#ifdef _WIN32
+        IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0);
+#else
+        int res = IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0);
+        if( < 0)
+        {
+            throw except_info("%s, %d: %s() - Error free buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
+        }
+#endif
+        delete m_Descr;
+        m_Descr = NULL;
+    }
 
     return 0;
 }
@@ -192,10 +222,24 @@ int  Stream::startDma(int IsCycling)
         StartDescrip.DmaChanNum = m_DmaChan;
         StartDescrip.IsCycling = IsCycling;
 
-        if (IPC_ioctlDevice(m_fpgaDev,IOCTL_AMB_START_MEMIO,&StartDescrip,sizeof(StartDescrip),0,0) < 0)
+#ifdef _WIN32
+        ResetEvent(m_Descr->hBlockEndEvent);
+        ResetEvent(m_OvlStartStream.hEvent);
+
+        IPC_ioctlDeviceOvl(m_fpgaDev, IOCTL_AMB_START_MEMIO,
+                                      &StartDescrip,
+                                      sizeof(StartDescrip),0,0,
+                                      &m_OvlStartStream);
+#else
+        int res = IPC_ioctlDevice(m_fpgaDev,
+                                  IOCTL_AMB_START_MEMIO,
+                                  &StartDescrip,
+                                  sizeof(StartDescrip),0,0);
+        if (res < 0)
         {
             throw except_info("%s, %d: %s() - Error start DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
+#endif
     }
     return 0;
 }
@@ -247,17 +291,27 @@ int  Stream::stateDma(U32 msTimeout, int& state, U32& blkNum)
 
 int Stream::waitDmaBuffer(U32 msTimeout)
 {
-    AMB_STATE_DMA_CHANNEL StateDescrip;
-    StateDescrip.DmaChanNum = m_DmaChan;
-    StateDescrip.Timeout = msTimeout;
-
     if(m_Descr)
     {
-        if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_WAIT_DMA_BUFFER,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)))
+#ifdef _WIN32
+        WaitForSingleObject(m_OvlStartStream.hEvent, msTimeout);
+#else
+        AMB_STATE_DMA_CHANNEL StateDescrip;
+        StateDescrip.DmaChanNum = m_DmaChan;
+        StateDescrip.Timeout = msTimeout;
+
+        int res = IPC_ioctlDevice(m_fpgaDev,
+                                  IOCTL_AMB_WAIT_DMA_BUFFER,
+                                  &StateDescrip,
+                                  sizeof(StateDescrip),
+                                  &StateDescrip,
+                                  sizeof(StateDescrip));
+        if (0 > res)
         {
             fprintf(stderr, "%s(): Error wait buffer DMA\n", __FUNCTION__ );
             return -1;
         }
+#endif
     }
 
     return 0;
@@ -273,7 +327,20 @@ int Stream::waitDmaBlock(U32 msTimeout)
 
     if(m_Descr)
     {
-        if (0 > IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_WAIT_DMA_BLOCK,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)))
+#ifdef _WIN32
+        int res = WaitForSingleObject(m_Descr->hBlockEndEvent, msTimeout);
+        if(res == WAIT_TIMEOUT) {
+            res = -1;
+        }
+#else
+        int res = IPC_ioctlDevice(m_fpgaDev,
+                                  IOCTL_AMB_WAIT_DMA_BLOCK,
+                                  &StateDescrip,
+                                  sizeof(StateDescrip),
+                                  &StateDescrip,
+                                  sizeof(StateDescrip));
+#endif
+        if (0 > res)
         {
             fprintf(stderr, "%s(): Error wait block DMA\n", __FUNCTION__ );
             return -1;

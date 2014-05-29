@@ -1,5 +1,6 @@
 
 #include "isvi.h"
+#include "exceptinfo.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -30,8 +31,13 @@ void WriteFlagSinc(const char *fileName, int newData, int newHeader)
     IPC_handle handle = NULL;
     int val[2] = {0, 0};
 
+    IPC_str fullName[256];
+    IPC_getCurrentDir(fullName, sizeof(fullName));
+    strcat(fullName, "//");
+    strcat(fullName, fileName);
+
     while( !handle ) {
-        handle = IPC_openFile(fileName, IPC_OPEN_FILE | IPC_FILE_RDWR);
+        handle = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
     }
     val[0] = newData;
     val[1] = newHeader;
@@ -49,8 +55,13 @@ int  ReadFlagSinc(const char *fileName)
     IPC_handle handle = NULL;
     int flg;
 
+    IPC_str fullName[256];
+    IPC_getCurrentDir(fullName, sizeof(fullName));
+    strcat(fullName, "//");
+    strcat(fullName, fileName);
+
     while( !handle ) {
-        handle = IPC_openFile(fileName, IPC_OPEN_FILE | IPC_FILE_RDWR);
+        handle = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
     }
     int res = IPC_readFile(handle, &flg, sizeof(flg));
     if(res < 0) {
@@ -96,14 +107,17 @@ bool lockDataFile(const char* fname, int counter)
 
 IPC_handle createDataFile(const char *fname)
 {
-    //IPC_handle fd = IPC_openFile(fname, IPC_FILE_RDWR | IPC_FILE_DIRECT);
-    IPC_handle fd = IPC_openFile(fname, IPC_CREATE_FILE | IPC_FILE_RDWR);
+    IPC_str fullName[256];
+    IPC_getCurrentDir(fullName, sizeof(fullName));
+    strcat(fullName, "//");
+    strcat(fullName, fname);
+
+    IPC_handle fd = IPC_openFile(fullName, IPC_CREATE_FILE | IPC_FILE_RDWR);
     if(!fd) {
-        fprintf(stderr, "%s(): Error create file: %s\n", __FUNCTION__, fname);
-        throw;
+        throw except_info("%s, %d: %s() - Error in IPC_openFile(%s)\n", __FILE__, __LINE__, __FUNCTION__, fullName);
     }
 
-    fprintf(stderr, "%s(): %s - Ok\n", __FUNCTION__, fname);
+    fprintf(stderr, "%s(): %s - Ok\n", __FUNCTION__, fullName);
 
     return fd;
 }
@@ -112,11 +126,14 @@ IPC_handle createDataFile(const char *fname)
 
 bool createFlagFile(const char *fname)
 {
-    //IPC_handle fd = IPC_openFile(fname, IPC_FILE_RDWR | IPC_FILE_DIRECT);
-    IPC_handle fd = IPC_openFile(fname, IPC_FILE_RDWR);
+    IPC_str fullName[256];
+    IPC_getCurrentDir(fullName, sizeof(fullName));
+    strcat(fullName, "//");
+    strcat(fullName, fname);
+
+    IPC_handle fd = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
     if(!fd) {
-        fprintf(stderr, "%s(): Error create file: %s\n", __FUNCTION__, fname);
-        throw;
+        throw except_info("%s, %d: %s() - Error in IPC_openFile(%s)\n", __FILE__, __LINE__, __FUNCTION__, fullName);
     }
 
     int val[2] = {0, 0};

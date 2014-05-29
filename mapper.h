@@ -2,9 +2,8 @@
 #ifndef __MAPPER_H__
 #define __MAPPER_H__
 
-#ifndef __GIPCY_H__
 #include "gipcy.h"
-#endif
+#include "utypes.h"
 
 #include "exceptinfo.h"
 
