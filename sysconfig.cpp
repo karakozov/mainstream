@@ -25,6 +25,8 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, uns
         }
         catch(except_info_t err) {
             fprintf(stderr, "%s", err.info.c_str());
+            if(i<(from+fpgaNumber))
+                continue;
             break;
         }
         catch(...) {
@@ -120,8 +122,9 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
         if(fpgaLocal.size() == 3) {
             acdsp* brd = new acdsp(fpgaLocal);
             boardList.push_back(brd);
-            fpgaLocal.clear();
         }
+
+        fpgaLocal.clear();
     }
 
     unsigned boards = boardList.size();

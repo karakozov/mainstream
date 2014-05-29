@@ -200,7 +200,7 @@ int  Stream::freeDmaMemory()
         IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0);
 #else
         int res = IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_FREE_MEMIO, m_Descr, m_DescrSize, 0, 0);
-        if( < 0)
+        if(res < 0)
         {
             throw except_info("%s, %d: %s() - Error free buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
