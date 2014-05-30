@@ -257,6 +257,7 @@ void adc_test_thread::dataFromMemAsMem()
             datafiles_t isviFile = isviFiles.at(i);
             flgnames_t flgName = flgNames.at(i);
             hdr_t hdrs = isviHdrs.at(i);
+            QString info;
 
             // Save MEM data in ISVI file for non masked FPGA
             for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
@@ -274,12 +275,16 @@ void adc_test_thread::dataFromMemAsMem()
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
                         fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
+                        info = "ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc) + "MEM_STATUS = 0x" + QString::number(status_mem);
+                        emit updateInfo(info);
                         break;
 
                     } else {
 
                         brd->writeBuffer(j, m_params.dmaChannel, isviFile[j], counter * m_params.dmaBlockSize * m_params.dmaBlockCount);
                         fprintf(stderr, "Write DMA buffer: %d\r", counter);
+                        info = "Board: " + QString::number(i) + "Write DMA buffer: " + QString::number(counter);
+                        emit updateInfo(info);
                     }
 
                     brd->stopDma(j, m_params.dmaChannel);
@@ -343,6 +348,7 @@ void adc_test_thread::dataFromAdc()
             datafiles_t isviFile = isviFiles.at(i);
             flgnames_t flgName = flgNames.at(i);
             hdr_t hdrs = isviHdrs.at(i);
+            QString info;
 
             // save ADC data into ISVI files for non masked FPGA
             for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
@@ -354,6 +360,8 @@ void adc_test_thread::dataFromAdc()
 
                     u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                     fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status_adc);
+                    info = "ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc, 16);
+                    emit updateInfo(info);
                     break;
 
                 } else {
@@ -365,11 +373,16 @@ void adc_test_thread::dataFromAdc()
                 }
 
                 //display 1-st element of each block
-                fprintf(stderr, "%d: STATUS = 0x%.4X [", pass_counter, (u16)brd->RegPeekDir(j,ADC_TRD,0x0));
+                u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
+                fprintf(stderr, "%d: STATUS = 0x%.4X [", pass_counter, (u16)status_adc);
+                info = QString::number(pass_counter) + ": STATUS = 0x" + QString::number((u16)status_adc) + "[";
                 for(unsigned k=0; k<Buffers[j].size(); k++) {
                     u32* value = (u32*)Buffers[j].at(k);
                     fprintf(stderr, " 0x%.8x ", value[0]);
+                    info += (" 0x" + QString::number(value[0], 16) + " ");
                 }
+                info += " ]";
+                emit updateInfo(info);
                 fprintf(stderr, " ]\r");
 
                 brd->RegPokeInd(j,ADC_TRD,0,0x0);
@@ -392,17 +405,20 @@ void adc_test_thread::dataFromAdc()
 
 void adc_test_thread::run()
 {
-    if(m_boardList.empty()) {
-        return;
+    emit updateInfo("Start ADC test thread");
+
+    if(!m_boardList.empty()) {
+
+        if(m_params.testMode == 0) {
+            dataFromAdc();
+        }
+
+        if(m_params.testMode == 1) {
+            dataFromMemAsMem();
+        }
     }
 
-    if(m_params.testMode == 0) {
-        dataFromAdc();
-    }
-
-    if(m_params.testMode == 1) {
-        return dataFromMemAsMem();
-    }
+    emit updateInfo("Stop ADC test thread");
 }
 
 //-----------------------------------------------------------------------------

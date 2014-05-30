@@ -59,6 +59,7 @@ private slots:
     void timerIsr();
     void showCountersGUI(std::vector<counter_t>* counters);
     void showRateGUI(std::vector<pcie_speed_t>* dataRate);
+    void showAdcTrace(QString buffer);
 };
 
 #endif // MAINWINDOW_H

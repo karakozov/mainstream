@@ -8,6 +8,7 @@
 #include "isvi.h"
 #include <QObject>
 #include <QThread>
+#include <QString>
 #include <vector>
 #include <string>
 
@@ -44,6 +45,9 @@ private:
     void dataFromAdc();
     void dataFromMemAsMem();
     void run();
+
+signals:
+    void updateInfo(QString infoString);
 };
 
 #endif // PCIE_TEST_THREAD_H
