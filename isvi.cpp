@@ -154,12 +154,18 @@ bool createIsviHeader(std::string& hdr, unsigned char hwAddr, unsigned char hwFp
     char str[128];
     hdr.clear();
 
-    unsigned BufSize = params.dmaBlockSize * params.dmaBlockCount;
+    unsigned BufSize = 0;
     unsigned NumOfChannel = 0;
     for(int i=0; i<4; i++) {
         if( params.adcMask & (0x1 << i)) {
             NumOfChannel += 1;
         }
+    }
+
+    switch(params.testMode) {
+    case 0: BufSize = params.dmaBlockSize * params.dmaBlockCount; break;
+    case 1: BufSize = params.dmaBuffersCount * params.dmaBlockSize * params.dmaBlockCount; break;
+    default: BufSize = params.dmaBlockSize * params.dmaBlockCount; break;
     }
 
     snprintf(str, sizeof(str), "DEVICE_NAME_________ AC_ADC_%d%d\r\n", hwAddr, hwFpgaNum);      hdr += str;
