@@ -9,6 +9,16 @@
 #include <QObject>
 #include <QThread>
 #include <vector>
+#include <string>
+
+typedef std::vector<void*> dmabuf_t;
+typedef std::vector<dmabuf_t> brdbuf_t;
+typedef std::vector<IPC_handle> datafiles_t;
+typedef std::vector<datafiles_t> isvidata_t;
+typedef std::vector<std::string> flgnames_t;
+typedef std::vector<flgnames_t> isviflg_t;
+typedef std::vector<std::string> hdr_t;
+typedef std::vector<hdr_t> isvihdr_t;
 
 class adc_test_thread : public QThread
 {
@@ -25,6 +35,14 @@ private:
     std::vector<acdsp*>&        m_boardList;
     struct app_params_t         m_params;
 
+    void prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, isvihdr_t& isviHdrs);
+    void prepareDma(std::vector<brdbuf_t>& dmaBuffers);
+    void startAdcDma();
+    void stopAdcDma();
+    void startAdcDmaMem();
+    void stopAdcDmaMem();
+    void dataFromAdc();
+    void dataFromMemAsMem();
     void run();
 };
 

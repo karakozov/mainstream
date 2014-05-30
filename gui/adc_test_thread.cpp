@@ -40,33 +40,54 @@ void adc_test_thread::start_adc_test(bool start, struct app_params_t& params)
 
 //-----------------------------------------------------------------------------
 
-typedef vector<void*> dmabuf_t;
-typedef vector<dmabuf_t> brdbuf_t;
+void adc_test_thread::prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, isvihdr_t& isviHdrs)
+{
+    unsigned N = m_boardList.size();
 
-typedef vector<IPC_handle> datafiles_t;
-typedef vector<datafiles_t> isvidata_t;
+    //--------------------------------------------------------------
+    //Prepare data and flag files for ISVI and counters
+    for(unsigned i=0; i<N; ++i) {
 
-typedef vector<string> flgnames_t;
-typedef vector<flgnames_t> isviflg_t;
-typedef vector<string> hdr_t;
-typedef vector<hdr_t> isvihdr_t;
+        // Take one board from list
+        acdsp* brd = m_boardList.at(i);
 
-typedef vector<unsigned> cnt_t;
-typedef vector<cnt_t> count_t;
+        datafiles_t isviFile;
+        flgnames_t flgName;
+        hdr_t hdr;
+
+        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+
+            if(m_params.fpgaMask & (0x1 << j)) {
+
+                char fname[64];
+                snprintf(fname, sizeof(fname), "data_%d%d.bin", brd->slotNumber(), j);
+                isviFile.push_back(createDataFile(fname));
+
+                char tmpflg[64];
+                snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", brd->slotNumber(), j);
+                createFlagFile(tmpflg);
+                flgName.push_back(tmpflg);
+
+                string s;
+                createIsviHeader(s, brd->slotNumber(), j, m_params);
+                hdr.push_back(s);
+            }
+        }
+
+        isviFiles.push_back(isviFile);
+        flgNames.push_back(flgName);
+        isviHdrs.push_back(hdr);
+    }
+}
 
 //-----------------------------------------------------------------------------
 
-void adc_test_thread::run()
+void adc_test_thread::prepareDma(vector<brdbuf_t>& dmaBuffers)
 {
-    if(m_boardList.empty()) {
-        return;
-    }
-
     unsigned N = m_boardList.size();
 
     //-------------------------------------------------------------
     // Allocate DMA buffers for all board and all onboard FPGA ADC
-    vector<brdbuf_t> dmaBuffers;
     for(unsigned i=0; i<N; ++i) {
 
         // Take one board from list
@@ -88,52 +109,14 @@ void adc_test_thread::run()
         // save board buffers for later using
         dmaBuffers.push_back(Buffers);
     }
+}
 
-    //--------------------------------------------------------------
-    //Prepare data and flag files for ISVI and counters
-    count_t counters;
-    isvidata_t isviFiles;
-    isviflg_t  flgNames;
-    isvihdr_t isviHdrs;
-    for(unsigned i=0; i<N; ++i) {
+//-----------------------------------------------------------------------------
 
-        // Take one board from list
-        acdsp* brd = m_boardList.at(i);
+void adc_test_thread::startAdcDma()
+{
+    unsigned N = m_boardList.size();
 
-        datafiles_t isviFile;
-        flgnames_t flgName;
-        cnt_t count;
-        hdr_t hdr;
-
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
-
-            if(m_params.fpgaMask & (0x1 << j)) {
-
-                char fname[64];
-                snprintf(fname, sizeof(fname), "data_%d%d.bin", brd->slotNumber(), j);
-                isviFile.push_back(createDataFile(fname));
-
-                char tmpflg[64];
-                snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", brd->slotNumber(), j);
-                createFlagFile(tmpflg);
-                flgName.push_back(tmpflg);
-
-                count.push_back(0);
-
-                string s;
-                createIsviHeader(s, brd->slotNumber(), j, m_params);
-                hdr.push_back(s);
-            }
-        }
-
-        isviFiles.push_back(isviFile);
-        flgNames.push_back(flgName);
-        counters.push_back(count);
-        isviHdrs.push_back(hdr);
-    }
-
-    //---------------------------------------------------------------
-    // prepare and start ADC and DMA channels for non masked FPGA
     for(unsigned i=0; i<N; ++i) {
 
         // Take one board from list
@@ -143,28 +126,213 @@ void adc_test_thread::run()
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
-                fprintf(stderr, "Set DMA source\n");
                 brd->setDmaSource(j, m_params.dmaChannel, ADC_TRD);
-
-                fprintf(stderr, "Set DMA direction\n");
                 brd->setDmaDirection(j, m_params.dmaChannel, BRDstrm_DIR_IN);
-
-                fprintf(stderr, "Set ADC channels mask\n");
                 brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
-
-                fprintf(stderr, "Set ADC start mode\n");
                 brd->RegPokeInd(j, ADC_TRD, 0x17, (0x3 << 4));
-
-                fprintf(stderr, "Start DMA channel\n");
                 brd->startDma(j, m_params.dmaChannel, 0);
-
-                fprintf(stderr, "Start ADC\n");
                 brd->RegPokeInd(j, ADC_TRD, 0, 0x2038);
             }
         }
     }
+}
+
+//-----------------------------------------------------------------------------
+
+void adc_test_thread::stopAdcDma()
+{
+    unsigned N = m_boardList.size();
+
+    // Stop ADC and DMA channels for non masked FPGA
+    // free DMA buffers, close ISVI data file
+    for(unsigned i=0; i<N; ++i) {
+
+        acdsp* brd = m_boardList.at(i);
+        //datafiles_t isviFile = isviFiles.at(i);
+
+        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+
+            if(m_params.fpgaMask & (0x1 << j)) {
+
+                brd->RegPokeInd(j,ADC_TRD,0,0x0);
+                brd->stopDma(j, m_params.dmaChannel);
+                IPC_delay(10);
+                brd->freeDmaMemory(j, m_params.dmaChannel);
+                //IPC_closeFile(isviFile.at(j)); !!!!!!!!!!!!!!
+            }
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void adc_test_thread::startAdcDmaMem()
+{
+    unsigned N = m_boardList.size();
+
+    U32 MemBufSize = m_params.dmaBuffersCount * m_params.dmaBlockSize * m_params.dmaBlockCount;
+    U32 PostTrigSize = 0;
+
+    for(unsigned i=0; i<N; ++i) {
+
+        acdsp* brd = m_boardList.at(i);
+
+        // prepare and start ADC and MEM for non masked FPGA
+        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+
+            if(!(m_params.fpgaMask & (0x1 << j)))
+                continue;
+
+            brd->DDR3(j)->setMemory(1, 0, PostTrigSize, MemBufSize);
+            brd->DDR3(j)->Enable(true);
+
+            brd->setDmaSource(j, m_params.dmaChannel, MEM_TRD);
+            brd->setDmaRequestFlag(j, m_params.dmaChannel, BRDstrm_DRQ_HALF);
+            brd->resetFifo(j, ADC_TRD);
+            brd->resetFifo(j, MEM_TRD);
+            brd->resetDmaFifo(j, m_params.dmaChannel);
+            brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
+            brd->RegPokeInd(j, ADC_TRD, 0x17, (0x3 << 4));
+            brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
+            brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void adc_test_thread::stopAdcDmaMem()
+{
+    unsigned N = m_boardList.size();
+
+    // Stop ADC, MEM and DMA channels for non masked FPGA
+    // free DMA buffers, close ISVI data file
+    for(unsigned i=0; i<N; ++i) {
+
+        acdsp* brd = m_boardList.at(i);
+        //datafiles_t isviFile = isviFiles.at(i);
+
+        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+
+            if(m_params.fpgaMask & (0x1 << j)) {
+
+                brd->RegPokeInd(i, MEM_TRD, 0x0, 0x0);
+                brd->RegPokeInd(j,ADC_TRD,0,0x0);
+                brd->stopDma(j, m_params.dmaChannel);
+                IPC_delay(10);
+                brd->freeDmaMemory(j, m_params.dmaChannel);
+                //IPC_closeFile(isviFile.at(j)); !!!!!!!!!!!!!! TODO
+            }
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void adc_test_thread::dataFromMemAsMem()
+{
+    unsigned N = m_boardList.size();
+
+    //-------------------------------------------------------------
+    // Allocate DMA buffers for all board and all onboard FPGA ADC
+    vector<brdbuf_t> dmaBuffers;
+    prepareDma(dmaBuffers);
+
+    //--------------------------------------------------------------
+    //Prepare data and flag files for ISVI and counters
+    isvidata_t isviFiles;
+    isviflg_t  flgNames;
+    isvihdr_t isviHdrs;
+    prepareIsvi(isviFiles, flgNames, isviHdrs);
+
+    unsigned pass_counter = 0;
+
+    while(m_start) {
+
+        startAdcDmaMem();
+
+        for(unsigned i=0; i<N; ++i) {
+
+            acdsp* brd = m_boardList.at(i);
+            datafiles_t isviFile = isviFiles.at(i);
+            flgnames_t flgName = flgNames.at(i);
+            hdr_t hdrs = isviHdrs.at(i);
+
+            // Save MEM data in ISVI file for non masked FPGA
+            for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+
+                if(!(m_params.fpgaMask & (0x1 << j)))
+                    continue;
+
+                fprintf(stderr, "\n");
+                for(unsigned counter = 0; counter < m_params.dmaBuffersCount; counter++) {
+
+                    brd->startDma(j, m_params.dmaChannel, 0x0); IPC_delay(10);
+
+                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 4000) < 0 ) {
+
+                        u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
+                        u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
+                        fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
+                        break;
+
+                    } else {
+
+                        brd->writeBuffer(j, m_params.dmaChannel, isviFile[j], counter * m_params.dmaBlockSize * m_params.dmaBlockCount);
+                        fprintf(stderr, "Write DMA buffer: %d\r", counter);
+                    }
+
+                    brd->stopDma(j, m_params.dmaChannel);
+                }
+
+                string h = hdrs.at(j);
+                IPC_writeFile(isviFile.at(j), (void*)h.c_str(), h.size());
+                lockDataFile(flgName[j].c_str(), pass_counter);
+
+                fprintf(stderr, "\n");
+
+                brd->RegPokeInd(j, MEM_TRD, 0x0, 0x0);
+                brd->RegPokeInd(j, ADC_TRD, 0x0, 0x0);
+                brd->resetFifo(j, ADC_TRD);
+                brd->resetFifo(j, MEM_TRD);
+                brd->resetDmaFifo(j, m_params.dmaChannel);
+
+                //IPC_delay(500);
+            }
+        }
+
+        ++pass_counter;
+    }
+
+    stopAdcDmaMem();
+}
+
+//-----------------------------------------------------------------------------
+
+void adc_test_thread::dataFromAdc()
+{
+    unsigned N = m_boardList.size();
+
+    //-------------------------------------------------------------
+    // Allocate DMA buffers for all board and all onboard FPGA ADC
+    vector<brdbuf_t> dmaBuffers;
+    prepareDma(dmaBuffers);
+
+    //--------------------------------------------------------------
+    //Prepare data and flag files for ISVI and counters
+    isvidata_t isviFiles;
+    isviflg_t  flgNames;
+    isvihdr_t isviHdrs;
+    prepareIsvi(isviFiles, flgNames, isviHdrs);
+
 
     //---------------------------------------------------------------
+    // prepare and start ADC and DMA channels for non masked FPGA
+    startAdcDma();
+
+    //---------------------------------------------------------------
+
+    unsigned pass_counter = 0;
 
     while(m_start) {
 
@@ -174,7 +342,6 @@ void adc_test_thread::run()
             vector<dmabuf_t> Buffers = dmaBuffers.at(i);
             datafiles_t isviFile = isviFiles.at(i);
             flgnames_t flgName = flgNames.at(i);
-            cnt_t count = counters.at(i);
             hdr_t hdrs = isviHdrs.at(i);
 
             // save ADC data into ISVI files for non masked FPGA
@@ -192,15 +359,13 @@ void adc_test_thread::run()
                 } else {
 
                     brd->writeBuffer(j, m_params.dmaChannel, isviFile.at(j), 0);
-
                     string h = hdrs.at(j);
                     IPC_writeFile(isviFile.at(j), (void*)h.c_str(), h.size());
-
-                    lockDataFile(flgName.at(j).c_str(), count.at(j));
+                    lockDataFile(flgName.at(j).c_str(), pass_counter);
                 }
 
                 //display 1-st element of each block
-                fprintf(stderr, "%d: STATUS = 0x%.4X [", ++count.at(j), (u16)brd->RegPeekDir(j,ADC_TRD,0x0));
+                fprintf(stderr, "%d: STATUS = 0x%.4X [", pass_counter, (u16)brd->RegPeekDir(j,ADC_TRD,0x0));
                 for(unsigned k=0; k<Buffers[j].size(); k++) {
                     u32* value = (u32*)Buffers[j].at(k);
                     fprintf(stderr, " 0x%.8x ", value[0]);
@@ -216,26 +381,28 @@ void adc_test_thread::run()
                 brd->RegPokeInd(j,ADC_TRD,0,0x2038);
             }
         }
+
+        ++pass_counter;
     }
 
-    // Stop ADC and DMA channels for non masked FPGA
-    // free DMA buffers, close ISVI data file
-    for(unsigned i=0; i<N; ++i) {
+    stopAdcDma();
+}
 
-        // Take one board from list
-        acdsp* brd = m_boardList.at(i);
-        datafiles_t isviFile = isviFiles.at(i);
+//-----------------------------------------------------------------------------
 
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+void adc_test_thread::run()
+{
+    if(m_boardList.empty()) {
+        return;
+    }
 
-            if(m_params.fpgaMask & (0x1 << j)) {
+    if(m_params.testMode == 0) {
+        dataFromAdc();
+    }
 
-                brd->RegPokeInd(j,ADC_TRD,0,0x0);
-                brd->stopDma(j, m_params.dmaChannel);
-                IPC_delay(10);
-                brd->freeDmaMemory(j, m_params.dmaChannel);
-                IPC_closeFile(isviFile.at(j));
-            }
-        }
+    if(m_params.testMode == 1) {
+        return dataFromMemAsMem();
     }
 }
+
+//-----------------------------------------------------------------------------
