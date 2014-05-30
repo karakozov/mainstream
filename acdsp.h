@@ -98,6 +98,8 @@ public:
     Fpga *FPGA(unsigned fpgaNum);
     const std::vector<Fpga*>& FPGA_LIST() { return m_fpga; }
 
+    Memory *DDR3(unsigned fpgaNum);
+
     trd_check* get_trd_check() { return m_trd_check; }
     pe_chn_rx* get_chan_rx() { return m_rx; }
     pe_chn_tx* get_chan_tx(int id) { return m_tx[id%2]; }
@@ -116,8 +118,6 @@ private:
 
     void createFpgaMemory();
     void deleteFpgaMemory();
-
-    Memory *DDR3(unsigned fpgaNum);
 };
 
 #endif // __ACDSP_H__
