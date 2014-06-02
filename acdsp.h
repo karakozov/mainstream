@@ -91,6 +91,10 @@ public:
     // ISVI INTERFACE
     bool writeBlock(U32 fpgaNum, U32 DmaChan, IPC_handle file, int blockNumber);
     bool writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos = 0);
+
+    bool isFpgaDsp(U32 fpgaNum);
+    bool isFpgaAdc(U32 fpgaNum);
+
 #ifndef USE_GUI
     void start_local_pcie_test(struct app_params_t& params);
 #endif

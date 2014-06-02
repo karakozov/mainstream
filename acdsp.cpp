@@ -320,6 +320,28 @@ bool acdsp::writeBuffer(U32 fpgaNum, U32 DmaChan, IPC_handle file, int fpos)
 
 //-----------------------------------------------------------------------------
 
+bool acdsp::isFpgaDsp(U32 fpgaNum)
+{
+    U16 device_id = 0;
+    FPGA(fpgaNum)->FpgaDeviceID(device_id);
+    if(device_id == 0x5513)
+        return true;
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+
+bool acdsp::isFpgaAdc(U32 fpgaNum)
+{
+    U16 device_id = 0;
+    FPGA(fpgaNum)->FpgaDeviceID(device_id);
+    if(device_id == 0x5512)
+        return true;
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+
 #define MAIN_TRD 0
 #define ADC_TRD  4
 #define MEM_TRD  5
