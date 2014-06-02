@@ -119,7 +119,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
             }
         }
 
-        if(fpgaLocal.size() == 3) {
+        if(fpgaLocal.size()) {
             acdsp* brd = new acdsp(fpgaLocal);
             boardList.push_back(brd);
         }
