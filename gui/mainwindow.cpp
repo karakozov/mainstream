@@ -238,5 +238,7 @@ void MainWindow::showRateGUI(std::vector<pcie_speed_t>* dataRate)
 
 void MainWindow::showAdcTrace(QString buffer)
 {
+    if(ui->ptTraceAdc->document()->lineCount() == 256)
+        ui->ptTraceAdc->clear();
     ui->ptTraceAdc->appendPlainText(buffer);
 }

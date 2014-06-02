@@ -260,12 +260,14 @@ void adc_test_thread::dataFromMemAsMem()
             QString info;
 
             // Save MEM data in ISVI file for non masked FPGA
-            for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+            for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
 
                 if(!(m_params.fpgaMask & (0x1 << j)))
                     continue;
 
-                fprintf(stderr, "\n");
+                if(brd->isFpgaDsp(j))
+                    continue;
+
                 for(unsigned counter = 0; counter < m_params.dmaBuffersCount; counter++) {
 
                     brd->startDma(j, m_params.dmaChannel, 0x0); IPC_delay(10);
@@ -274,16 +276,17 @@ void adc_test_thread::dataFromMemAsMem()
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
-                        fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X MEM STATUS = 0x%.4X\n", status_adc, status_mem);
-                        info = "ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc) + "MEM_STATUS = 0x" + QString::number(status_mem);
+                        info += " BRD: " + QString::number(brd->slotNumber()) + " FPGA: " + QString::number(j);
+                        info += " - ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc) + "MEM_STATUS = 0x" + QString::number(status_mem);
                         emit updateInfo(info);
                         break;
 
                     } else {
 
                         brd->writeBuffer(j, m_params.dmaChannel, isviFile[j], counter * m_params.dmaBlockSize * m_params.dmaBlockCount);
-                        fprintf(stderr, "Write DMA buffer: %d\r", counter);
-                        info = "Board: " + QString::number(i) + "Write DMA buffer: " + QString::number(counter);
+                        info = QString::number(pass_counter) + " - ";
+                        info += "BRD: " + QString::number(i) + " FPGA: " + QString::number(j);
+                        info += " - Write DMA buffer: " + QString::number(counter);
                         emit updateInfo(info);
                     }
 
@@ -294,19 +297,17 @@ void adc_test_thread::dataFromMemAsMem()
                 IPC_writeFile(isviFile.at(j), (void*)h.c_str(), h.size());
                 lockDataFile(flgName[j].c_str(), pass_counter);
 
-                fprintf(stderr, "\n");
-
                 brd->RegPokeInd(j, MEM_TRD, 0x0, 0x0);
                 brd->RegPokeInd(j, ADC_TRD, 0x0, 0x0);
                 brd->resetFifo(j, ADC_TRD);
                 brd->resetFifo(j, MEM_TRD);
                 brd->resetDmaFifo(j, m_params.dmaChannel);
-
-                //IPC_delay(500);
             }
+            emit updateInfo("");
         }
 
         ++pass_counter;
+        IPC_delay(500);
     }
 
     stopAdcDmaMem();
@@ -351,16 +352,19 @@ void adc_test_thread::dataFromAdc()
             QString info;
 
             // save ADC data into ISVI files for non masked FPGA
-            for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+            for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
 
                 if(!(m_params.fpgaMask & (0x1 << j)))
+                    continue;
+
+                if(brd->isFpgaDsp(j))
                     continue;
 
                 if( brd->waitDmaBuffer(j, m_params.dmaChannel, 2000) < 0 ) {
 
                     u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
-                    fprintf( stderr, "ERROR TIMEOUT! ADC STATUS = 0x%.4X\n", status_adc);
-                    info = "ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc, 16);
+                    info = "BRD: " + QString::number(brd->slotNumber()) + " FPGA: " + QString::number(j);
+                    info += " - ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc, 16);
                     emit updateInfo(info);
                     break;
 
@@ -374,16 +378,15 @@ void adc_test_thread::dataFromAdc()
 
                 //display 1-st element of each block
                 u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
-                fprintf(stderr, "%d: STATUS = 0x%.4X [", pass_counter, (u16)status_adc);
-                info = QString::number(pass_counter) + ": STATUS = 0x" + QString::number((u16)status_adc) + "[";
+                info = QString::number(pass_counter) + " - ";
+                info += "BRD: " + QString::number(brd->slotNumber()) + " FPGA: " + QString::number(j);
+                info += " : STATUS = 0x" + QString::number((u16)status_adc) + " [";
                 for(unsigned k=0; k<Buffers[j].size(); k++) {
                     u32* value = (u32*)Buffers[j].at(k);
-                    fprintf(stderr, " 0x%.8x ", value[0]);
                     info += (" 0x" + QString::number(value[0], 16) + " ");
                 }
                 info += " ]";
                 emit updateInfo(info);
-                fprintf(stderr, " ]\r");
 
                 brd->RegPokeInd(j,ADC_TRD,0,0x0);
                 brd->stopDma(j, m_params.dmaChannel);
@@ -393,9 +396,11 @@ void adc_test_thread::dataFromAdc()
                 IPC_delay(10);
                 brd->RegPokeInd(j,ADC_TRD,0,0x2038);
             }
+            emit updateInfo("");
         }
 
         ++pass_counter;
+        IPC_delay(500);
     }
 
     stopAdcDma();
