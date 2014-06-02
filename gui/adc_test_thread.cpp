@@ -272,7 +272,7 @@ void adc_test_thread::dataFromMemAsMem()
 
                     brd->startDma(j, m_params.dmaChannel, 0x0); IPC_delay(10);
 
-                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 4000) < 0 ) {
+                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 1000) < 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
@@ -311,6 +311,7 @@ void adc_test_thread::dataFromMemAsMem()
     }
 
     stopAdcDmaMem();
+    IPC_delay(500);
 }
 
 //-----------------------------------------------------------------------------
@@ -404,6 +405,7 @@ void adc_test_thread::dataFromAdc()
     }
 
     stopAdcDma();
+    IPC_delay(500);
 }
 
 //-----------------------------------------------------------------------------

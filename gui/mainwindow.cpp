@@ -55,7 +55,7 @@ MainWindow::~MainWindow()
 
 //-----------------------------------------------------------------------------
 
-void MainWindow::startSystemConfiguration()
+void MainWindow::updateSystemParams()
 {
     bool ok;
 
@@ -74,15 +74,29 @@ void MainWindow::startSystemConfiguration()
     m_params.syncSelClkOut = ui->leSyncSelClkOut->text().toInt(&ok, 16);
     m_params.syncFd = ui->leSyncFD->text().toFloat(&ok);
     m_params.syncFo = ui->leSyncFO->text().toFloat(&ok);
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::startSync()
+{
+    if(m_sync) {
+        m_sync->PowerON(true);
+        m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
+        IPC_delay(100);
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::startSystemConfiguration()
+{
+    updateSystemParams();
 
     unsigned brdCount = 0;
     unsigned fpgaCount = create_fpga_list(m_fpgaList, 16, 0);
     if(fpgaCount) {
         brdCount = create_board_list(m_fpgaList, m_boardList, &m_sync, m_params.boardMask);
-        if(m_sync) {
-            m_sync->PowerON(true);
-            m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
-        }
     }
 
     ui->ptTrace->appendPlainText("Total FPGA: " + QString::number(fpgaCount));
@@ -116,6 +130,8 @@ void MainWindow::startPciExpressTest()
 
     if(m_pcie_thread)
         m_pcie_thread->start_pcie_test(true);
+
+    ui->tab->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -128,12 +144,18 @@ void MainWindow::stopPciExpressTest()
     m_timer->stop();
     m_timer_counter = 0;
     m_timer->setInterval(0);
+
+    ui->tab->setEnabled(true);
 }
 
 //-----------------------------------------------------------------------------
 
 void MainWindow::startAdcTest()
 {
+    updateSystemParams();
+
+    startSync();
+
     unsigned period = ui->leUpdateInfoPeriodAdc->text().toInt();
 
     m_timer->stop();
@@ -143,6 +165,8 @@ void MainWindow::startAdcTest()
 
     if(m_adc_thread)
         m_adc_thread->start_adc_test(true, m_params);
+
+    ui->tab->setEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -155,6 +179,8 @@ void MainWindow::stopAdcTest()
     m_timer->stop();
     m_timer_counter = 0;
     m_timer->setInterval(0);
+
+    ui->tab->setEnabled(true);
 }
 
 //-----------------------------------------------------------------------------

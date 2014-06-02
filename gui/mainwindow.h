@@ -51,7 +51,9 @@ private:
     void init_display_table(QTableWidget *table);
 
 private slots:
+    void updateSystemParams();
     void startSystemConfiguration();
+    void startSync();
     void startPciExpressTest();
     void stopPciExpressTest();
     void startAdcTest();

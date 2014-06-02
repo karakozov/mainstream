@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-CONFIG += debug
+#CONFIG += release
+#CONFIG += debug
 
 QT       += core gui
 
