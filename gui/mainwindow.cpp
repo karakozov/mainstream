@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_timer_counter = 0;
     m_pcie_thread = 0;
     m_adc_thread = 0;
+    m_systemConfigured = false;
 
     connect(ui->pbStartConfiguration, SIGNAL(clicked()), this, SLOT(startSystemConfiguration()));
     connect(ui->pbStartPcieTest, SIGNAL(clicked()), this, SLOT(startPciExpressTest()));
@@ -33,6 +34,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pbStartAdcTest, SIGNAL(clicked()), this, SLOT(startAdcTest()));
     connect(ui->pbStopAdcTest, SIGNAL(clicked()), this, SLOT(stopAdcTest()));
     connect(m_timer, SIGNAL(timeout()), this, SLOT(timerIsr()));
+    connect(ui->pbSyncConfigure, SIGNAL(clicked()), this, SLOT(startSync()));
+    connect(ui->cbSlot1, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->cbSlot2, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->cbSlot3, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->cbSlot4, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->cbSlot5, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->cbSlot6, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+
+    ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
+
+    setBoardMask();
 }
 
 
@@ -70,17 +82,23 @@ void MainWindow::updateSystemParams()
     m_params.dmaBuffersCount = ui->leDmaBuffersCount->text().toInt(&ok, 10);
     m_params.dmaBlockCount = ui->leDmaBlocksCount->text().toInt(&ok, 10);
 
-    m_params.syncMode = ui->leSyncMode->text().toInt(&ok, 16);
-    m_params.syncSelClkOut = ui->leSyncSelClkOut->text().toInt(&ok, 16);
-    m_params.syncFd = ui->leSyncFD->text().toFloat(&ok);
-    m_params.syncFo = ui->leSyncFO->text().toFloat(&ok);
+    m_params.syncMode = ui->cbSyncMode->currentText().toInt(&ok, 16);
+    m_params.syncSelClkOut = ui->cbSyncSelClkOut->currentText().toInt(&ok, 16);
+    m_params.syncFd = ui->cbSyncFD->currentText().toFloat(&ok);
+    m_params.syncFo = ui->cbSyncFO->currentText().toFloat(&ok);
 }
 
 //-----------------------------------------------------------------------------
 
 void MainWindow::startSync()
 {
+    updateSystemParams();
+
     if(m_sync) {
+        if(!m_sync->checkFrequencyParam(m_params.syncMode, m_params.syncFd, m_params.syncFo)) {
+            statusBar()->showMessage("Error: Invalid AC_SYNC parameters!");
+            return;
+        }
         m_sync->PowerON(true);
         m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
         IPC_delay(100);
@@ -111,6 +129,9 @@ void MainWindow::startSystemConfiguration()
 
         m_adc_thread = new adc_test_thread(m_boardList);
         connect(m_adc_thread, SIGNAL(updateInfo(QString)), this, SLOT(showAdcTrace(QString)));
+
+        m_systemConfigured = true;
+        ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
     }
 
     init_display_table(m_tableError);
@@ -268,3 +289,45 @@ void MainWindow::showAdcTrace(QString buffer)
         ui->ptTraceAdc->clear();
     ui->ptTraceAdc->appendPlainText(buffer);
 }
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setBoardMask()
+{
+    u32 mask = 0;
+
+    if(ui->cbSlot1->isChecked())
+        mask |=  (0x1 << 0);
+    else
+        mask &= ~(0x1 << 0);
+
+    if(ui->cbSlot2->isChecked())
+        mask |=  (0x1 << 1);
+    else
+        mask &= ~(0x1 << 1);
+
+    if(ui->cbSlot3->isChecked())
+        mask |=  (0x1 << 2);
+    else
+        mask &= ~(0x1 << 2);
+
+    if(ui->cbSlot4->isChecked())
+        mask |=  (0x1 << 3);
+    else
+        mask &= ~(0x1 << 3);
+
+    if(ui->cbSlot5->isChecked())
+        mask |=  (0x1 << 4);
+    else
+        mask &= ~(0x1 << 4);
+
+    if(ui->cbSlot6->isChecked())
+        mask |=  (0x1 << 5);
+    else
+        mask &= ~(0x1 << 5);
+
+    ui->leBoardMask->setText("0x" + QString::number(mask, 16));
+    m_params.boardMask = mask;
+}
+
+//-----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-#include "test_thread.h"
+#include "pcie_test_thread.h"
 
 #include <cstdlib>
 #include <cstdio>

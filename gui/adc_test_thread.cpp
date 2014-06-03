@@ -259,6 +259,9 @@ void adc_test_thread::dataFromMemAsMem()
             hdr_t hdrs = isviHdrs.at(i);
             QString info;
 
+            if(!m_start)
+                break;
+
             // Save MEM data in ISVI file for non masked FPGA
             for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
 
@@ -268,11 +271,14 @@ void adc_test_thread::dataFromMemAsMem()
                 if(brd->isFpgaDsp(j))
                     continue;
 
+                if(!m_start)
+                    break;
+
                 for(unsigned counter = 0; counter < m_params.dmaBuffersCount; counter++) {
 
-                    brd->startDma(j, m_params.dmaChannel, 0x0); IPC_delay(10);
+                    brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 1000) < 0 ) {
+                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 10) < 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);

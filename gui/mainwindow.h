@@ -8,7 +8,7 @@
 #include "iniparser.h"
 #include "pcie_test.h"
 #include "isvi.h"
-#include "test_thread.h"
+#include "pcie_test_thread.h"
 #include "adc_test_thread.h"
 
 #include <QMainWindow>
@@ -48,6 +48,8 @@ private:
     QAbstractItemModel *m_modelRate;
     QTableWidget *m_tableRate;
 
+    bool m_systemConfigured;
+
     void init_display_table(QTableWidget *table);
 
 private slots:
@@ -62,6 +64,7 @@ private slots:
     void showCountersGUI(std::vector<counter_t>* counters);
     void showRateGUI(std::vector<pcie_speed_t>* dataRate);
     void showAdcTrace(QString buffer);
+    void setBoardMask();
 };
 
 #endif // MAINWINDOW_H

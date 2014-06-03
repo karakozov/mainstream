@@ -36,30 +36,22 @@
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QGroupBox" name="groupBox_2">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
             <property name="title">
-             <string>System configuration</string>
+             <string>System test configuration</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
              <item row="0" column="0">
               <layout class="QGridLayout" name="gridLayout_5">
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="leBoardMask">
-                 <property name="text">
-                  <string>0x3D</string>
-                 </property>
-                </widget>
-               </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="label_8">
                  <property name="text">
                   <string>Test mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_7">
-                 <property name="text">
-                  <string>Board mask</string>
                  </property>
                 </widget>
                </item>
@@ -87,70 +79,137 @@
                  </item>
                 </widget>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>FPGA mask</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="leFpgaMask">
-                 <property name="text">
-                  <string>0x3</string>
-                 </property>
-                </widget>
-               </item>
               </layout>
              </item>
             </layout>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_3">
+           <widget class="QGroupBox" name="groupBox_8">
             <property name="title">
-             <string>ADC configuration</string>
+             <string>Board and FPGA configuration</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="0">
-              <layout class="QGridLayout" name="gridLayout_7">
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="lineEdit_7">
+             <item row="0" column="0" colspan="2">
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <item>
+                <widget class="QCheckBox" name="cbSlot6">
+                 <property name="text">
+                  <string>SLOT6</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="cbSlot5">
+                 <property name="text">
+                  <string>SLOT5</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="cbSlot4">
+                 <property name="text">
+                  <string>SLOT4</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="cbSlot3">
+                 <property name="text">
+                  <string>SLOT3</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="cbSlot2">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
                  <property name="text">
-                  <string>0.0</string>
+                  <string>SLOT2</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_9">
-                 <property name="text">
-                  <string>ADC channels mask</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_10">
+               <item>
+                <widget class="QCheckBox" name="cbSlot1">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
                  <property name="text">
-                  <string>ADC frequency, Hz</string>
+                  <string>SLOT1</string>
                  </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="leAdcMask">
-                 <property name="text">
-                  <string>0xF</string>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Board mask</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="leBoardMask">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>0x3D</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>FPGA ADC mask</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="leFpgaMask">
+               <property name="text">
+                <string>0x3</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>ADC channels mask</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="leAdcMask">
+               <property name="text">
+                <string>0xF</string>
+               </property>
+              </widget>
+             </item>
             </layout>
+            <zorder></zorder>
+            <zorder>label_7</zorder>
+            <zorder>leBoardMask</zorder>
+            <zorder>label_11</zorder>
+            <zorder>leFpgaMask</zorder>
+            <zorder>label_9</zorder>
+            <zorder>leAdcMask</zorder>
            </widget>
           </item>
           <item>
@@ -161,17 +220,10 @@
             <layout class="QGridLayout" name="gridLayout_8">
              <item row="0" column="0">
               <layout class="QGridLayout" name="gridLayout_9">
-               <item row="2" column="0">
+               <item row="3" column="0">
                 <widget class="QLabel" name="label_5">
                  <property name="text">
                   <string>FD, MHz</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>FO, MHz</string>
                  </property>
                 </widget>
                </item>
@@ -190,31 +242,122 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLineEdit" name="leSyncSelClkOut">
+                <widget class="QComboBox" name="cbSyncSelClkOut">
+                 <item>
+                  <property name="text">
+                   <string>0x0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x1</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="cbSyncMode">
+                 <property name="currentIndex">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>0x0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x1</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x2</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x3</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QPushButton" name="pbSyncConfigure">
                  <property name="text">
-                  <string>0x0</string>
+                  <string>Configure AC_SYNC</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>FO, MHz</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QLineEdit" name="leSyncFD">
-                 <property name="text">
-                  <string>448.0</string>
+                <widget class="QComboBox" name="cbSyncFO">
+                 <property name="currentIndex">
+                  <number>1</number>
                  </property>
+                 <item>
+                  <property name="text">
+                   <string>10.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>56.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>120.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>400.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>448.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>480.0</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
                <item row="3" column="1">
-                <widget class="QLineEdit" name="leSyncFO">
-                 <property name="text">
-                  <string>56.0</string>
+                <widget class="QComboBox" name="cbSyncFD">
+                 <property name="currentIndex">
+                  <number>1</number>
                  </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="leSyncMode">
-                 <property name="text">
-                  <string>0x3</string>
-                 </property>
+                 <item>
+                  <property name="text">
+                   <string>400.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>448.0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>488.72</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>480</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
