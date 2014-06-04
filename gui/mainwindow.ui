@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>GUI monitor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -216,6 +216,27 @@
                  </property>
                 </widget>
                </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>ADC channels start</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QComboBox" name="cbAdcStartSource">
+                 <item>
+                  <property name="text">
+                   <string>0x3 - Software</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x2 - Hardware</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
               </layout>
              </item>
             </layout>
@@ -252,6 +273,9 @@
                </item>
                <item row="1" column="1">
                 <widget class="QComboBox" name="cbSyncSelClkOut">
+                 <property name="currentIndex">
+                  <number>1</number>
+                 </property>
                  <item>
                   <property name="text">
                    <string>0x0</string>

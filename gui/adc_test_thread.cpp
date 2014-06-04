@@ -129,7 +129,7 @@ void adc_test_thread::startAdcDma()
                 brd->setDmaSource(j, m_params.dmaChannel, ADC_TRD);
                 brd->setDmaDirection(j, m_params.dmaChannel, BRDstrm_DIR_IN);
                 brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
-                brd->RegPokeInd(j, ADC_TRD, 0x17, (0x3 << 4));
+                brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
                 brd->startDma(j, m_params.dmaChannel, 0);
                 brd->RegPokeInd(j, ADC_TRD, 0, 0x2038);
             }
@@ -192,7 +192,7 @@ void adc_test_thread::startAdcDmaMem()
             brd->resetFifo(j, MEM_TRD);
             brd->resetDmaFifo(j, m_params.dmaChannel);
             brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
-            brd->RegPokeInd(j, ADC_TRD, 0x17, (0x3 << 4));
+            brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
             brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
             brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
         }
