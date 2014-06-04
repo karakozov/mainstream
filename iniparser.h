@@ -10,6 +10,7 @@ struct app_params_t {
     unsigned fpgaMask;
     unsigned dmaChannel;
     unsigned adcMask;
+    unsigned adcStart;
     unsigned dmaBlockSize;
     unsigned dmaBlockCount;
     unsigned dmaBuffersCount;
