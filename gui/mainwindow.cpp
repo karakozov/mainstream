@@ -142,6 +142,10 @@ void MainWindow::startSystemConfiguration()
 
 void MainWindow::startPciExpressTest()
 {
+    updateSystemParams();
+
+    startSync();
+
     unsigned period = ui->leUpdateInfoPeriod->text().toInt();
 
     m_timer->stop();
