@@ -216,7 +216,7 @@ void adc_test_thread::stopAdcDmaMem()
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
-                brd->RegPokeInd(i, MEM_TRD, 0x0, 0x0);
+                brd->RegPokeInd(j, MEM_TRD, 0x0, 0x0);
                 brd->RegPokeInd(j,ADC_TRD,0,0x0);
                 brd->stopDma(j, m_params.dmaChannel);
                 IPC_delay(10);
@@ -411,7 +411,6 @@ void adc_test_thread::dataFromAdc()
     }
 
     stopAdcDma();
-    IPC_delay(500);
 }
 
 //-----------------------------------------------------------------------------
@@ -420,15 +419,22 @@ void adc_test_thread::run()
 {
     emit updateInfo("Start ADC test thread");
 
-    if(!m_boardList.empty()) {
+    try {
+        if(!m_boardList.empty()) {
 
-        if(m_params.testMode == 0) {
-            dataFromAdc();
-        }
+            if(m_params.testMode == 0) {
+                dataFromAdc();
+            }
 
-        if(m_params.testMode == 1) {
-            dataFromMemAsMem();
+            if(m_params.testMode == 1) {
+                dataFromMemAsMem();
+            }
         }
+    } catch(except_info_t err) {
+        QString msg = err.info.c_str();
+        emit updateInfo(msg);
+    } catch(...) {
+        emit updateInfo("Error! Exception was generated in program.");
     }
 
     emit updateInfo("Stop ADC test thread");
