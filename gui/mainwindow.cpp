@@ -250,6 +250,8 @@ void MainWindow::timerIsr()
 {
     ++m_timer_counter;
     statusBar()->showMessage("Test working time: " + QString::number(m_timer_counter * m_timer->interval()) + " ms");
+    if((m_timer_counter%5) == 0)
+        updateFpgaTemperature();
 }
 
 //-----------------------------------------------------------------------------
@@ -336,3 +338,54 @@ void MainWindow::setBoardMask()
 }
 
 //-----------------------------------------------------------------------------
+
+void MainWindow::updateFpgaTemperature()
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(!brd) continue;
+
+        if(brd->slotNumber() == 3) {
+            float t30 = 0;
+            if(brd->getFpgaTemperature(0, t30)) {
+                ui->lb_fpgaT30->setText(QString::number(t30));
+            }
+            float t31 = 0;
+            if(brd->getFpgaTemperature(1, t31)) {
+                ui->lb_fpgaT30->setText(QString::number(t31));
+            }
+        }
+        if(brd->slotNumber() == 4) {
+            float t40 = 0;
+            if(brd->getFpgaTemperature(0, t40)) {
+                ui->lb_fpgaT40->setText(QString::number(t40));
+            }
+            float t41 = 0;
+            if(brd->getFpgaTemperature(1, t41)) {
+                ui->lb_fpgaT41->setText(QString::number(t41));
+            }
+        }
+        if(brd->slotNumber() == 5) {
+            float t50 = 0;
+            if(brd->getFpgaTemperature(0, t50)) {
+                ui->lb_fpgaT50->setText(QString::number(t50));
+            }
+            float t51 = 0;
+            if(brd->getFpgaTemperature(1, t51)) {
+                ui->lb_fpgaT51->setText(QString::number(t51));
+            }
+        }
+        if(brd->slotNumber() == 6) {
+            float t60 = 0;
+            if(brd->getFpgaTemperature(0, t60)) {
+                ui->lb_fpgaT60->setText(QString::number(t60));
+            }
+            float t61 = 0;
+            if(brd->getFpgaTemperature(1, t61)) {
+                ui->lb_fpgaT61->setText(QString::number(t61));
+            }
+        }
+    }
+}
