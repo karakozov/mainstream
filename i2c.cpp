@@ -37,8 +37,8 @@ i2c::i2c()
     m_deviceFile = -1;
     m_force = 1;
 
-    char deviceName[256];
 #ifdef __linux__
+    char deviceName[256];
     if( open_i2c_dev(1, deviceName, sizeof(deviceName)) < 0) {
         throw;
     }
@@ -52,8 +52,8 @@ i2c::i2c(int bus)
     m_deviceFile = -1;
     m_force = 1;
 
-    char deviceName[256];
 #ifdef __linux__
+    char deviceName[256];
     if( open_i2c_dev(bus, deviceName, sizeof(deviceName)) < 0) {
         throw;
     }
