@@ -205,7 +205,7 @@ int  Stream::freeDmaMemory()
             throw except_info("%s, %d: %s() - Error free buffer for DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
         }
 #endif
-        delete m_Descr;
+        delete[] m_Descr;
         m_Descr = NULL;
     }
 
