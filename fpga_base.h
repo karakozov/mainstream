@@ -60,8 +60,8 @@ protected:
     u32 core_read_reg_buf(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
     u32 core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 RegBufSize);
 
-    bool core_device_id(U16& device_id);
-    bool core_hw_address(U08& hwAddr, U08& fpgaNum);
+    void core_device_id(U16& device_id);
+    void core_hw_address(U08& hwAddr, U08& fpgaNum);
     bool core_temperature(float &t);
 
     IPC_handle              m_fpga;

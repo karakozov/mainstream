@@ -24,28 +24,32 @@ using namespace std;
 
 fpga_base::fpga_base(u32 fpgaNumber) : m_fpgaNumber(fpgaNumber)
 {
-    if(!openFpga()) {
-        throw except_info("%s, %d: %s() - Error open FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
-    }
-
-    fprintf(stderr, "====================== Open FPGA%d ======================\n", m_fpgaNumber);
-
-#ifdef __linux__
-    //m_map = new Mapper();
-    m_map = new Mapper(m_fpga);
-#else
-    m_map = new Mapper(m_fpga);
-#endif
-
-    infoFpga();
-    mapFpga();
-    initBar();
     m_hwID = 0;
     m_hwAddr = 0;
     m_hwFpgaNum = 0;
-    core_device_id(m_hwID);
-    core_hw_address(m_hwAddr, m_hwFpgaNum);
-    fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", m_hwAddr, m_hwID, m_hwFpgaNum );
+
+    if(!openFpga()) {
+        throw except_info("%s, %d: %s() - Error open DEVICE%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+    }
+
+    fprintf(stderr, "====================== Open DEVICE%d ======================\n", m_fpgaNumber);
+
+    try {
+        m_map = new Mapper(m_fpga);
+        infoFpga();
+        mapFpga();
+        initBar();
+        core_hw_address(m_hwAddr, m_hwFpgaNum);
+        core_device_id(m_hwID);
+    } catch(except_info_t err) {
+        closeFpga();
+        throw err;
+    } catch(...) {
+        closeFpga();
+        throw except_info("%s, %d: %s() - Unknown exception while init DEVICE%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
+    }
+
+    fprintf(stderr, "SLOT: 0x%.2X\tFPGA: 0x%.4X\tID: 0x%.4X\n", m_hwAddr, m_hwFpgaNum, m_hwID );
     fprintf(stderr, "========================================================\n");
 }
 
@@ -83,8 +87,6 @@ void fpga_base::closeFpga()
 
 void fpga_base::infoFpga()
 {
-    //AMB_CONFIGURATION fpgaInfo;
-    //memset(&fpgaInfo, 0, sizeof(AMB_CONFIGURATION));
     memset(&m_info, 0, sizeof(m_info));
 
     int res = IPC_ioctlDevice( m_fpga, IOCTL_AMB_GET_CONFIGURATION, &m_info, sizeof(AMB_CONFIGURATION), &m_info, sizeof(AMB_CONFIGURATION));
@@ -388,28 +390,26 @@ u32 fpga_base::core_read_reg_buf_dir(u32 TetrNum, u32 RegNum, void* RegBuf, u32 
 
 //-----------------------------------------------------------------------------
 
-bool fpga_base::core_hw_address(U08& hwAddr, U08& fpgaNum)
+void fpga_base::core_hw_address(U08& hwAddr, U08& fpgaNum)
 {
     U32 hw = core_block_read(0, 0x1F);
     hwAddr =  ((hw >> 8) & 0xff);
     fpgaNum = (hw & 0xff);
     if(((hw >> 16)&0xffff) == 0x4912) {
-      return true;
+        return;
     }
-    fprintf(stderr, "%s(): Error get geographical address\n", __FUNCTION__);
-    return false;
+    throw except_info("%s, %d: %s() - Error get hardware addresses for DEVICE%d.\n", __FILE__, __LINE__, __FUNCTION__, m_fpgaNumber);
 }
 
 //-----------------------------------------------------------------------------
 
-bool fpga_base::core_device_id(U16& device_id)
+void fpga_base::core_device_id(U16& device_id)
 {
     device_id = (core_block_read(0, 2) & 0xffff);
     if((device_id != 0) && (device_id != 0xffff)) {
-        return true;
+        return;
     }
-    fprintf(stderr, "%s(): Error get device id\n", __FUNCTION__);
-    return false;
+    throw except_info("%s, %d: %s() - Error get device_id for BOARD%d FPGA%d.\n", __FILE__, __LINE__, __FUNCTION__, m_hwAddr, m_hwFpgaNum);
 }
 
 //-----------------------------------------------------------------------------
