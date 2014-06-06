@@ -1426,3 +1426,22 @@ void acdsp::start_local_pcie_test(struct app_params_t& params)
 }
 #endif
 //-----------------------------------------------------------------------------
+
+bool acdsp::getFpgaTemperature(U32 fpgaNum, float& t)
+{
+    if(isFpgaAdc(fpgaNum)) {
+
+        fpga_trd_t memTrd;
+        if(FPGA(fpgaNum)->fpgaTrd(0, 0x9B, memTrd)) {
+
+            u32 val = FPGA(fpgaNum)->FpgaRegPeekDir(memTrd.number, 0x207);
+            val >>= 6;
+            val &= 0x3FF;
+            t = ((val*503.975)/1024-273.15);
+            return true;
+        }
+    }
+    return false;
+}
+
+//-----------------------------------------------------------------------------
