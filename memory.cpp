@@ -204,20 +204,21 @@ void Memory::MemInit(U32 init)
     fprintf(stderr, "MODE1 = 0x%x\n", (U16)ddrCfg.AsWhole);
     fprintf(stderr, "Waiting for Memory Initialization  ... \n");
     IPC_delay( 200 );
+
+    U32 status_mem = 0;
+    U32 loop = 0;
+    do
     {
-        U32 status_mem = 0;
-        U32 loop = 0;
-        do
-        {
-            status_mem = m_fpga->FpgaRegPeekDir(m_MemTetrNum, 0);
-            fprintf( stderr, "%.8d: STATUS 0x%.4X\r", loop, status_mem );
-            IPC_delay( 100 );
-            loop++;
-            if(loop > 10) {
-                break;
-            }
-        } while( !(status_mem & 0x800));
-    }
+        status_mem = m_fpga->FpgaRegPeekDir(m_MemTetrNum, 0);
+        fprintf( stderr, "%.8d: STATUS 0x%.4X\r", loop, status_mem );
+        IPC_delay( 100 );
+        loop++;
+        if(loop > 20) {
+            fprintf(stderr, "\nMemory Initialization ERROR\n");
+            return;
+        }
+    } while( !(status_mem & 0x800));
+
     fprintf(stderr, "\nMemory Initialization DONE\n");
 }
 
@@ -707,7 +708,7 @@ void Memory::PrepareDDR3()
 
         U32 total_size=size/8*primary_bus/sdram_width*ranks;
         fprintf(stderr, "\nCOLUMNS \t\t%d\nROWS    \t\t%d\nBANKS   \t\t%d\nRANKS   \t\t%d\nSDRAM SIZE   \t\t%d \nSDRAM WITH \t\t%d\nPRIMARY BUS \t\t%d\nTOTAL SIZE \t\t%d [MB]\n",
-                    columns, rows, banks, ranks, size, sdram_width, primary_bus, total_size );
+                columns, rows, banks, ranks, size, sdram_width, primary_bus, total_size );
 
         fprintf(stderr, "\nMODE1 :\t\t0x%X\n\n", mode1);
     }
