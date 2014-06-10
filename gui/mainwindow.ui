@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -747,6 +747,13 @@
           <layout class="QGridLayout" name="gridLayout_19">
            <item row="0" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="pbFpgaT">
+               <property name="text">
+                <string>FPGA temperature</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <spacer name="horizontalSpacer_3">
                <property name="orientation">

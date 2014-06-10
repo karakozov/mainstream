@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbSlot4, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot5, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot6, SIGNAL(clicked()), this, SLOT(setBoardMask()));
+    connect(ui->pbFpgaT, SIGNAL(clicked()), this, SLOT(updateFpgaTemperature()));
 
     ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
 
@@ -354,7 +355,7 @@ void MainWindow::updateFpgaTemperature()
             }
             float t31 = 0;
             if(brd->getFpgaTemperature(1, t31)) {
-                ui->lb_fpgaT30->setText(QString::number(t31));
+                ui->lb_fpgaT31->setText(QString::number(t31));
             }
         }
         if(brd->slotNumber() == 4) {
