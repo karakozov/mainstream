@@ -51,6 +51,7 @@ private:
     bool m_systemConfigured;
 
     void init_display_table(QTableWidget *table);
+    void init_display_labels();
 
 private slots:
     void updateSystemParams();
@@ -65,6 +66,7 @@ private slots:
     void showRateGUI(std::vector<pcie_speed_t>* dataRate);
     void showAdcTrace(QString buffer);
     void setBoardMask();
+    void updateFpgaTemperature();
 };
 
 #endif // MAINWINDOW_H
