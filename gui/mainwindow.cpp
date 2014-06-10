@@ -113,9 +113,23 @@ void MainWindow::startSystemConfiguration()
     updateSystemParams();
 
     unsigned brdCount = 0;
-    unsigned fpgaCount = create_fpga_list(m_fpgaList, 16, 0);
-    if(fpgaCount) {
-        brdCount = create_board_list(m_fpgaList, m_boardList, &m_sync, m_params.boardMask);
+    unsigned fpgaCount = 0;
+
+    try {
+        fpgaCount = create_fpga_list(m_fpgaList, 16, 0);
+    } catch(...) {
+        ui->ptTrace->appendPlainText("Exception was generated in the program. FPGA list not formed");
+    }
+    try {
+        if(fpgaCount) {
+            brdCount = create_board_list(m_fpgaList, m_boardList, &m_sync, m_params.boardMask);
+        }
+    } catch(except_info_t err) {
+        QString msg = err.info.c_str();
+        ui->ptTrace->appendPlainText(msg);
+    }
+    catch(...) {
+        ui->ptTrace->appendPlainText("Exception was generated in the program. Board list not formed");
     }
 
     ui->ptTrace->appendPlainText("Total FPGA: " + QString::number(fpgaCount));

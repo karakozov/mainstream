@@ -278,7 +278,7 @@ void adc_test_thread::dataFromMemAsMem()
 
                     brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 10) < 0 ) {
+                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 100) < 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
