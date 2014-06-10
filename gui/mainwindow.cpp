@@ -78,6 +78,7 @@ void MainWindow::updateSystemParams()
     m_params.fpgaMask = ui->leFpgaMask->text().toInt(&ok, 16);
     m_params.adcMask = ui->leAdcMask->text().toInt(&ok, 16);
     m_params.adcStart = ui->cbAdcStartSource->currentIndex() == 0 ? 0x3 : 0x2;
+    m_params.adcStartInv = ui->cbAdcStartInversion->currentText().toInt(&ok, 16);
 
     m_params.dmaChannel = ui->leDmaChannel->text().toInt(&ok, 16);
     m_params.dmaBlockSize = ui->leDmaBlockSize->text().toInt(&ok, 16);

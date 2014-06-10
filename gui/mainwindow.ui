@@ -64,11 +64,11 @@
                <item row="0" column="1">
                 <widget class="QComboBox" name="cbTestMode">
                  <property name="currentIndex">
-                  <number>1</number>
+                  <number>0</number>
                  </property>
                  <item>
                   <property name="text">
-                   <string>DATA FORM ADC STREAM</string>
+                   <string>DATA FROM ADC STREAM</string>
                   </property>
                  </item>
                  <item>
@@ -238,6 +238,27 @@
                    <string>0x2 - Hardware</string>
                   </property>
                  </item>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QComboBox" name="cbAdcStartInversion">
+                 <item>
+                  <property name="text">
+                   <string>0x0</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>0x1</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_22">
+                 <property name="text">
+                  <string>Trigger inversion</string>
+                 </property>
                 </widget>
                </item>
               </layout>

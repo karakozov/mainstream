@@ -69,6 +69,12 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
     }
     param.adcStart = strtol(Buffer,0,16);
 
+    res = IPC_getPrivateProfileString(SECTION_NAME, "adcStartInv", "0x1", Buffer, sizeof(Buffer), iniFilePath);
+    if(!res) {
+        fprintf(stderr, "Parameter: adcStartInv - not found. Use default value\n");
+    }
+    param.adcStartInv = strtol(Buffer,0,16);
+
     res = IPC_getPrivateProfileString(SECTION_NAME, "dmaBlockSize", "0x10000", Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: dmaBlockSize - not found. Use default value\n");
@@ -130,6 +136,7 @@ void showParams(struct app_params_t& param)
     fprintf(stderr, "dmaChannel:        0x%x\n", param.dmaChannel);
     fprintf(stderr, "adcMask:           0x%x\n", param.adcMask);
     fprintf(stderr, "adcStart:          0x%x\n", param.adcStart);
+    fprintf(stderr, "adcStartInv:       0x%x\n", param.adcStartInv);
     fprintf(stderr, "dmaBlockSize:      0x%x\n", param.dmaBlockSize);
     fprintf(stderr, "dmaBlockCount:     0x%x\n", param.dmaBlockCount);
     fprintf(stderr, "dmaBuffersCount:   0x%x\n", param.dmaBuffersCount);

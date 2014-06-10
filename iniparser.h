@@ -11,6 +11,7 @@ struct app_params_t {
     unsigned dmaChannel;
     unsigned adcMask;
     unsigned adcStart;
+    unsigned adcStartInv;
     unsigned dmaBlockSize;
     unsigned dmaBlockCount;
     unsigned dmaBuffersCount;

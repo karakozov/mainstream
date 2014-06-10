@@ -55,7 +55,10 @@ void adc_test_thread::prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, is
         flgnames_t flgName;
         hdr_t hdr;
 
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
@@ -95,7 +98,10 @@ void adc_test_thread::prepareDma(vector<brdbuf_t>& dmaBuffers)
 
         // allocate DMA buffer for 2 FPGA ADC
         vector<dmabuf_t> Buffers;
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if((m_params.fpgaMask & (0x1 << j))) {
 
@@ -113,6 +119,27 @@ void adc_test_thread::prepareDma(vector<brdbuf_t>& dmaBuffers)
 
 //-----------------------------------------------------------------------------
 
+U32 calc_stmode(const struct app_params_t& params)
+{
+    U32 stmode = 0x0;
+
+    if(params.adcStart == 0x2) {
+        stmode |= 0x87;
+    } else {
+        stmode &= ~0x80;
+    }
+
+    if(params.adcStartInv) {
+        stmode |= 0x40;
+    } else {
+        stmode &= ~0x40;
+    }
+
+    return stmode;
+}
+
+//-----------------------------------------------------------------------------
+
 void adc_test_thread::startAdcDma()
 {
     unsigned N = m_boardList.size();
@@ -122,13 +149,20 @@ void adc_test_thread::startAdcDma()
         // Take one board from list
         acdsp* brd = m_boardList.at(i);
 
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
                 brd->setDmaSource(j, m_params.dmaChannel, ADC_TRD);
                 brd->setDmaDirection(j, m_params.dmaChannel, BRDstrm_DIR_IN);
                 brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
+
+                U32 stmode = calc_stmode(m_params);
+
+                brd->RegPokeInd(j, ADC_TRD, 0x5, stmode);
                 brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
                 brd->startDma(j, m_params.dmaChannel, 0);
                 brd->RegPokeInd(j, ADC_TRD, 0, 0x2038);
@@ -150,7 +184,10 @@ void adc_test_thread::stopAdcDma()
         acdsp* brd = m_boardList.at(i);
         //datafiles_t isviFile = isviFiles.at(i);
 
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
@@ -178,7 +215,10 @@ void adc_test_thread::startAdcDmaMem()
         acdsp* brd = m_boardList.at(i);
 
         // prepare and start ADC and MEM for non masked FPGA
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if(!(m_params.fpgaMask & (0x1 << j)))
                 continue;
@@ -192,6 +232,10 @@ void adc_test_thread::startAdcDmaMem()
             brd->resetFifo(j, MEM_TRD);
             brd->resetDmaFifo(j, m_params.dmaChannel);
             brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
+
+            U32 stmode = calc_stmode(m_params);
+
+            brd->RegPokeInd(j, ADC_TRD, 0x5, stmode);
             brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
             brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
             brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
@@ -212,7 +256,10 @@ void adc_test_thread::stopAdcDmaMem()
         acdsp* brd = m_boardList.at(i);
         //datafiles_t isviFile = isviFiles.at(i);
 
-        for(unsigned j=0; j<ADC_FPGA_COUNT; ++j) {
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
+
+            if(brd->isFpgaDsp(j))
+                continue;
 
             if(m_params.fpgaMask & (0x1 << j)) {
 
@@ -265,10 +312,10 @@ void adc_test_thread::dataFromMemAsMem()
             // Save MEM data in ISVI file for non masked FPGA
             for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
 
-                if(!(m_params.fpgaMask & (0x1 << j)))
+                if(brd->isFpgaDsp(j))
                     continue;
 
-                if(brd->isFpgaDsp(j))
+                if(!(m_params.fpgaMask & (0x1 << j)))
                     continue;
 
                 if(!m_start)
@@ -278,7 +325,8 @@ void adc_test_thread::dataFromMemAsMem()
 
                     brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    if( brd->waitDmaBuffer(j, m_params.dmaChannel, 100) < 0 ) {
+                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 100);
+                    if( res != 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
@@ -361,14 +409,16 @@ void adc_test_thread::dataFromAdc()
             // save ADC data into ISVI files for non masked FPGA
             for(unsigned j=0; j<brd->FPGA_LIST().size(); ++j) {
 
-                if(!(m_params.fpgaMask & (0x1 << j)))
-                    continue;
-
                 if(brd->isFpgaDsp(j))
                     continue;
 
-                if( brd->waitDmaBuffer(j, m_params.dmaChannel, 2000) < 0 ) {
+                if(!(m_params.fpgaMask & (0x1 << j)))
+                    continue;
 
+                int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 2000);
+                if( res != 0 ) {
+
+                    emit updateInfo("waitDmaBuffer() - 0x" + QString::number(res,16));
                     u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                     info = "BRD: " + QString::number(brd->slotNumber()) + " FPGA: " + QString::number(j);
                     info += " - ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc, 16);

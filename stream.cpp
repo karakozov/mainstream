@@ -226,10 +226,11 @@ int  Stream::startDma(int IsCycling)
         ResetEvent(m_Descr->hBlockEndEvent);
         ResetEvent(m_OvlStartStream.hEvent);
 
-        IPC_ioctlDeviceOvl(m_fpgaDev, IOCTL_AMB_START_MEMIO,
+        int res = IPC_ioctlDeviceOvl(m_fpgaDev, IOCTL_AMB_START_MEMIO,
                                       &StartDescrip,
                                       sizeof(StartDescrip),0,0,
                                       &m_OvlStartStream);
+        return res;
 #else
         int res = IPC_ioctlDevice(m_fpgaDev,
                                   IOCTL_AMB_START_MEMIO,
@@ -294,7 +295,10 @@ int Stream::waitDmaBuffer(U32 msTimeout)
     if(m_Descr)
     {
 #ifdef _WIN32
-        WaitForSingleObject(m_OvlStartStream.hEvent, msTimeout);
+        int res = WaitForSingleObject(m_OvlStartStream.hEvent, msTimeout);
+        if(res != WAIT_OBJECT_0) {
+            return res;
+        }
 #else
         AMB_STATE_DMA_CHANNEL StateDescrip;
         StateDescrip.DmaChanNum = m_DmaChan;
@@ -329,8 +333,8 @@ int Stream::waitDmaBlock(U32 msTimeout)
     {
 #ifdef _WIN32
         int res = WaitForSingleObject(m_Descr->hBlockEndEvent, msTimeout);
-        if(res == WAIT_TIMEOUT) {
-            res = -1;
+        if(res != WAIT_OBJECT_0) {
+            return res;
         }
 #else
         int res = IPC_ioctlDevice(m_fpgaDev,
