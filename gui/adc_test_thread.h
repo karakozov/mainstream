@@ -26,7 +26,7 @@ class adc_test_thread : public QThread
     Q_OBJECT
 
 public:
-    adc_test_thread(std::vector<acdsp*>& boardList);
+    adc_test_thread(std::vector<acdsp*>& boardList, acsync* sync);
     virtual ~adc_test_thread();
 
     void start_adc_test(bool star, struct app_params_t& params);
@@ -34,6 +34,7 @@ public:
 private:
     bool                        m_start;
     std::vector<acdsp*>&        m_boardList;
+    acsync*                     m_sync;
     struct app_params_t         m_params;
 
     void prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, isvihdr_t& isviHdrs);

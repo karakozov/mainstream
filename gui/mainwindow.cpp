@@ -104,6 +104,7 @@ void MainWindow::startSync()
         }
         m_sync->PowerON(true);
         m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
+        m_sync->ResetSync(true);
         IPC_delay(100);
     }
 }
@@ -144,7 +145,7 @@ void MainWindow::startSystemConfiguration()
         connect(m_pcie_thread,SIGNAL(updateCounters(std::vector<counter_t>*)),this,SLOT(showCountersGUI(std::vector<counter_t>*)));
         connect(m_pcie_thread,SIGNAL(updateDataRate(std::vector<pcie_speed_t>*)),this,SLOT(showRateGUI(std::vector<pcie_speed_t>*)));
 
-        m_adc_thread = new adc_test_thread(m_boardList);
+        m_adc_thread = new adc_test_thread(m_boardList, m_sync);
         connect(m_adc_thread, SIGNAL(updateInfo(QString)), this, SLOT(showAdcTrace(QString)));
 
         m_systemConfigured = true;

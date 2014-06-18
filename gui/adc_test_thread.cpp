@@ -10,7 +10,7 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-adc_test_thread::adc_test_thread(std::vector<acdsp*>& boardList) : m_boardList(boardList)
+adc_test_thread::adc_test_thread(std::vector<acdsp*>& boardList, acsync* sync) : m_boardList(boardList), m_sync(sync)
 {
     m_start = false;
 }
@@ -210,6 +210,8 @@ void adc_test_thread::startAdcDmaMem()
     U32 MemBufSize = m_params.dmaBuffersCount * m_params.dmaBlockSize * m_params.dmaBlockCount;
     U32 PostTrigSize = 0;
 
+    if(m_sync) m_sync->ResetSync(true);
+
     for(unsigned i=0; i<N; ++i) {
 
         acdsp* brd = m_boardList.at(i);
@@ -237,10 +239,15 @@ void adc_test_thread::startAdcDmaMem()
 
             brd->RegPokeInd(j, ADC_TRD, 0x5, stmode);
             brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
+
+            brd->startDma(j, m_params.dmaChannel, 0x0);
+
             brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
             brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
         }
     }
+
+    if(m_sync) m_sync->ResetSync(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -323,9 +330,9 @@ void adc_test_thread::dataFromMemAsMem()
 
                 for(unsigned counter = 0; counter < m_params.dmaBuffersCount; counter++) {
 
-                    brd->startDma(j, m_params.dmaChannel, 0x0);
+                    //brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 100);
+                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 500);
                     if( res != 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);

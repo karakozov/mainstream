@@ -64,7 +64,7 @@
                <item row="0" column="1">
                 <widget class="QComboBox" name="cbTestMode">
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>1</number>
                  </property>
                  <item>
                   <property name="text">
@@ -468,7 +468,7 @@
                <item row="1" column="1">
                 <widget class="QLineEdit" name="leDmaBlocksCount">
                  <property name="text">
-                  <string>64</string>
+                  <string>4</string>
                  </property>
                 </widget>
                </item>
