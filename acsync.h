@@ -59,6 +59,7 @@ public:
     void FreqMultipler1(U32 mode, U32 FO);
     void FreqMultiplerDivider(U32 mode, float FD, float FO);
     void PowerON(bool on);
+    void ResetSync(bool on);
 
 private:
     Fpga*                    m_fpga;
