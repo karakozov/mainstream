@@ -261,8 +261,7 @@ int  Stream::stopDma()
 
                 if (IPC_ioctlDevice(m_fpgaDev, IOCTL_AMB_STOP_MEMIO,&StateDescrip,sizeof(StateDescrip),&StateDescrip,sizeof(StateDescrip)) < 0)
                 {
-                    fprintf(stderr, "%s(): Error stop DMA\n", __FUNCTION__ );
-                    return -1;
+                    throw except_info("%s, %d: %s() - Error stop DMA %d\n", __FILE__, __LINE__, __FUNCTION__, m_Descr->DmaChanNum);
                 }
             }
         }
@@ -325,10 +324,6 @@ int Stream::waitDmaBuffer(U32 msTimeout)
 
 int Stream::waitDmaBlock(U32 msTimeout)
 {
-    AMB_STATE_DMA_CHANNEL StateDescrip;
-    StateDescrip.DmaChanNum = m_DmaChan;
-    StateDescrip.Timeout = msTimeout;
-
     if(m_Descr)
     {
 #ifdef _WIN32
@@ -337,6 +332,10 @@ int Stream::waitDmaBlock(U32 msTimeout)
             return res;
         }
 #else
+        AMB_STATE_DMA_CHANNEL StateDescrip;
+        StateDescrip.DmaChanNum = m_DmaChan;
+        StateDescrip.Timeout = msTimeout;
+
         int res = IPC_ioctlDevice(m_fpgaDev,
                                   IOCTL_AMB_WAIT_DMA_BLOCK,
                                   &StateDescrip,
