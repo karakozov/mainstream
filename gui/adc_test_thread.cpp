@@ -337,8 +337,9 @@ void adc_test_thread::dataFromMemAsMem()
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
                         u32 status_mem = brd->RegPeekDir(j, MEM_TRD, 0x0);
+                        info = QString::number(pass_counter) + " - ";
                         info += " BRD: " + QString::number(brd->slotNumber()) + " FPGA: " + QString::number(j);
-                        info += " - ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc) + "MEM_STATUS = 0x" + QString::number(status_mem);
+                        info += " - ERROR TIMEOUT! ADC STATUS = 0x" + QString::number(status_adc,16) + " MEM_STATUS = 0x" + QString::number(status_mem,16);
                         emit updateInfo(info);
                         break;
 
