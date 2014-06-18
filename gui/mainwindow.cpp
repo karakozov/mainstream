@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_adc_thread = 0;
     m_systemConfigured = false;
 
+    connect(ui->pbResetSync, SIGNAL(clicked(bool)), this, SLOT(resetSync(bool)));
     connect(ui->pbStartConfiguration, SIGNAL(clicked()), this, SLOT(startSystemConfiguration()));
     connect(ui->pbStartPcieTest, SIGNAL(clicked()), this, SLOT(startPciExpressTest()));
     connect(ui->pbStopPcieTest, SIGNAL(clicked()), this, SLOT(stopPciExpressTest()));
@@ -104,8 +105,7 @@ void MainWindow::startSync()
         }
         m_sync->PowerON(true);
         m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
-        m_sync->ResetSync(true);
-        IPC_delay(100);
+        m_sync->ResetSync(false);
     }
 }
 
@@ -406,3 +406,20 @@ void MainWindow::updateFpgaTemperature()
         }
     }
 }
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::resetSync(bool reset)
+{
+    updateSystemParams();
+
+    if(reset) {
+        ui->pbResetSync->setText("Unreset AC_SYNC");
+        if(m_sync) m_sync->ResetSync(true);
+     } else {
+        ui->pbResetSync->setText("Reset AC_SYNC");
+        if(m_sync) m_sync->ResetSync(false);
+    }
+}
+
+//-----------------------------------------------------------------------------

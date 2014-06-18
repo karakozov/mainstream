@@ -67,6 +67,7 @@ private slots:
     void showAdcTrace(QString buffer);
     void setBoardMask();
     void updateFpgaTemperature();
+    void resetSync(bool reset);
 };
 
 #endif // MAINWINDOW_H
