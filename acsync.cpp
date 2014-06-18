@@ -678,10 +678,11 @@ void acsync::PowerON(bool on)
 void acsync::ResetSync(bool on)
 {
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
-    if(on)
-        mode1 |= 0x100;
-    else
+    if(on) {
         mode1 &= ~0x100;
+    } else {
+        mode1 |= 0x100;
+    }
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
 }
