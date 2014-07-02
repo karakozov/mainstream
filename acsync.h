@@ -35,6 +35,26 @@ typedef struct _adf4002_t {
 
 //-----------------------------------------------------------------------------
 
+#define ENPOW_PLL           0x1
+#define ENPOW_OCXO          0x2
+#define ENPOW_CLKSM         0x4
+#define PRESENCE_MASTER     0x8
+#define ST_IN_RST           0x100
+#define ENx5                0x200
+#define ENx8                0x400
+
+#define SELCLK0             0x1
+#define SELCLK1             0x2
+#define SELCLK2             0x4
+#define SELCLK3             0x8
+#define SELCLK4             0x10
+#define SELCLK5             0x20
+#define SELCLK6             0x40
+#define SELCLK7             0x80
+#define SELCLKOUT           0x100
+
+//-----------------------------------------------------------------------------
+
 class acsync
 {
 public:
