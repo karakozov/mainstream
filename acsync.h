@@ -78,6 +78,7 @@ public:
     void progADF4002(U32 FO, U32 Fvco, U32 variant = 0);
     void FreqMultipler1(U32 mode, U32 FO);
     void FreqMultiplerDivider(U32 mode, float FD, float FO);
+    void GetCxDx(U32 mode, float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2, U32& DIV01, U32& DIV23);
     void PowerON(bool on);
     void ResetSync(bool on);
 

@@ -339,6 +339,39 @@ void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
 
 //-----------------------------------------------------------------------------
 
+void acsync::GetCxDx(U32 mode, float FD, float FO, U8 &C4, U8 &C5, U8 &D1, U8 &D2, U32& DIV01, U32& DIV23)
+{
+    U8 code_c4 = 1;
+    U8 code_c5 = 1;
+    U8 code_d1 = 1;
+    U8 code_d2 = 1;
+
+    switch(mode) {
+    case 0: getMultCxDxMode0(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    case 1: getMultCxDxMode1(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    case 2: getMultCxDxMode2(FD, FO, code_c4, code_c5, code_d1, code_d2); break;
+    default: return;
+    }
+
+    fprintf(stderr, "code_c4 = 0x%x\n", code_c4);
+    fprintf(stderr, "code_c5 = 0x%x\n", code_c5);
+    fprintf(stderr, "code_d1 = 0x%x\n", code_d1);
+    fprintf(stderr, "code_d2 = 0x%x\n", code_d2);
+
+    C4 = getCxDxScale(code_c4);
+    C5 = getCxDxScale(code_c5);
+    D1 = getCxDxScale(code_d1);
+    D2 = getCxDxScale(code_d2);
+
+    DIV01 = ((C5 << 6) | C4);
+    DIV23 = ((D2 << 6) | D1);
+
+    fprintf(stderr, "DIV01 = 0x%x\n", DIV01);
+    fprintf(stderr, "DIV23 = 0x%x\n", DIV23);
+}
+
+//-----------------------------------------------------------------------------
+
 U08 acsync::getCxDxScale(int code)
 {
     if((code <= 0) || (code > 17)) {
