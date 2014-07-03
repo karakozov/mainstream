@@ -144,6 +144,12 @@ void MainWindow::startSystemConfiguration()
 {
     updateSystemParams();
 
+    if(m_systemConfigured) {
+        statusBar()->showMessage("System already configured!");
+        return;
+    }
+
+
     unsigned brdCount = 0;
     unsigned fpgaCount = 0;
 
@@ -183,6 +189,12 @@ void MainWindow::startSystemConfiguration()
 
     init_display_table(m_tableError);
     init_display_table(m_tableRate);
+
+    if(m_systemConfigured) {
+        statusBar()->showMessage("System was successfully configured: FPGA - " + QString::number(fpgaCount) + " BOARD - " + QString::number(brdCount));
+    } else {
+        statusBar()->showMessage("ERROR: System configuration failed: FPGA - " + QString::number(fpgaCount) + " BOARD - " + QString::number(brdCount));
+    }
 }
 
 //-----------------------------------------------------------------------------
