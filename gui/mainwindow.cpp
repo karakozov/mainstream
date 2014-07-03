@@ -44,6 +44,35 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbSlot6, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->pbFpgaT, SIGNAL(clicked()), this, SLOT(updateFpgaTemperature()));
 
+    //---------------------------------------------------------------------------------------
+
+    connect(ui->pbSyncv11Configure,SIGNAL(clicked()),this,SLOT(startSystemConfiguration()));
+    connect(ui->pbSyncv11Sel0,SIGNAL(clicked(bool)),this,SLOT(Selclk0(bool)));
+    connect(ui->pbSyncv11Sel1,SIGNAL(clicked(bool)),this,SLOT(Selclk1(bool)));
+    connect(ui->pbSyncv11Sel2,SIGNAL(clicked(bool)),this,SLOT(Selclk2(bool)));
+    connect(ui->pbSyncv11Sel3,SIGNAL(clicked(bool)),this,SLOT(Selclk3(bool)));
+    connect(ui->pbSyncv11Sel4,SIGNAL(clicked(bool)),this,SLOT(Selclk4(bool)));
+    connect(ui->pbSyncv11Sel5,SIGNAL(clicked(bool)),this,SLOT(Selclk5(bool)));
+    connect(ui->pbSyncv11Sel6,SIGNAL(clicked(bool)),this,SLOT(Selclk6(bool)));
+    connect(ui->pbSyncv11Sel7,SIGNAL(clicked(bool)),this,SLOT(Selclk7(bool)));
+    connect(ui->pbSyncv11SelOut,SIGNAL(clicked(bool)),this,SLOT(SelclkOut(bool)));
+
+    connect(ui->pbSyncv11Powpll,SIGNAL(clicked(bool)),this,SLOT(EnpowPll(bool)));
+    connect(ui->pbSyncv11Powocxo,SIGNAL(clicked(bool)),this,SLOT(EnpowOcxo(bool)));
+    connect(ui->pbSyncv11Powclksm,SIGNAL(clicked(bool)),this,SLOT(EnpowClksm(bool)));
+    connect(ui->pbSyncv11Master,SIGNAL(clicked(bool)),this,SLOT(Master(bool)));
+    connect(ui->pbSyncv11Rst,SIGNAL(clicked(bool)),this,SLOT(Reset(bool)));
+    connect(ui->pbSyncv11ENx5,SIGNAL(clicked(bool)),this,SLOT(Enx5(bool)));
+    connect(ui->pbSyncv11ENx8,SIGNAL(clicked(bool)),this,SLOT(Enx8(bool)));
+
+    connect(ui->pbSyncv11CheckParams,SIGNAL(clicked()),this,SLOT(CheckParams()));
+    connect(ui->pbSyncv11SetupCxDx,SIGNAL(clicked()),this,SLOT(SetupCxDx()));
+    connect(ui->cbSyncv11Mode,SIGNAL(currentIndexChanged(int)),this,SLOT(ParametersChange()));
+    connect(ui->cbSyncv11FD,SIGNAL(currentIndexChanged(int)),this,SLOT(ParametersChange()));
+    connect(ui->cbSyncv11FO,SIGNAL(currentIndexChanged(int)),this,SLOT(ParametersChange()));
+
+    //---------------------------------------------------------------------------------------
+
     ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
 
     setBoardMask();
@@ -416,10 +445,252 @@ void MainWindow::resetSync(bool reset)
     if(reset) {
         ui->pbResetSync->setText("Unreset AC_SYNC");
         if(m_sync) m_sync->ResetSync(true);
-     } else {
+    } else {
         ui->pbResetSync->setText("Reset AC_SYNC");
         if(m_sync) m_sync->ResetSync(false);
     }
 }
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void MainWindow::Selclk0(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK0;
+        else
+            selclk &= ~SELCLK0;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk1(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK1;
+        else
+            selclk &= ~SELCLK1;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk2(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK2;
+        else
+            selclk &= ~SELCLK2;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk3(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK3;
+        else
+            selclk &= ~SELCLK3;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk4(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK4;
+        else
+            selclk &= ~SELCLK4;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk5(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK5;
+        else
+            selclk &= ~SELCLK5;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk6(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK6;
+        else
+            selclk &= ~SELCLK6;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::Selclk7(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLK7;
+        else
+            selclk &= ~SELCLK7;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::SelclkOut(bool set)
+{
+    if(m_sync) {
+        U32 selclk = m_sync->RegPeekInd(0, 4, 0xF);
+        if(set)
+            selclk |= SELCLKOUT;
+        else
+            selclk &= ~SELCLKOUT;
+        m_sync->RegPokeInd(0, 4, 0xF, selclk);
+    }
+}
+void MainWindow::EnpowPll(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ENPOW_PLL;
+        else
+            mode1 &= ~ENPOW_PLL;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::EnpowOcxo(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ENPOW_OCXO;
+        else
+            mode1 &= ~ENPOW_OCXO;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::EnpowClksm(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ENPOW_CLKSM;
+        else
+            mode1 &= ~ENPOW_CLKSM;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::Master(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= PRESENCE_MASTER;
+        else
+            mode1 &= ~PRESENCE_MASTER;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::Reset(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ST_IN_RST;
+        else
+            mode1 &= ~ST_IN_RST;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::Enx5(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ENx5;
+        else
+            mode1 &= ~ENx5;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::Enx8(bool set)
+{
+    if(m_sync) {
+        U32 mode1 = m_sync->RegPeekInd(0, 4, 0x9);
+        if(set)
+            mode1 |= ENx8;
+        else
+            mode1 &= ~ENx8;
+        m_sync->RegPokeInd(0, 4, 0x9, mode1);
+    }
+}
+void MainWindow::ParametersChange()
+{
+    if(m_sync) {
+
+        U32 DIV01 = 0;
+        U32 DIV23 = 0;
+        U8 C4 = 0;
+        U8 C5 = 0;
+        U8 D1 = 0;
+        U8 D2 = 0;
+
+        if(!m_sync->checkFrequencyParam(ui->cbSyncv11Mode->currentIndex(),
+                                        ui->cbSyncv11FD->currentText().toFloat(),
+                                        ui->cbSyncv11FO->currentText().toFloat())) {
+            statusBar()->showMessage("ERROR: Invalid frequency combination!");
+            return;
+        } else {
+            statusBar()->showMessage("OK: Frequency combination is valid!");
+        }
+
+        m_sync->GetCxDx(ui->cbSyncv11Mode->currentIndex(),
+                        ui->cbSyncv11FD->currentText().toFloat(),
+                        ui->cbSyncv11FO->currentText().toFloat(),
+                        C4, C5, D1, D2, DIV01, DIV23);
+
+        ui->leSyncv11C4->setText(QString::number(C4,10));
+        ui->leSyncv11C5->setText(QString::number(C5,10));
+        ui->leSyncv11D1->setText(QString::number(D1,10));
+        ui->leSyncv11D2->setText(QString::number(D2,10));
+        ui->leSyncv11DIV01->setText("0x"+QString::number(DIV01,16));
+        ui->leSyncv11DIV23->setText("0x"+QString::number(DIV23,16));
+    }
+}
+void MainWindow::CheckParams()
+{
+    if(m_sync) {
+        if(!m_sync->checkFrequencyParam(ui->cbSyncv11Mode->currentIndex(),
+                                        ui->cbSyncv11FD->currentText().toFloat(),
+                                        ui->cbSyncv11FO->currentText().toFloat())) {
+            statusBar()->showMessage("ERROR: Invalid frequency combination!");
+        } else {
+            statusBar()->showMessage("OK: Frequency combination is valid!");
+        }
+        ParametersChange();
+    }
+}
+void MainWindow::SetupCxDx()
+{
+    if(m_sync) {
+
+        bool ok;
+
+        U8 C4 = ui->leSyncv11C4->text().toInt(&ok,10);
+        U8 C5 = ui->leSyncv11C5->text().toInt(&ok,10);
+        U8 D1 = ui->leSyncv11D1->text().toInt(&ok,10);
+        U8 D2 = ui->leSyncv11D2->text().toInt(&ok,10);
+
+        U32 DIV01 = ((C5 << 6) | C4);
+        U32 DIV23 = ((D2 << 6) | D1);
+
+        m_sync->RegPokeInd(0, 4, 0x10, DIV01);
+        m_sync->RegPokeInd(0, 4, 0x11, DIV23);
+    }
+}

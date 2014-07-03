@@ -68,6 +68,29 @@ private slots:
     void setBoardMask();
     void updateFpgaTemperature();
     void resetSync(bool reset);
+
+    void Selclk0(bool set);
+    void Selclk1(bool set);
+    void Selclk2(bool set);
+    void Selclk3(bool set);
+    void Selclk4(bool set);
+    void Selclk5(bool set);
+    void Selclk6(bool set);
+    void Selclk7(bool set);
+    void SelclkOut(bool set);
+
+    void EnpowPll(bool set);
+    void EnpowOcxo(bool set);
+    void EnpowClksm(bool set);
+    void Master(bool set);
+    void Reset(bool set);
+    void Enx5(bool set);
+    void Enx8(bool set);
+
+    void ParametersChange();
+    void CheckParams();
+    void SetupCxDx();
+
 };
 
 #endif // MAINWINDOW_H
