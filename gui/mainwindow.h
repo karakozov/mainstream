@@ -90,6 +90,7 @@ private slots:
     void ParametersChange();
     void CheckParams();
     void SetupCxDx();
+    void SetSelectedMode();
 
 };
 

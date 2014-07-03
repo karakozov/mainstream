@@ -926,26 +926,6 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_25">
         <item row="0" column="4">
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="pbSyncv11Configure">
-          <property name="text">
-           <string>Configure AC_SYNC</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
          <widget class="QGroupBox" name="groupBox_13">
           <property name="title">
            <string>DIV01 &amp; DIV23</string>
@@ -1062,7 +1042,7 @@
           </layout>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="0" column="2">
          <widget class="QGroupBox" name="groupBox_11">
           <property name="title">
            <string>MODE1</string>
@@ -1161,7 +1141,7 @@
           </layout>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="3">
          <widget class="QGroupBox" name="groupBox_10">
           <property name="title">
            <string>SELCLK</string>
@@ -1314,17 +1294,22 @@
                </property>
                <item>
                 <property name="text">
-                 <string>0x0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
                  <string>0x1</string>
                 </property>
                </item>
                <item>
                 <property name="text">
                  <string>0x2</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0x3</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0x4</string>
                 </property>
                </item>
               </widget>
@@ -1421,6 +1406,13 @@
                </property>
               </widget>
              </item>
+             <item row="4" column="1">
+              <widget class="QPushButton" name="pbSyncv11SetMode">
+               <property name="text">
+                <string>Set mode</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item row="1" column="0">
@@ -1438,6 +1430,26 @@
            </item>
           </layout>
          </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pbSyncv11Configure">
+          <property name="text">
+           <string>Configure AC_SYNC</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>

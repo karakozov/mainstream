@@ -71,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbSyncv11FD,SIGNAL(currentIndexChanged(int)),this,SLOT(ParametersChange()));
     connect(ui->cbSyncv11FO,SIGNAL(currentIndexChanged(int)),this,SLOT(ParametersChange()));
 
+    connect(ui->pbSyncv11SetMode,SIGNAL(clicked()),this,SLOT(SetSelectedMode()));
+
     //---------------------------------------------------------------------------------------
 
     ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
@@ -89,10 +91,9 @@ MainWindow::~MainWindow()
     m_timer->stop();
     delete m_timer;
 
-    if(!m_boardList.empty())
-        delete_board_list(m_boardList, m_sync);
-    if(!m_fpgaList.empty())
-        delete_fpga_list(m_fpgaList);
+    delete_board_list(m_boardList, m_sync);
+    delete_fpga_list(m_fpgaList);
+
     delete ui;
 }
 
@@ -133,7 +134,7 @@ void MainWindow::startSync()
             return;
         }
         m_sync->PowerON(true);
-        m_sync->progFD(m_params.syncMode, m_params.syncSelClkOut, m_params.syncFd, m_params.syncFo);
+        m_sync->progFD(m_params.syncMode, m_params.syncFd, m_params.syncFo);
         m_sync->ResetSync(false);
     }
 }
@@ -704,5 +705,16 @@ void MainWindow::SetupCxDx()
 
         m_sync->RegPokeInd(0, 4, 0x10, DIV01);
         m_sync->RegPokeInd(0, 4, 0x11, DIV23);
+    }
+}
+void MainWindow::SetSelectedMode()
+{
+    updateSystemParams();
+
+    if(m_sync) {
+        m_sync->progFD(ui->cbSyncv11Mode->currentIndex(),
+                       ui->cbSyncv11FD->currentText().toFloat(),
+                       ui->cbSyncv11FO->currentText().toFloat());
+        statusBar()->showMessage("Set new mode: " + ui->cbSyncv11Mode->currentText());
     }
 }

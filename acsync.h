@@ -72,7 +72,7 @@ public:
     U32 RegPeekDir(U32 fpgaNum, S32 trdNo, S32 rgnum);
 
     bool checkFrequencyParam(U32 mode, float FD, float FO);
-    bool progFD(U32 mode, U32 selout, float FD, float FO);
+    bool progFD(U32 mode, float FD, float FO);
 
     void calcADF4002(U32 FO, U32 Fvco, U32 variant = 0);
     void progADF4002(U32 FO, U32 Fvco, U32 variant = 0);
@@ -96,11 +96,11 @@ private:
 
     bool initFpga();
 
-    void selclkMode0(U32 FO);
     void selclkMode1(U32 FO);
     void selclkMode2(U32 FO);
     void selclkMode3(U32 FO);
-    void selclkout(U32 sel);
+    void selclkMode4(U32 FO);
+    //void selclkout(U32 sel);
 
     U32 gcd(U32 a, U32 b);
     void writeADF4002(U16 reg, U32 data);

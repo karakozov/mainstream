@@ -54,6 +54,8 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
 
     fillCxDx();
 
+    PowerON(true);
+
     fprintf(stderr, "========================================================\n");
 }
 
@@ -61,6 +63,7 @@ acsync::acsync(Fpga *fpga) : m_fpga(fpga)
 
 acsync::~acsync()
 {
+    PowerON(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -120,13 +123,13 @@ bool acsync::exitFlag()
 
 //-----------------------------------------------------------------------------
 
-void acsync::selclkMode0(U32 FO)
+void acsync::selclkMode1(U32 FO)
 {
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
     U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
 
     mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
-    selclk &= ~0xFF;
+    selclk &= ~0x1FF;
 
     switch(FO) {
     case 10:
@@ -137,19 +140,21 @@ void acsync::selclkMode0(U32 FO)
     } break;
     }
 
+    selclk |= SELCLKOUT;
+
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
 }
 
 //-----------------------------------------------------------------------------
 
-void acsync::selclkMode1(U32 FO)
+void acsync::selclkMode2(U32 FO)
 {
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
     U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
 
     mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
-    selclk &= ~0xFF;
+    selclk &= ~0x1FF;
 
     switch(FO) {
     case 10: {
@@ -177,22 +182,7 @@ void acsync::selclkMode1(U32 FO)
     } break;
     }
 
-    RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
-    RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::selclkMode2(U32 FO)
-{
-    U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
-    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
-
-    mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
-    selclk &= ~0xFF;
-
-    mode1 |= (ENx5 | ENx8);
-    selclk |= (SELCLK0 |SELCLK1 | SELCLK2 | SELCLK4 | SELCLK5 | SELCLK6);
+    selclk |= SELCLKOUT;
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
@@ -202,14 +192,23 @@ void acsync::selclkMode2(U32 FO)
 
 void acsync::selclkMode3(U32 FO)
 {
+}
+
+//-----------------------------------------------------------------------------
+
+void acsync::selclkMode4(U32 FO)
+{
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
-    mode1 &= ~0x2;
+    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
+
+    mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
+    selclk = ~0x1FF;
+
+    mode1 |= (ENx5 | ENx8);
+    selclk |= (SELCLK1 | SELCLK2 | SELCLK4 | SELCLK5 | SELCLK6);
+    selclk &= ~SELCLKOUT;
+
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
-
-    IPC_delay(200);
-
-    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF) & ~0xF;
-    selclk |= (0x8);
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
 }
 
@@ -218,10 +217,10 @@ void acsync::selclkMode3(U32 FO)
 void acsync::FreqMultipler1(U32 mode, U32 FO)
 {
     switch(mode) {
-    case 0: selclkMode0(FO); break;
-    case 1: selclkMode1(FO); break;
-    case 2: selclkMode2(FO); break;
-    case 3: selclkMode3(FO); break;
+    case 0: selclkMode1(FO); break;
+    case 1: selclkMode2(FO); break;
+    case 2: selclkMode3(FO); break;
+    case 3: selclkMode4(FO); break;
     }
 }
 
@@ -673,7 +672,7 @@ finished:
 
 //-----------------------------------------------------------------------------
 
-bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
+bool acsync::progFD(U32 mode, float FD, float FO)
 {
     if(!checkFrequencyParam(mode, FD, FO)) {
         fprintf(stderr, "checkFrequencyParam() error!\n");
@@ -688,26 +687,11 @@ bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
 
     FreqMultiplerDivider(mode, FD, FO);
 
-    selclkout(selout);
+    fprintf(stderr, "%s(): MODE = 0x%x, FO = %f, FD = %f\n", __FUNCTION__, mode, FO, FD);
 
-    fprintf(stderr, "%s(): MODE = 0x%x, SELOUT = 0x%x, FO = %f, FD = %f\n", __FUNCTION__, mode, selout, FO, FD);
+    IPC_delay(5);
 
     return true;
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::selclkout(U32 sel)
-{
-    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
-
-    if(sel) {
-        selclk |= SELCLKOUT;
-    } else {
-        selclk &= ~SELCLKOUT;
-    }
-
-    RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
 }
 
 //-----------------------------------------------------------------------------
