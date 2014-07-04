@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
         if(sync_board) {
             sync_board->PowerON(true);
-            sync_board->progFD(params.syncMode, params.syncSelClkOut, params.syncFd, params.syncFo);
+            sync_board->progFD(params.syncMode, params.syncFd, params.syncFo);
         }
 
         if(params.testMode == 3) {

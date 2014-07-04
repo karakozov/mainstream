@@ -158,15 +158,46 @@ void acsync::selclkMode2(U32 FO)
 
     switch(FO) {
     case 10: {
-        selclk |= (SELCLK0 | SELCLK1 | SELCLK2 | SELCLK5 | SELCLK7);
+        selclk |= (SELCLK0 | SELCLK1 | SELCLK2 | SELCLK5 | SELCLK6);
     } break;
     case 56: {
         mode1 |= ENx5;
-        selclk |= (SELCLK1 | SELCLK2 | SELCLK4 | SELCLK7);
+        selclk |= (SELCLK0 | SELCLK2 | SELCLK4 | SELCLK6);
     } break;
     case 120: {
         mode1 |= ENx5;
-        selclk |= (SELCLK1 | SELCLK2 | SELCLK4 | SELCLK7);
+        selclk |= (SELCLK0 | SELCLK2 | SELCLK4 | SELCLK6);
+    } break;
+    }
+
+    selclk |= SELCLKOUT;
+
+    RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
+    RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
+}
+
+//-----------------------------------------------------------------------------
+
+void acsync::selclkMode3(U32 FO)
+{
+    U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
+    U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
+
+    mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
+    selclk &= ~0x1FF;
+
+    switch(FO) {
+    case 10: {
+        mode1 |= ENx8;
+        selclk |= (SELCLK0 | SELCLK1 | SELCLK4 | SELCLK5 | SELCLK7);
+    } break;
+    case 56: {
+        mode1 |= (ENx5 | ENx8);
+        selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
+    } break;
+    case 120: {
+        mode1 |= (ENx5 | ENx8);
+        selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 400: {
         mode1 |= (ENx5 | ENx8);
@@ -186,12 +217,6 @@ void acsync::selclkMode2(U32 FO)
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
     RegPokeInd(0, m_sync_trd.number, 0xF, selclk);
-}
-
-//-----------------------------------------------------------------------------
-
-void acsync::selclkMode3(U32 FO)
-{
 }
 
 //-----------------------------------------------------------------------------
@@ -400,7 +425,7 @@ void acsync::getMultCxDxMode0(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 
     } else if(FD >= 488.72 && FO == 56.0) {
 
-        C4 = 8;  C5 = 12;
+        C4 = 12;  C5 = 8;
         D1 = 11; D2 = 1;
 
     } else if(FD == 480.0 && FO == 120) {
@@ -450,27 +475,38 @@ void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 {
     fprintf(stderr, "%s(): FD = %f, FO = %f\n", __FUNCTION__, FD, FO);
 
+    if(FO == 10.0) {
+
+        if(FD == 400.0) {
+
+            C4 = 16; C5 = 5;
+            D1 = 5; D2 = 2;
+
+        }
+    }
+
     if(FO == 56.0) {
 
         if(FD == 400.0) {
 
-            D1 = 7; D2 = 2;
             C4 = 10; C5 = 10;
+            D1 = 7;  D2 = 2;
 
         } else if(FD == 448.0) {
 
-            D1 = 4; D2 = 2;
             C4 = 8; C5 = 8;
+            D1 = 4; D2 = 2;
 
         } else if(FD >= 488.72) {
 
-            D1 = 11; D2 = 1;
             C4 = 12; C5 = 8;
+            D1 = 11; D2 = 1;
 
         } else if(FD == 480.0) {
 
-            D1 = 7;  D2 = 1;
             C4 = 10; C5 = 6;
+            D1 = 7;  D2 = 1;
+
         }
     }
 
@@ -478,8 +514,8 @@ void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 
         if(FD == 480.0) {
 
-            D1 = 5; D2 = 2;
             C4 = 8; C5 = 5;
+            D1 = 5; D2 = 2;
         }
     }
 
@@ -487,8 +523,8 @@ void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 
         if(FD == 400.0) {
 
+            C4 = 2; C5 = 5;
             D1 = 5; D2 = 2;
-            C4 = 5; C5 = 2;
         }
     }
 
@@ -496,8 +532,8 @@ void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 
         if(FD == 448.0) {
 
+            C4 = 2; C5 = 5;
             D1 = 5; D2 = 2;
-            C4 = 5; C5 = 2;
         }
         if(FD >= 488.72) {
 
@@ -510,8 +546,8 @@ void acsync::getMultCxDxMode2(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2
 
         if(FD == 480.0) {
 
-            D1 = 5; D2 = 2;
             C4 = 5; C5 = 2;
+            D1 = 5; D2 = 2;
         }
     }
 
