@@ -363,7 +363,7 @@ void acsync::FreqMultiplerDivider(U32 mode, float FD, float FO)
 
 //-----------------------------------------------------------------------------
 
-void acsync::GetCxDx(U32 mode, float FD, float FO, U8 &C4, U8 &C5, U8 &D1, U8 &D2, U32& DIV01, U32& DIV23)
+void acsync::GetCxDxEncoded(U32 mode, float FD, float FO, U8 &C4, U8 &C5, U8 &D1, U8 &D2, U32& DIV01, U32& DIV23)
 {
     U8 code_c4 = 1;
     U8 code_c5 = 1;
@@ -757,6 +757,18 @@ void acsync::ResetSync(bool on)
     }
 
     RegPokeInd(0, m_sync_trd.number, 0x9, mode1);
+}
+
+//-----------------------------------------------------------------------------
+
+void acsync::getCxDxValues(U32 mode, float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2)
+{
+    switch(mode) {
+    case 0: return getMultCxDxMode0(FD, FO, C4, C5, D1, D2);
+    case 1: return getMultCxDxMode1(FD, FO, C4, C5, D1, D2);
+    case 2: return getMultCxDxMode2(FD, FO, C4, C5, D1, D2);
+    case 3: C4 = 0; C5 = 0; D1 = 0; D2 = 0; break;
+    }
 }
 
 //-----------------------------------------------------------------------------

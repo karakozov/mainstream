@@ -1017,6 +1017,48 @@
                </property>
               </widget>
              </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="lbC4Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="lbC5Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="lbD1Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="lbD2Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QLabel" name="lbDIV01Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="2">
+              <widget class="QLabel" name="lbDIV23Encoded">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item row="1" column="0">

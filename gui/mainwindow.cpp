@@ -647,8 +647,6 @@ void MainWindow::ParametersChange()
 {
     if(m_sync) {
 
-        U32 DIV01 = 0;
-        U32 DIV23 = 0;
         U8 C4 = 0;
         U8 C5 = 0;
         U8 D1 = 0;
@@ -663,17 +661,35 @@ void MainWindow::ParametersChange()
             statusBar()->showMessage("OK: Frequency combination is valid!");
         }
 
-        m_sync->GetCxDx(ui->cbSyncv11Mode->currentIndex(),
-                        ui->cbSyncv11FD->currentText().toFloat(),
-                        ui->cbSyncv11FO->currentText().toFloat(),
-                        C4, C5, D1, D2, DIV01, DIV23);
+        m_sync->getCxDxValues(ui->cbSyncv11Mode->currentIndex(),
+                              ui->cbSyncv11FD->currentText().toFloat(),
+                              ui->cbSyncv11FO->currentText().toFloat(),
+                              C4, C5, D1, D2);
 
         ui->leSyncv11C4->setText(QString::number(C4,10));
         ui->leSyncv11C5->setText(QString::number(C5,10));
         ui->leSyncv11D1->setText(QString::number(D1,10));
         ui->leSyncv11D2->setText(QString::number(D2,10));
-        ui->leSyncv11DIV01->setText("0x"+QString::number(DIV01,16));
-        ui->leSyncv11DIV23->setText("0x"+QString::number(DIV23,16));
+
+        U8 c4_code = 0;
+        U8 c5_code = 0;
+        U8 d1_code = 0;
+        U8 d2_code = 0;
+        U32 div01_code = 0;
+        U32 div23_code = 0;
+
+        m_sync->GetCxDxEncoded(ui->cbSyncv11Mode->currentIndex(),
+                        ui->cbSyncv11FD->currentText().toFloat(),
+                        ui->cbSyncv11FO->currentText().toFloat(),
+                        c4_code, c5_code, d1_code, d2_code, div01_code, div23_code);
+
+        ui->lbC4Encoded->setText(QString::number(c4_code,10));
+        ui->lbC5Encoded->setText(QString::number(c5_code,10));
+        ui->lbD1Encoded->setText(QString::number(d1_code,10));
+        ui->lbD2Encoded->setText(QString::number(d2_code,10));
+
+        ui->leSyncv11DIV01->setText("0x"+QString::number(div01_code,16));
+        ui->leSyncv11DIV23->setText("0x"+QString::number(div23_code,16));
     }
 }
 void MainWindow::CheckParams()
@@ -700,11 +716,19 @@ void MainWindow::SetupCxDx()
         U8 D1 = ui->leSyncv11D1->text().toInt(&ok,10);
         U8 D2 = ui->leSyncv11D2->text().toInt(&ok,10);
 
-        U32 DIV01 = ((C5 << 6) | C4);
-        U32 DIV23 = ((D2 << 6) | D1);
+        U32 DIV01 = ((m_sync->getCxDxScale(C5) << 6) | m_sync->getCxDxScale(C4));
+        U32 DIV23 = ((m_sync->getCxDxScale(D2) << 6) | m_sync->getCxDxScale(D1));
 
         m_sync->RegPokeInd(0, 4, 0x10, DIV01);
         m_sync->RegPokeInd(0, 4, 0x11, DIV23);
+
+        ui->lbC4Encoded->setText(QString::number(m_sync->getCxDxScale(C4),10));
+        ui->lbC5Encoded->setText(QString::number(m_sync->getCxDxScale(C5),10));
+        ui->lbD1Encoded->setText(QString::number(m_sync->getCxDxScale(D1),10));
+        ui->lbD2Encoded->setText(QString::number(m_sync->getCxDxScale(D2),10));
+
+        ui->lbDIV01Encoded->setText("0x"+QString::number(DIV01,16));
+        ui->lbDIV23Encoded->setText("0x"+QString::number(DIV23,16));
     }
 }
 void MainWindow::SetSelectedMode()

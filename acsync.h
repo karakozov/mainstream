@@ -78,9 +78,11 @@ public:
     void progADF4002(U32 FO, U32 Fvco, U32 variant = 0);
     void FreqMultipler1(U32 mode, U32 FO);
     void FreqMultiplerDivider(U32 mode, float FD, float FO);
-    void GetCxDx(U32 mode, float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2, U32& DIV01, U32& DIV23);
+    void GetCxDxEncoded(U32 mode, float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2, U32& DIV01, U32& DIV23);
     void PowerON(bool on);
     void ResetSync(bool on);
+    void getCxDxValues(U32 mode, float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2);
+    U08 getCxDxScale(int code);
 
 private:
     Fpga*                    m_fpga;
@@ -105,7 +107,6 @@ private:
     U32 gcd(U32 a, U32 b);
     void writeADF4002(U16 reg, U32 data);
     void fillCxDx();
-    U08 getCxDxScale(int code);
 
     void getMultCxDxMode0(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2);
     void getMultCxDxMode1(float FD, float FO, U8& C4, U8& C5, U8& D1, U8& D2);
