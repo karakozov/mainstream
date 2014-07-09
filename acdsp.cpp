@@ -18,6 +18,10 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <getopt.h>
+#else
+#ifdef _WIN64
+#define snprintf		_snprintf
+#endif
 #endif
 #include <fcntl.h>
 #include <signal.h>
@@ -372,19 +376,23 @@ void acdsp::dataFromAdc(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
-        flgName[i] = tmpflg;
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
+		flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
 
@@ -506,18 +514,22 @@ void acdsp::dataFromMemAsMem(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
         flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
@@ -693,18 +705,22 @@ void acdsp::dataFromMemAsFifo(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
         flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
@@ -859,18 +875,22 @@ void acdsp::dataFromMain(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
         flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
@@ -985,18 +1005,22 @@ void acdsp::dataFromMainToMemAsMem(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
         flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
@@ -1142,18 +1166,22 @@ void acdsp::dataFromMainToMemAsFifo(struct app_params_t& params)
 
     // prepare ISVI files for non masked FPGA
     IPC_handle isviFile[ADC_FPGA_COUNT];
-    string flgName[ADC_FPGA_COUNT];
+#ifdef _WIN64
+    wstring flgName[ADC_FPGA_COUNT];
+#else
+	string flgName[ADC_FPGA_COUNT];
+#endif
     for(unsigned i=0; i<ADC_FPGA_COUNT; ++i) {
 
         if(!(params.fpgaMask & (0x1 << i)))
             continue;
 
-        char fname[64];
-        snprintf(fname, sizeof(fname), "data_%d%d.bin", m_slotNumber, i);
+        IPC_str fname[64];
+        BRDC_snprintf(fname, sizeof(fname), _BRDC("data_%d%d.bin"), m_slotNumber, i);
         isviFile[i] = createDataFile(fname);
 
-        char tmpflg[64];
-        snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", m_slotNumber, i);
+        IPC_str tmpflg[64];
+        BRDC_snprintf(tmpflg, sizeof(tmpflg), _BRDC("data_%d%d.flg"), m_slotNumber, i);
         flgName[i] = tmpflg;
         createFlagFile(flgName[i].c_str());
     }
@@ -1437,7 +1465,7 @@ bool acdsp::getFpgaTemperature(U32 fpgaNum, float& t)
             u32 val = FPGA(fpgaNum)->FpgaRegPeekDir(memTrd.number, 0x207);
             val >>= 6;
             val &= 0x3FF;
-            t = ((val*503.975)/1024-273.15);
+            t = float((val*503.975)/1024-273.15);
             return true;
         }
     }

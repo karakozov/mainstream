@@ -1,5 +1,6 @@
 
 #include "isvi.h"
+#include "utypes.h"
 #include "exceptinfo.h"
 
 #include <stdio.h>
@@ -12,6 +13,10 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <getopt.h>
+#else
+#ifdef _WIN64
+#define snprintf		_snprintf
+#endif
 #endif
 #include <fcntl.h>
 #include <signal.h>
@@ -26,15 +31,15 @@ using namespace std;
 
 //-----------------------------------------------------------------------------
 
-void WriteFlagSinc(const char *fileName, int newData, int newHeader)
+void WriteFlagSinc(const IPC_str *fileName, int newData, int newHeader)
 {
     IPC_handle handle = NULL;
     int val[2] = {0, 0};
 
     IPC_str fullName[256];
     IPC_getCurrentDir(fullName, sizeof(fullName));
-    strcat(fullName, "//");
-    strcat(fullName, fileName);
+    BRDC_strcat(fullName, _BRDC("//"));
+    BRDC_strcat(fullName, fileName);
 
     while( !handle ) {
         handle = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
@@ -50,15 +55,15 @@ void WriteFlagSinc(const char *fileName, int newData, int newHeader)
 
 //-----------------------------------------------------------------------------
 
-int  ReadFlagSinc(const char *fileName)
+int  ReadFlagSinc(const IPC_str *fileName)
 {
     IPC_handle handle = NULL;
     int flg;
 
     IPC_str fullName[256];
     IPC_getCurrentDir(fullName, sizeof(fullName));
-    strcat(fullName, "//");
-    strcat(fullName, fileName);
+    BRDC_strcat(fullName, _BRDC("//"));
+    BRDC_strcat(fullName, fileName);
 
     while( !handle ) {
         handle = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
@@ -76,7 +81,7 @@ int  ReadFlagSinc(const char *fileName)
 
 //-----------------------------------------------------------------------------
 
-bool lockDataFile(const char* fname, int counter)
+bool lockDataFile(const IPC_str* fname, int counter)
 {
     if(counter==0) {
         WriteFlagSinc(fname, 0xffffffff,0xffffffff);
@@ -105,12 +110,12 @@ bool lockDataFile(const char* fname, int counter)
 
 //-----------------------------------------------------------------------------
 
-IPC_handle createDataFile(const char *fname)
+IPC_handle createDataFile(const IPC_str *fname)
 {
     IPC_str fullName[256];
     IPC_getCurrentDir(fullName, sizeof(fullName));
-    strcat(fullName, "//");
-    strcat(fullName, fname);
+    BRDC_strcat(fullName, _BRDC("//"));
+    BRDC_strcat(fullName, fname);
 
     IPC_handle fd = IPC_openFile(fullName, IPC_CREATE_FILE | IPC_FILE_RDWR);
     if(!fd) {
@@ -124,12 +129,12 @@ IPC_handle createDataFile(const char *fname)
 
 //-----------------------------------------------------------------------------
 
-bool createFlagFile(const char *fname)
+bool createFlagFile(const IPC_str *fname)
 {
     IPC_str fullName[256];
     IPC_getCurrentDir(fullName, sizeof(fullName));
-    strcat(fullName, "//");
-    strcat(fullName, fname);
+    BRDC_strcat(fullName, _BRDC("//"));
+    BRDC_strcat(fullName, fname);
 
     IPC_handle fd = IPC_openFile(fullName, IPC_OPEN_FILE | IPC_FILE_RDWR);
     if(!fd) {

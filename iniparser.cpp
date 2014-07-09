@@ -1,5 +1,6 @@
 
 #include "iniparser.h"
+#include "utypes.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -21,8 +22,8 @@ using namespace std;
 bool getParams(int argc, char *argv[], struct app_params_t& param)
 {
     int res = 0;
-    char Buffer[128];
-    char iniFilePath[1024];
+    IPC_str Buffer[128];
+    IPC_str iniFilePath[1024];
 
     if(argc > 2) {
         fprintf(stderr, "usage: %s [alternate ini file name. mainstream.ini by default]\n", argv[0]);
@@ -31,97 +32,97 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
 
     memset(&param, 0, sizeof(param));
 
-    string iniFileName = "mainstream.ini";
+    IPC_str *iniFileName = _BRDC("mainstream.ini");
 
     IPC_getCurrentDir(iniFilePath, sizeof(iniFilePath)/sizeof(char));
-    strcat(iniFilePath, "/");
-    strcat(iniFilePath, iniFileName.c_str());
+    BRDC_strcat(iniFilePath, _BRDC("/"));
+    BRDC_strcat(iniFilePath, iniFileName);
 
     fprintf(stderr, "inifile = %s\n", iniFilePath);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "boardMask", "0x1F", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("boardMask"), _BRDC("0x1F"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: boardMask - not found. Use default value\n");
     }
-    param.boardMask = strtol(Buffer,0,16);
+    param.boardMask = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "fpgaMask", "0x3", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("fpgaMask"), _BRDC("0x3"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: fpgaMask - not found. Use default value\n");
     }
-    param.fpgaMask = strtol(Buffer,0,16);
+    param.fpgaMask = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "dmaChannel", "0x0", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("dmaChannel"), _BRDC("0x0"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: dmaChannel - not found. Use default value\n");
     }
-    param.dmaChannel = strtol(Buffer,0,16);
+    param.dmaChannel = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "adcMask", "0xF", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("adcMask"), _BRDC("0xF"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: adcMask - not found. Use default value\n");
     }
-    param.adcMask = strtol(Buffer,0,16);
+    param.adcMask = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "adcStart", "0x3", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("adcStart"), _BRDC("0x3"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: adcStart - not found. Use default value\n");
     }
-    param.adcStart = strtol(Buffer,0,16);
+    param.adcStart = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "adcStartInv", "0x1", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("adcStartInv"), _BRDC("0x1"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: adcStartInv - not found. Use default value\n");
     }
-    param.adcStartInv = strtol(Buffer,0,16);
+    param.adcStartInv = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "dmaBlockSize", "0x10000", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("dmaBlockSize"), _BRDC("0x10000"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: dmaBlockSize - not found. Use default value\n");
     }
-    param.dmaBlockSize = strtol(Buffer,0,16);
+    param.dmaBlockSize = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "dmaBlockCount", "0x4", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("dmaBlockCount"), _BRDC("0x4"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: dmaBlockCount - not found. Use default value\n");
     }
-    param.dmaBlockCount = strtol(Buffer,0,16);
+    param.dmaBlockCount = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "dmaBuffersCount", "16", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("dmaBuffersCount"), _BRDC("16"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: dmaBuffersCount - not found. Use default value\n");
     }
-    param.dmaBuffersCount = strtol(Buffer,0,10);
+    param.dmaBuffersCount = BRDC_strtol(Buffer,0,10);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "testMode", "0x0", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("testMode"), _BRDC("0x0"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: testMode - not found. Use default value\n");
     }
-    param.testMode = strtol(Buffer,0,16);
+    param.testMode = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "syncMode", "0x3", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("syncMode"), _BRDC("0x3"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: syncMode - not found. Use default value\n");
     }
-    param.syncMode = strtol(Buffer,0,16);
+    param.syncMode = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "syncSelClkOut", "0x1", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("syncSelClkOut"), _BRDC("0x1"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: syncSelClkOut - not found. Use default value\n");
     }
-    param.syncSelClkOut = strtol(Buffer,0,16);
+    param.syncSelClkOut = BRDC_strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "syncFd", "448000000", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("syncFd"), _BRDC("448000000"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: syncFd - not found. Use default value\n");
     }
-    param.syncFd = (float)strtod(Buffer,0);
+    param.syncFd = float(BRDC_strtod(Buffer,0));
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "syncFo", "56000000", Buffer, sizeof(Buffer), iniFilePath);
+    res = IPC_getPrivateProfileString(SECTION_NAME, _BRDC("syncFo"), _BRDC("56000000"), Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
         fprintf(stderr, "Parameter: syncFo - not found. Use default value\n");
     }
-    param.syncFo = (float)strtod(Buffer,0);
+    param.syncFo = float(BRDC_strtod(Buffer,0));
 
     return true;
 }

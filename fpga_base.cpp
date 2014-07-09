@@ -64,7 +64,7 @@ fpga_base::~fpga_base()
 
 bool fpga_base::openFpga()
 {
-    char name[256];
+    IPC_str name[256];
 
     m_fpga = IPC_openDevice(name, AmbDeviceName, m_fpgaNumber);
     if(!m_fpga) {

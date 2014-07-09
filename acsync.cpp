@@ -216,7 +216,7 @@ U32 acsync::gcd(U32 freqA, U32 freqB)
         freqA = freqB;
         freqB = c;
     }
-    return abs(freqA);
+    return abs(long(freqA));
 }
 
 //-----------------------------------------------------------------------------
@@ -628,10 +628,10 @@ bool acsync::progFD(U32 mode, U32 selout, float FD, float FO)
         return false;
     }
 
-    FreqMultipler1(mode, FO);
+    FreqMultipler1(mode, U32(FO));
 
     if(mode == 0) {
-        progADF4002(FO, m_FVCO_ADF4002);
+        progADF4002(U32(FO), m_FVCO_ADF4002);
     }
 
     FreqMultiplerDivider(mode, FD, FO);

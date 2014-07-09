@@ -130,7 +130,7 @@ void calculateSpeed(std::vector<pcie_speed_t>& dataRate, std::vector<counter_t>&
             u32 c0 = rd_cnt0.dataVector0.at(j);
             u32 c1 = rd_cnt1.dataVector0.at(j);
 
-            float rxRate = 1000.0*(((c1-c0)*16.0*32768.0)/(1024.*1024.)/dt);
+            float rxRate = float(1000.0*(((c1-c0)*16.0*32768.0)/(1024.*1024.)/dt));
 
             rateVector.dataVector0.push_back(rxRate);
         }
@@ -255,7 +255,7 @@ static u32 make_sign(u8 hwAddr, u8 fpgaNum)
 
 void program_rx(vector<acdsp*>& boardList)
 {
-    unsigned N = boardList.size();
+    unsigned N = unsigned(boardList.size());
 
     fprintf(stderr, " _____________________________________________________________________ \n");
     fprintf(stderr, "|                                                                     |\n");
@@ -315,8 +315,8 @@ static int parse_line(string &str, vector<u32> &data)
             str[i] = ' ';
     }
 
-    int start = 0;
-    int stop = 0;
+    size_t start = 0;
+    size_t stop = 0;
 
     do {
 
@@ -336,14 +336,14 @@ static int parse_line(string &str, vector<u32> &data)
         } else if(strstr(s.c_str(), "-")) {
           value = 255;
         } else {
-          value = strtod(s.c_str(), &offset);
+          value = u32(strtod(s.c_str(), &offset));
         }
 
         data.push_back(value);
 
     } while (1);
 
-    return data.size();
+    return int(data.size());
 }
 
 //------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ static bool read_tx_config(string fileName, unsigned N, vector<board_tx>& boardT
 void program_tx(vector<acdsp*>& boardList, string fileName)
 {
     vector<board_tx> boardTxList;
-    unsigned N = boardList.size();
+    unsigned N = unsigned(boardList.size());
     unsigned M = 2;
     unsigned index = 0;
 
@@ -521,19 +521,21 @@ void stop_all_fpga(vector<acdsp*>& boardList)
 }
 
 //-----------------------------------------------------------------------------
-#ifndef USE_GUI
+
 bool start_pcie_test(std::vector<acdsp*>& boardList, struct app_params_t& params)
 {
     fprintf(stderr, "DSP_FPGA: %ld\n", boardList.size());
     fprintf(stderr, "ADC_FPGA: %ld\n", 2*boardList.size());
 
     start_all_fpga(boardList);
+#ifndef USE_GUI
     show_test_result(boardList);
+#endif
     stop_all_fpga(boardList);
 
     IPC_delay(500);
 
     return true;
 }
-#endif
+
 //-----------------------------------------------------------------------------

@@ -62,9 +62,9 @@ void start_all_fpga(std::vector<acdsp*>& boardList);
 
 void stop_all_fpga(std::vector<acdsp*>& boardList);
 
-#ifndef USE_GUI
+//#ifndef USE_GUI
 bool start_pcie_test(std::vector<acdsp*>& boards, struct app_params_t& params);
-#endif
+//#endif
 
 //-----------------------------------------------------------------------------
 

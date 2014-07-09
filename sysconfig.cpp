@@ -47,7 +47,7 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, uns
         fprintf(stderr, "HW: 0x%.2X\tID: 0x%.4X\tNUM: 0x%.4X\n", hwAddr, ID, fpgaNum );
     }
 
-    return fpgaList.size();
+    return unsigned(fpgaList.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
         fpgaLocal.clear();
     }
 
-    unsigned boards = boardList.size();
+    unsigned boards = unsigned(boardList.size());
     if(sync_board) {
         if(*sync_board) ++boards;
     }

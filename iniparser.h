@@ -3,7 +3,7 @@
 
 #include "gipcy.h"
 
-#define SECTION_NAME "VARIABLE"
+#define SECTION_NAME _BRDC("VARIABLE")
 
 struct app_params_t {
     unsigned boardMask;

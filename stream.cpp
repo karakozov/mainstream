@@ -14,6 +14,10 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <getopt.h>
+#else
+#ifdef _WIN64
+#define snprintf		_snprintf
+#endif
 #endif
 
 //-----------------------------------------------------------------------------

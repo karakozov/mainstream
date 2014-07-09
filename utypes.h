@@ -133,6 +133,7 @@ typedef wchar_t			BRDCHAR;
 #define BRDC_flushall   flushall
 #define BRDC_putch      _putwch
 #define BRDC_cgets      _cgetws
+#define BRDC_snprintf	_snwprintf
 #else
 typedef char			BRDCHAR;
 #define _BRDC(x)		x
@@ -183,6 +184,7 @@ typedef char			BRDCHAR;
 #define BRDC_flushall   flushall
 #define BRDC_putch      putch
 #define BRDC_cgets      cgets
+#define BRDC_snprintf	_snprintf
 #endif
 
 #endif /* _WIN32 */
