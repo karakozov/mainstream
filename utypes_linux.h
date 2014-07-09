@@ -89,6 +89,7 @@ typedef char                    BRDCHAR;
 #define BRDC_putch              putchar
 #define BRDC_cgets              gets
 #define BRDC_cputs              puts
+#define BRDC_snprintf           snprintf
 //-------------------------------------
 
 #define lstrcpy strcpy

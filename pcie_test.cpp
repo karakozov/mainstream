@@ -323,7 +323,7 @@ static int parse_line(string &str, vector<u32> &data)
         start = str.find_first_not_of(" ", stop);
         stop = str.find_first_of(" ", start);
 
-        if(start == -1)
+        if(start == (size_t)-1)
             break;
 
         char *offset = 0;

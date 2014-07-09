@@ -32,7 +32,7 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
 
     memset(&param, 0, sizeof(param));
 
-    IPC_str *iniFileName = _BRDC("mainstream.ini");
+    const IPC_str *iniFileName = _BRDC("mainstream.ini");
 
     IPC_getCurrentDir(iniFilePath, sizeof(iniFilePath)/sizeof(char));
     BRDC_strcat(iniFilePath, _BRDC("/"));
