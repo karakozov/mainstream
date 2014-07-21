@@ -144,6 +144,8 @@ void adc_test_thread::startAdcDma()
 {
     unsigned N = m_boardList.size();
 
+    if(m_sync) m_sync->ResetSync(true);
+
     for(unsigned i=0; i<N; ++i) {
 
         // Take one board from list
@@ -169,6 +171,8 @@ void adc_test_thread::startAdcDma()
             }
         }
     }
+
+    if(m_sync) m_sync->ResetSync(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -332,7 +336,7 @@ void adc_test_thread::dataFromMemAsMem()
 
                     //brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 500);
+                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 2000);
                     if( res != 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
