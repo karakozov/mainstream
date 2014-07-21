@@ -22,6 +22,10 @@
 
 //-----------------------------------------------------------------------------
 
+using namespace std;
+
+//-----------------------------------------------------------------------------
+
 Fpga::Fpga(unsigned id) : fpga_base(id)
 {
     m_strm.clear();
@@ -640,3 +644,104 @@ bool Fpga::FpgaTemperature(float &t)
 {
     return false;
 }
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::writeSpdDev(U32 trd, U32 devSpdNum, U32 devSpdReg, U32 devSpdRegData, U32 spdCtrl)
+{
+    int timeout = 0;
+
+    // wait trd ready
+    U32 status = 0;
+    while(1) {
+        status = FpgaRegPeekDir(trd,0);
+        if(status & 0x1)
+            break;
+        timeout++;
+        if(timeout > 100) {
+            fprintf(stderr, "%s(): TIMEOUT\n", __FUNCTION__);
+            return false;
+        }
+        IPC_delay(10);
+    }
+
+    // select spd device
+    FpgaRegPokeInd(trd, 0x203, devSpdNum);
+
+    // set desired spd device register
+    FpgaRegPokeInd(trd, 0x205, devSpdReg);
+
+    // write data for spd device
+    FpgaRegPokeInd(trd, 0x206, devSpdRegData);
+
+    // write command
+    FpgaRegPokeInd(trd, 0x204, spdCtrl|0x2);
+
+    // wait trd ready
+    status = 0;
+    timeout = 0;
+    while(1) {
+        status = FpgaRegPeekDir(trd,0);
+        if(status & 0x1)
+            break;
+        timeout++;
+        if(timeout > 100) {
+            fprintf(stderr, "%s(): TIMEOUT\n", __FUNCTION__);
+            return false;
+        }
+        IPC_delay(10);
+    }
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+
+bool Fpga::readSpdDev(U32 trd, U32 devSpdNum, U32 devSpdReg, U32 spdCtrl, U32& devSpdRegData)
+{
+    int timeout = 0;
+
+    // wait trd ready
+    U32 status = 0;
+    while(1) {
+        status = FpgaRegPeekDir(trd,0);
+        if(status & 0x1)
+            break;
+        timeout++;
+        if(timeout > 100) {
+            fprintf(stderr, "%s(): TIMEOUT\n", __FUNCTION__);
+            return false;
+        }
+        IPC_delay(10);
+    }
+
+    // select spd device
+    FpgaRegPokeInd(trd, 0x203, devSpdNum);
+
+    // set desired sdp device register
+    FpgaRegPokeInd(trd, 0x205, devSpdReg);
+
+    // send read command
+    FpgaRegPokeInd(trd, 0x204, spdCtrl|0x1);
+
+    // wait trd ready
+    status = 0;
+    timeout = 0;
+    while(1) {
+        status = FpgaRegPeekDir(trd,0);
+        if(status & 0x1)
+            break;
+        timeout++;
+        if(timeout > 100) {
+            fprintf(stderr, "%s(): TIMEOUT\n", __FUNCTION__);
+            return false;
+        }
+        IPC_delay(10);
+    }
+
+    // read spd data
+    devSpdRegData = FpgaRegPeekInd(trd, 0x206);
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
