@@ -365,44 +365,24 @@ void MainWindow::updateFpgaTemperature()
         if(!brd) continue;
 
         if(brd->slotNumber() == 3) {
-            float t30 = 0;
-            if(brd->getFpgaTemperature(0, t30)) {
-                ui->lb_fpgaT30->setText(QString::number(t30));
-            }
-            float t31 = 0;
-            if(brd->getFpgaTemperature(1, t31)) {
-                ui->lb_fpgaT31->setText(QString::number(t31));
-            }
+            ui->lb_fpgaT30->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT31->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT32->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 4) {
-            float t40 = 0;
-            if(brd->getFpgaTemperature(0, t40)) {
-                ui->lb_fpgaT40->setText(QString::number(t40));
-            }
-            float t41 = 0;
-            if(brd->getFpgaTemperature(1, t41)) {
-                ui->lb_fpgaT41->setText(QString::number(t41));
-            }
+            ui->lb_fpgaT40->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT41->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT42->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 5) {
-            float t50 = 0;
-            if(brd->getFpgaTemperature(0, t50)) {
-                ui->lb_fpgaT50->setText(QString::number(t50));
-            }
-            float t51 = 0;
-            if(brd->getFpgaTemperature(1, t51)) {
-                ui->lb_fpgaT51->setText(QString::number(t51));
-            }
+            ui->lb_fpgaT50->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT51->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT52->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 6) {
-            float t60 = 0;
-            if(brd->getFpgaTemperature(0, t60)) {
-                ui->lb_fpgaT60->setText(QString::number(t60));
-            }
-            float t61 = 0;
-            if(brd->getFpgaTemperature(1, t61)) {
-                ui->lb_fpgaT61->setText(QString::number(t61));
-            }
+            ui->lb_fpgaT60->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT61->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT62->setText(QString::number(brd->getFpgaTemperature(2)));
         }
     }
 }
@@ -416,7 +396,7 @@ void MainWindow::resetSync(bool reset)
     if(reset) {
         ui->pbResetSync->setText("Unreset AC_SYNC");
         if(m_sync) m_sync->ResetSync(true);
-     } else {
+    } else {
         ui->pbResetSync->setText("Reset AC_SYNC");
         if(m_sync) m_sync->ResetSync(false);
     }

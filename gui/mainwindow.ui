@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -554,6 +554,36 @@
           <layout class="QGridLayout" name="gridLayout_18">
            <item row="0" column="0">
             <layout class="QGridLayout" name="labelLayout">
+             <item row="1" column="0" rowspan="3">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>SLOT 3</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QLabel" name="label_27">
+               <property name="text">
+                <string>2</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_26">
+               <property name="text">
+                <string>2</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
              <item row="0" column="1">
               <widget class="QLabel" name="label_21">
                <property name="text">
@@ -594,7 +624,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <widget class="QLabel" name="lb_fpgaName2">
                <property name="text">
                 <string>0</string>
@@ -604,7 +634,7 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="5" column="1">
               <widget class="QLabel" name="lb_fpgaName3">
                <property name="text">
                 <string>1</string>
@@ -614,7 +644,7 @@
                </property>
               </widget>
              </item>
-             <item row="5" column="1">
+             <item row="7" column="1">
               <widget class="QLabel" name="lb_fpgaName4">
                <property name="text">
                 <string>0</string>
@@ -624,7 +654,7 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="1">
+             <item row="8" column="1">
               <widget class="QLabel" name="label_23">
                <property name="text">
                 <string>1</string>
@@ -634,7 +664,7 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="1">
+             <item row="10" column="1">
               <widget class="QLabel" name="label_24">
                <property name="text">
                 <string>0</string>
@@ -644,7 +674,7 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="1">
+             <item row="11" column="1">
               <widget class="QLabel" name="label_25">
                <property name="text">
                 <string>1</string>
@@ -674,7 +704,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="2">
+             <item row="4" column="2">
               <widget class="QLabel" name="lb_fpgaT40">
                <property name="text">
                 <string>---</string>
@@ -684,7 +714,7 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="2">
+             <item row="5" column="2">
               <widget class="QLabel" name="lb_fpgaT41">
                <property name="text">
                 <string>---</string>
@@ -694,7 +724,7 @@
                </property>
               </widget>
              </item>
-             <item row="5" column="2">
+             <item row="7" column="2">
               <widget class="QLabel" name="lb_fpgaT50">
                <property name="text">
                 <string>---</string>
@@ -704,7 +734,7 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="2">
+             <item row="8" column="2">
               <widget class="QLabel" name="lb_fpgaT51">
                <property name="text">
                 <string>---</string>
@@ -714,7 +744,7 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="2">
+             <item row="10" column="2">
               <widget class="QLabel" name="lb_fpgaT60">
                <property name="text">
                 <string>---</string>
@@ -724,7 +754,7 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="2">
+             <item row="11" column="2">
               <widget class="QLabel" name="lb_fpgaT61">
                <property name="text">
                 <string>---</string>
@@ -734,31 +764,93 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0" rowspan="2">
-              <widget class="QLabel" name="label_17">
+             <item row="9" column="1">
+              <widget class="QLabel" name="label_28">
                <property name="text">
-                <string>SLOT 3</string>
+                <string>2</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
-             <item row="3" column="0" rowspan="2">
-              <widget class="QLabel" name="label_18">
+             <item row="12" column="1">
+              <widget class="QLabel" name="label_29">
                <property name="text">
-                <string>SLOT 4</string>
+                <string>2</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
-             <item row="5" column="0" rowspan="2">
+             <item row="10" column="0" rowspan="3">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>SLOT 6</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0" rowspan="3">
               <widget class="QLabel" name="label_19">
                <property name="text">
                 <string>SLOT 5</string>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
               </widget>
              </item>
-             <item row="7" column="0" rowspan="2">
-              <widget class="QLabel" name="label_20">
+             <item row="4" column="0" rowspan="3">
+              <widget class="QLabel" name="label_18">
                <property name="text">
-                <string>SLOT 6</string>
+                <string>SLOT 4</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="lb_fpgaT32">
+               <property name="text">
+                <string>---</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="2">
+              <widget class="QLabel" name="lb_fpgaT42">
+               <property name="text">
+                <string>---</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="2">
+              <widget class="QLabel" name="lb_fpgaT52">
+               <property name="text">
+                <string>---</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="2">
+              <widget class="QLabel" name="lb_fpgaT62">
+               <property name="text">
+                <string>---</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>

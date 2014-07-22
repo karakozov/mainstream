@@ -229,15 +229,19 @@ void adc_test_thread::startAdcDmaMem()
             if(!(m_params.fpgaMask & (0x1 << j)))
                 continue;
 
-            brd->DDR3(j)->setMemory(1, 0, PostTrigSize, MemBufSize);
-            brd->DDR3(j)->Enable(true);
+            brd->DDR3(j)->Enable(false);
 
             brd->setDmaSource(j, m_params.dmaChannel, MEM_TRD);
             brd->setDmaRequestFlag(j, m_params.dmaChannel, BRDstrm_DRQ_HALF);
+
+            //brd->RegPokeInd(j, ADC_TRD, 0xC, 0x100);
+
             brd->resetFifo(j, ADC_TRD);
             brd->resetFifo(j, MEM_TRD);
             brd->resetDmaFifo(j, m_params.dmaChannel);
             brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
+
+            brd->DDR3(j)->setMemory(1, 0, PostTrigSize, MemBufSize);
 
             U32 stmode = calc_stmode(m_params);
 
