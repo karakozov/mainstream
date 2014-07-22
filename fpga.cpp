@@ -640,9 +640,19 @@ bool Fpga::FpgaDeviceID(U16& device_id)
 
 //-----------------------------------------------------------------------------
 
-bool Fpga::FpgaTemperature(float &t)
+float Fpga::FpgaTemperature()
 {
-    return false;
+    unsigned temp;
+    float t = 0;
+
+    FpgaRegPokeInd(0, 0x210, 0 );
+    temp = FpgaRegPeekInd( 0, 0x211 );
+
+    temp >>= 6;
+    temp &= 0x3FF;
+    t = (temp*503.975)/1024-273.15;
+
+    return t;
 }
 
 //-----------------------------------------------------------------------------
