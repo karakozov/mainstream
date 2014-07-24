@@ -94,7 +94,7 @@ unsigned create_board_list(std::vector<Fpga*>& fpgaList, std::vector<acdsp*>& bo
 
     // scan geographical addresses for non masked AC_DSP boards
     std::vector<Fpga*> fpgaLocal;
-    for(unsigned slotIndex=0; slotIndex<6; slotIndex++) {
+    for(unsigned slotIndex=6; slotIndex>=1; slotIndex--) {
 
         if(!(boradMask & (0x1 << slotIndex)))
             continue;

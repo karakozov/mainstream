@@ -82,7 +82,7 @@ void pe_chn_tx::start_tx(bool start, unsigned adcMask)
 
     } else {
 
-        //ctrl &= ~0x10; //TX_CHN_OFF
+        ctrl &= ~0x10; //TX_CHN_OFF
 
         // stop TX channel
         m_fpga->FpgaBlockWrite(m_tx.number, 0x8, (ctrl & (~(0x3 << 5))));
