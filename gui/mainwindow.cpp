@@ -43,8 +43,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbSlot5, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot6, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->pbFpgaT, SIGNAL(clicked()), this, SLOT(updateFpgaTemperature()));
+    connect(ui->pbReadDelaysFormFpga, SIGNAL(clicked()), this, SLOT(readDelayFromFpga()));
+    connect(ui->pbWriteDelaysToFpga, SIGNAL(clicked()), this, SLOT(writeDelayToFpga()));
+
+    enableDelaySlots(true);
 
     ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
+    ui->tabWidget->setCurrentIndex(0);
 
     setBoardMask();
 }
@@ -79,7 +84,7 @@ void MainWindow::updateSystemParams()
     m_params.fpgaMask = ui->leFpgaMask->text().toInt(&ok, 16);
     m_params.adcMask = ui->leAdcMask->text().toInt(&ok, 16);
     m_params.adcStart = ui->cbAdcStartSource->currentIndex() == 0 ? 0x3 : 0x2;
-    m_params.adcStartInv = ui->cbAdcStartInversion->currentText().toInt(&ok, 16);
+    m_params.adcStartInv = ui->cbAdcStartInversion->currentIndex();
 
     m_params.dmaChannel = ui->leDmaChannel->text().toInt(&ok, 16);
     m_params.dmaBlockSize = ui->leDmaBlockSize->text().toInt(&ok, 16);
@@ -189,6 +194,8 @@ void MainWindow::stopPciExpressTest()
     m_timer->setInterval(0);
 
     ui->tab->setEnabled(true);
+
+    statusBar()->showMessage("PCI Express data rate: STOP");
 }
 
 //-----------------------------------------------------------------------------
@@ -254,11 +261,19 @@ void MainWindow::init_display_table(QTableWidget *table)
         hList1 << "TX_CHN" + QString::number(i);
     }
 
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
+    table->setHorizontalHeaderLabels(hList1);
+    table->verticalHeader()->setStretchLastSection(true);
+    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+#else
     table->setHorizontalHeaderLabels(hList1);
     table->verticalHeader()->setStretchLastSection(true);
     table->verticalHeader()->setResizeMode(QHeaderView::Stretch);
     table->horizontalHeader()->setStretchLastSection(true);
     table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -399,6 +414,277 @@ void MainWindow::resetSync(bool reset)
     } else {
         ui->pbResetSync->setText("Reset AC_SYNC");
         if(m_sync) m_sync->ResetSync(false);
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+typedef std::vector<unsigned> delay_t;
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::readDelayFromFpga()
+{
+    enableDelaySlots(false);
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); j++) {
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 3)) {
+
+                if(j==0) {
+                    ui->spbDelay30->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay31->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 4)) {
+
+                if(j==0) {
+                    ui->spbDelay40->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay41->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 5)) {
+
+                if(j==0) {
+                    ui->spbDelay50->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay51->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 6)) {
+
+                if(j==0) {
+                    ui->spbDelay60->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay61->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+        }
+    }
+
+    enableDelaySlots(true);
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::writeDelayToFpga()
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); j++) {
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 3)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay30->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay31->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 4)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay40->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay41->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 5)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay50->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay51->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 6)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay60->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay61->value());
+                }
+            }
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay30(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 3) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay31(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 3) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay40(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 4) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay41(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 4) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay50(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 5) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay51(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 5) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay60(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 6) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay61(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 6) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::enableDelaySlots(bool enable)
+{
+    if(enable) {
+        connect(ui->spbDelay30,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay30(int)));
+        connect(ui->spbDelay31,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay31(int)));
+        connect(ui->spbDelay40,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay40(int)));
+        connect(ui->spbDelay41,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay41(int)));
+        connect(ui->spbDelay50,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay50(int)));
+        connect(ui->spbDelay51,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay51(int)));
+        connect(ui->spbDelay60,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay60(int)));
+        connect(ui->spbDelay61,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay61(int)));
+    } else {
+        disconnect(ui->spbDelay30,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay30(int)));
+        disconnect(ui->spbDelay31,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay31(int)));
+        disconnect(ui->spbDelay40,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay40(int)));
+        disconnect(ui->spbDelay41,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay41(int)));
+        disconnect(ui->spbDelay50,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay50(int)));
+        disconnect(ui->spbDelay51,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay51(int)));
+        disconnect(ui->spbDelay60,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay60(int)));
+        disconnect(ui->spbDelay61,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay61(int)));
     }
 }
 

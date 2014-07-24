@@ -11,9 +11,9 @@
 #include "pcie_test_thread.h"
 #include "adc_test_thread.h"
 
-#include <QMainWindow>
+#include <QtWidgets/QMainWindow>
 #include <QAbstractItemModel>
-#include <QTableWidget>
+#include <QtWidgets/QTableWidget>
 #include <QTimer>
 #include <vector>
 
@@ -68,6 +68,17 @@ private slots:
     void setBoardMask();
     void updateFpgaTemperature();
     void resetSync(bool reset);
+    void readDelayFromFpga();
+    void writeDelayToFpga();
+    void setFpgaStartDelay30(int val);
+    void setFpgaStartDelay31(int val);
+    void setFpgaStartDelay40(int val);
+    void setFpgaStartDelay41(int val);
+    void setFpgaStartDelay50(int val);
+    void setFpgaStartDelay51(int val);
+    void setFpgaStartDelay60(int val);
+    void setFpgaStartDelay61(int val);
+    void enableDelaySlots(bool connect);
 };
 
 #endif // MAINWINDOW_H

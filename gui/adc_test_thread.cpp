@@ -63,11 +63,11 @@ void adc_test_thread::prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, is
             if(m_params.fpgaMask & (0x1 << j)) {
 
                 char fname[64];
-                snprintf(fname, sizeof(fname), "data_%d%d.bin", brd->slotNumber(), j);
+                snprintf(fname, sizeof(fname), "CH%d_%d.bin", brd->slotNumber()-2, j);
                 isviFile.push_back(createDataFile(fname));
 
                 char tmpflg[64];
-                snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", brd->slotNumber(), j);
+                snprintf(tmpflg, sizeof(tmpflg), "CH%d_%d.flg", brd->slotNumber()-2, j);
                 createFlagFile(tmpflg);
                 flgName.push_back(tmpflg);
 
@@ -168,6 +168,9 @@ void adc_test_thread::startAdcDma()
                 brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
                 brd->startDma(j, m_params.dmaChannel, 0);
                 brd->RegPokeInd(j, ADC_TRD, 0, 0x2038);
+                IPC_delay(1);
+                U32 mode0 = brd->RegPeekInd(j, ADC_TRD, 0);
+                mode0 = mode0;
             }
         }
     }
@@ -251,6 +254,12 @@ void adc_test_thread::startAdcDmaMem()
             brd->resetFifo(j, MEM_TRD);
             brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
             brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
+
+            IPC_delay(1);
+            U32 mode01 = brd->RegPeekInd(j, ADC_TRD, 0);
+            U32 mode02 = brd->RegPeekInd(j, MEM_TRD, 0);
+            mode01 = mode01;
+            mode02 = mode02;
         }
     }
 
