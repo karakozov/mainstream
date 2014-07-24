@@ -1,5 +1,5 @@
 #include <qglobal.h>
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
+#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 1))
 #include <QApplication>
 #else
 #include <QtGui/QApplication>

@@ -11,9 +11,14 @@
 #include "pcie_test_thread.h"
 #include "adc_test_thread.h"
 
+#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 1))
 #include <QtWidgets/QMainWindow>
-#include <QAbstractItemModel>
 #include <QtWidgets/QTableWidget>
+#else
+#include <QMainWindow>
+#include <QTableWidget>
+#endif
+#include <QAbstractItemModel>
 #include <QTimer>
 #include <vector>
 

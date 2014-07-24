@@ -303,7 +303,7 @@ void MainWindow::init_display_table(QTableWidget *table)
         hList1 << "TX_CHN" + QString::number(i);
     }
 
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
+#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 1))
     table->setHorizontalHeaderLabels(hList1);
     table->verticalHeader()->setStretchLastSection(true);
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
