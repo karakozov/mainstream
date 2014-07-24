@@ -736,9 +736,12 @@ void MainWindow::SetSelectedMode()
     updateSystemParams();
 
     if(m_sync) {
-        m_sync->progFD(ui->cbSyncv11Mode->currentIndex(),
+        bool res = m_sync->progFD(ui->cbSyncv11Mode->currentIndex(),
                        ui->cbSyncv11FD->currentText().toFloat(),
                        ui->cbSyncv11FO->currentText().toFloat());
-        statusBar()->showMessage("Set new mode: " + ui->cbSyncv11Mode->currentText());
+        if(res)
+            statusBar()->showMessage("Set new mode: " + ui->cbSyncv11Mode->currentText());
+        else
+            statusBar()->showMessage("Set new mode: ERROR!");
     }
 }

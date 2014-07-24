@@ -135,7 +135,7 @@ void acsync::selclkMode1(U32 FO)
     case 10:
     case 56:
     case 120:{
-        mode1 |= (ENPOW_OCXO | ENx5 | ENx8);
+        mode1 |= ENPOW_OCXO;
         selclk |= (SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     }
@@ -158,14 +158,15 @@ void acsync::selclkMode2(U32 FO)
 
     switch(FO) {
     case 10: {
+        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK0 | SELCLK1 | SELCLK2 | SELCLK5 | SELCLK6);
     } break;
     case 56: {
-        mode1 |= ENx5;
+        mode1 |= ENx8;
         selclk |= (SELCLK0 | SELCLK2 | SELCLK4 | SELCLK6);
     } break;
     case 120: {
-        mode1 |= ENx5;
+        mode1 |= ENx8;
         selclk |= (SELCLK0 | SELCLK2 | SELCLK4 | SELCLK6);
     } break;
     }
@@ -188,27 +189,22 @@ void acsync::selclkMode3(U32 FO)
 
     switch(FO) {
     case 10: {
-        mode1 |= ENx8;
+        mode1 |= ENx5;
         selclk |= (SELCLK0 | SELCLK1 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 56: {
-        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 120: {
-        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 400: {
-        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 448: {
-        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     case 480: {
-        mode1 |= (ENx5 | ENx8);
         selclk |= (SELCLK1 | SELCLK2 | SELCLK3 | SELCLK4 | SELCLK5 | SELCLK7);
     } break;
     }
@@ -227,9 +223,9 @@ void acsync::selclkMode4(U32 FO)
     U32 selclk = RegPeekInd(0, m_sync_trd.number, 0xF);
 
     mode1 &= ~(ENPOW_OCXO | ENx5 | ENx8);
+    mode1 |= (ENx5 | ENx8);
     selclk = ~0x1FF;
 
-    mode1 |= (ENx5 | ENx8);
     selclk |= (SELCLK1 | SELCLK2 | SELCLK4 | SELCLK5 | SELCLK6);
     selclk &= ~SELCLKOUT;
 
