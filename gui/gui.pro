@@ -7,7 +7,7 @@
 #CONFIG += release
 #CONFIG += debug
 
-QT       += core gui
+QT       += core gui widgets
 
 TARGET = gui
 TEMPLATE = app
@@ -56,7 +56,6 @@ win32 {
 
 
 HEADERS  += mainwindow.h \
-    ../test_thread.h \
     adc_test_thread.h \
     pcie_test_thread.h
 

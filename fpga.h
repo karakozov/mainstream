@@ -49,7 +49,9 @@ public:
     U32  FpgaBlockRead(U32 nb, U32 reg);
     bool FpgaHwAddress(U08& hwAddr, U08& fpgaNum);
     bool FpgaDeviceID(U16& device_id);
-    bool FpgaTemperature(float& t);
+    float FpgaTemperature();
+    bool writeSpdDev(U32 trd, U32 devSpdNum, U32 devSpdReg, U32 devSpdRegData, U32 spdCtrl = 0);
+    bool readSpdDev(U32 trd, U32 devSpdNum, U32 devSpdReg, U32 spdCtrl, U32& devSpdRegData);
 
     int allocateDmaMemory(U32 DmaChan, BRDctrl_StreamCBufAlloc* param);
     int allocateDmaMemory(U32 DmaChan,

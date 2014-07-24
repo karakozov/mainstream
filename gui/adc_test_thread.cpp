@@ -63,11 +63,11 @@ void adc_test_thread::prepareIsvi(isvidata_t& isviFiles, isviflg_t& flgNames, is
             if(m_params.fpgaMask & (0x1 << j)) {
 
                 char fname[64];
-                snprintf(fname, sizeof(fname), "data_%d%d.bin", brd->slotNumber(), j);
+                snprintf(fname, sizeof(fname), "CH%d_%d.bin", brd->slotNumber()-2, j);
                 isviFile.push_back(createDataFile(fname));
 
                 char tmpflg[64];
-                snprintf(tmpflg, sizeof(tmpflg), "data_%d%d.flg", brd->slotNumber(), j);
+                snprintf(tmpflg, sizeof(tmpflg), "CH%d_%d.flg", brd->slotNumber()-2, j);
                 createFlagFile(tmpflg);
                 flgName.push_back(tmpflg);
 
@@ -144,6 +144,8 @@ void adc_test_thread::startAdcDma()
 {
     unsigned N = m_boardList.size();
 
+    if(m_sync) m_sync->ResetSync(true);
+
     for(unsigned i=0; i<N; ++i) {
 
         // Take one board from list
@@ -166,9 +168,14 @@ void adc_test_thread::startAdcDma()
                 brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
                 brd->startDma(j, m_params.dmaChannel, 0);
                 brd->RegPokeInd(j, ADC_TRD, 0, 0x2038);
+                IPC_delay(1);
+                U32 mode0 = brd->RegPeekInd(j, ADC_TRD, 0);
+                mode0 = mode0;
             }
         }
     }
+
+    if(m_sync) m_sync->ResetSync(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -225,25 +232,34 @@ void adc_test_thread::startAdcDmaMem()
             if(!(m_params.fpgaMask & (0x1 << j)))
                 continue;
 
-            brd->DDR3(j)->setMemory(1, 0, PostTrigSize, MemBufSize);
-            brd->DDR3(j)->Enable(true);
+            brd->DDR3(j)->Enable(false);
 
             brd->setDmaSource(j, m_params.dmaChannel, MEM_TRD);
             brd->setDmaRequestFlag(j, m_params.dmaChannel, BRDstrm_DRQ_HALF);
+
+            //brd->RegPokeInd(j, ADC_TRD, 0xC, 0x100);
+
             brd->resetFifo(j, ADC_TRD);
             brd->resetFifo(j, MEM_TRD);
             brd->resetDmaFifo(j, m_params.dmaChannel);
             brd->RegPokeInd(j, ADC_TRD, 0x10, m_params.adcMask);
 
+            brd->DDR3(j)->setMemory(1, 0, PostTrigSize, MemBufSize);
+
             U32 stmode = calc_stmode(m_params);
 
             brd->RegPokeInd(j, ADC_TRD, 0x5, stmode);
             brd->RegPokeInd(j, ADC_TRD, 0x17, (m_params.adcStart << 4));
-
-            brd->startDma(j, m_params.dmaChannel, 0x0);
-
+            brd->resetFifo(j, ADC_TRD);
+            brd->resetFifo(j, MEM_TRD);
             brd->RegPokeInd(j, MEM_TRD, 0x0, 0x2038);
             brd->RegPokeInd(j, ADC_TRD, 0x0, 0x2038);
+
+            IPC_delay(1);
+            U32 mode01 = brd->RegPeekInd(j, ADC_TRD, 0);
+            U32 mode02 = brd->RegPeekInd(j, MEM_TRD, 0);
+            mode01 = mode01;
+            mode02 = mode02;
         }
     }
 
@@ -330,9 +346,9 @@ void adc_test_thread::dataFromMemAsMem()
 
                 for(unsigned counter = 0; counter < m_params.dmaBuffersCount; counter++) {
 
-                    //brd->startDma(j, m_params.dmaChannel, 0x0);
+                    brd->startDma(j, m_params.dmaChannel, 0x0);
 
-                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 500);
+                    int res = brd->waitDmaBuffer(j, m_params.dmaChannel, 2000);
                     if( res != 0 ) {
 
                         u32 status_adc = brd->RegPeekDir(j, ADC_TRD, 0x0);
@@ -396,14 +412,12 @@ void adc_test_thread::dataFromAdc()
 
 
     //---------------------------------------------------------------
-    // prepare and start ADC and DMA channels for non masked FPGA
-    startAdcDma();
-
-    //---------------------------------------------------------------
 
     unsigned pass_counter = 0;
 
     while(m_start) {
+
+        startAdcDma();
 
         for(unsigned i=0; i<N; ++i) {
 
@@ -457,9 +471,6 @@ void adc_test_thread::dataFromAdc()
                 brd->stopDma(j, m_params.dmaChannel);
                 brd->resetFifo(j, ADC_TRD);
                 brd->resetDmaFifo(j, m_params.dmaChannel);
-                brd->startDma(j,m_params.dmaChannel,0);
-                IPC_delay(10);
-                brd->RegPokeInd(j,ADC_TRD,0,0x2038);
             }
             emit updateInfo("");
         }

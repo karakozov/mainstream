@@ -43,6 +43,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cbSlot5, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot6, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->pbFpgaT, SIGNAL(clicked()), this, SLOT(updateFpgaTemperature()));
+    connect(ui->pbReadDelaysFormFpga, SIGNAL(clicked()), this, SLOT(readDelayFromFpga()));
+    connect(ui->pbWriteDelaysToFpga, SIGNAL(clicked()), this, SLOT(writeDelayToFpga()));
+
+    enableDelaySlots(true);
 
     //---------------------------------------------------------------------------------------
 
@@ -76,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //---------------------------------------------------------------------------------------
 
     ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
+    ui->tabWidget->setCurrentIndex(0);
 
     setBoardMask();
 }
@@ -109,7 +114,7 @@ void MainWindow::updateSystemParams()
     m_params.fpgaMask = ui->leFpgaMask->text().toInt(&ok, 16);
     m_params.adcMask = ui->leAdcMask->text().toInt(&ok, 16);
     m_params.adcStart = ui->cbAdcStartSource->currentIndex() == 0 ? 0x3 : 0x2;
-    m_params.adcStartInv = ui->cbAdcStartInversion->currentText().toInt(&ok, 16);
+    m_params.adcStartInv = ui->cbAdcStartInversion->currentIndex();
 
     m_params.dmaChannel = ui->leDmaChannel->text().toInt(&ok, 16);
     m_params.dmaBlockSize = ui->leDmaBlockSize->text().toInt(&ok, 16);
@@ -231,6 +236,8 @@ void MainWindow::stopPciExpressTest()
     m_timer->setInterval(0);
 
     ui->tab->setEnabled(true);
+
+    statusBar()->showMessage("PCI Express data rate: STOP");
 }
 
 //-----------------------------------------------------------------------------
@@ -296,11 +303,19 @@ void MainWindow::init_display_table(QTableWidget *table)
         hList1 << "TX_CHN" + QString::number(i);
     }
 
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
+    table->setHorizontalHeaderLabels(hList1);
+    table->verticalHeader()->setStretchLastSection(true);
+    table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+#else
     table->setHorizontalHeaderLabels(hList1);
     table->verticalHeader()->setStretchLastSection(true);
     table->verticalHeader()->setResizeMode(QHeaderView::Stretch);
     table->horizontalHeader()->setStretchLastSection(true);
     table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -407,44 +422,24 @@ void MainWindow::updateFpgaTemperature()
         if(!brd) continue;
 
         if(brd->slotNumber() == 3) {
-            float t30 = 0;
-            if(brd->getFpgaTemperature(0, t30)) {
-                ui->lb_fpgaT30->setText(QString::number(t30));
-            }
-            float t31 = 0;
-            if(brd->getFpgaTemperature(1, t31)) {
-                ui->lb_fpgaT31->setText(QString::number(t31));
-            }
+            ui->lb_fpgaT30->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT31->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT32->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 4) {
-            float t40 = 0;
-            if(brd->getFpgaTemperature(0, t40)) {
-                ui->lb_fpgaT40->setText(QString::number(t40));
-            }
-            float t41 = 0;
-            if(brd->getFpgaTemperature(1, t41)) {
-                ui->lb_fpgaT41->setText(QString::number(t41));
-            }
+            ui->lb_fpgaT40->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT41->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT42->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 5) {
-            float t50 = 0;
-            if(brd->getFpgaTemperature(0, t50)) {
-                ui->lb_fpgaT50->setText(QString::number(t50));
-            }
-            float t51 = 0;
-            if(brd->getFpgaTemperature(1, t51)) {
-                ui->lb_fpgaT51->setText(QString::number(t51));
-            }
+            ui->lb_fpgaT50->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT51->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT52->setText(QString::number(brd->getFpgaTemperature(2)));
         }
         if(brd->slotNumber() == 6) {
-            float t60 = 0;
-            if(brd->getFpgaTemperature(0, t60)) {
-                ui->lb_fpgaT60->setText(QString::number(t60));
-            }
-            float t61 = 0;
-            if(brd->getFpgaTemperature(1, t61)) {
-                ui->lb_fpgaT61->setText(QString::number(t61));
-            }
+            ui->lb_fpgaT60->setText(QString::number(brd->getFpgaTemperature(0)));
+            ui->lb_fpgaT61->setText(QString::number(brd->getFpgaTemperature(1)));
+            ui->lb_fpgaT62->setText(QString::number(brd->getFpgaTemperature(2)));
         }
     }
 }
@@ -465,8 +460,7 @@ void MainWindow::resetSync(bool reset)
 }
 
 //-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk0(bool set)
 {
     if(m_sync) {
@@ -478,6 +472,9 @@ void MainWindow::Selclk0(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk1(bool set)
 {
     if(m_sync) {
@@ -489,6 +486,9 @@ void MainWindow::Selclk1(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk2(bool set)
 {
     if(m_sync) {
@@ -500,6 +500,9 @@ void MainWindow::Selclk2(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk3(bool set)
 {
     if(m_sync) {
@@ -511,6 +514,9 @@ void MainWindow::Selclk3(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk4(bool set)
 {
     if(m_sync) {
@@ -522,6 +528,9 @@ void MainWindow::Selclk4(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk5(bool set)
 {
     if(m_sync) {
@@ -533,6 +542,9 @@ void MainWindow::Selclk5(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk6(bool set)
 {
     if(m_sync) {
@@ -544,6 +556,9 @@ void MainWindow::Selclk6(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Selclk7(bool set)
 {
     if(m_sync) {
@@ -555,6 +570,9 @@ void MainWindow::Selclk7(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::SelclkOut(bool set)
 {
     if(m_sync) {
@@ -566,6 +584,9 @@ void MainWindow::SelclkOut(bool set)
         m_sync->RegPokeInd(0, 4, 0xF, selclk);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::EnpowPll(bool set)
 {
     if(m_sync) {
@@ -577,6 +598,9 @@ void MainWindow::EnpowPll(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::EnpowOcxo(bool set)
 {
     if(m_sync) {
@@ -588,6 +612,9 @@ void MainWindow::EnpowOcxo(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::EnpowClksm(bool set)
 {
     if(m_sync) {
@@ -599,6 +626,9 @@ void MainWindow::EnpowClksm(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Master(bool set)
 {
     if(m_sync) {
@@ -610,6 +640,9 @@ void MainWindow::Master(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Reset(bool set)
 {
     if(m_sync) {
@@ -621,6 +654,9 @@ void MainWindow::Reset(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Enx5(bool set)
 {
     if(m_sync) {
@@ -632,6 +668,9 @@ void MainWindow::Enx5(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::Enx8(bool set)
 {
     if(m_sync) {
@@ -643,6 +682,9 @@ void MainWindow::Enx8(bool set)
         m_sync->RegPokeInd(0, 4, 0x9, mode1);
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::ParametersChange()
 {
     if(m_sync) {
@@ -692,6 +734,9 @@ void MainWindow::ParametersChange()
         ui->leSyncv11DIV23->setText("0x"+QString::number(div23_code,16));
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::CheckParams()
 {
     if(m_sync) {
@@ -705,6 +750,9 @@ void MainWindow::CheckParams()
         ParametersChange();
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::SetupCxDx()
 {
     if(m_sync) {
@@ -731,6 +779,9 @@ void MainWindow::SetupCxDx()
         ui->lbDIV23Encoded->setText("0x"+QString::number(DIV23,16));
     }
 }
+
+//-----------------------------------------------------------------------------
+
 void MainWindow::SetSelectedMode()
 {
     updateSystemParams();
@@ -745,3 +796,272 @@ void MainWindow::SetSelectedMode()
             statusBar()->showMessage("Set new mode: ERROR!");
     }
 }
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::readDelayFromFpga()
+{
+    enableDelaySlots(false);
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); j++) {
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 3)) {
+
+                if(j==0) {
+                    ui->spbDelay30->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay31->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 4)) {
+
+                if(j==0) {
+                    ui->spbDelay40->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay41->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 5)) {
+
+                if(j==0) {
+                    ui->spbDelay50->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay51->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 6)) {
+
+                if(j==0) {
+                    ui->spbDelay60->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+
+                if(j==1) {
+                    ui->spbDelay61->setValue(brd->RegPeekInd(j,ADC_TRD,0x209));
+                }
+            }
+        }
+    }
+
+    enableDelaySlots(true);
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::writeDelayToFpga()
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        for(unsigned j=0; j<brd->FPGA_LIST().size(); j++) {
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 3)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay30->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay31->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 4)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay40->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay41->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 5)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay50->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay51->value());
+                }
+            }
+
+            if(brd->isFpgaAdc(j) && (brd->slotNumber() == 6)) {
+
+                if(j==0) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay60->value());
+                }
+
+                if(j==1) {
+                    brd->RegPokeInd(j,ADC_TRD,0xB,ui->spbDelay61->value());
+                }
+            }
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay30(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 3) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay31(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 3) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay40(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 4) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay41(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 4) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay50(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 5) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay51(int val)
+{
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 5) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay60(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 6) {
+
+            brd->RegPokeInd(0, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::setFpgaStartDelay61(int val)
+{
+
+    for(unsigned i=0; i<m_boardList.size(); i++) {
+
+        acdsp *brd = m_boardList.at(i);
+
+        if(brd->slotNumber() == 6) {
+
+            brd->RegPokeInd(1, ADC_TRD, 0xB, val);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+void MainWindow::enableDelaySlots(bool enable)
+{
+    if(enable) {
+        connect(ui->spbDelay30,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay30(int)));
+        connect(ui->spbDelay31,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay31(int)));
+        connect(ui->spbDelay40,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay40(int)));
+        connect(ui->spbDelay41,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay41(int)));
+        connect(ui->spbDelay50,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay50(int)));
+        connect(ui->spbDelay51,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay51(int)));
+        connect(ui->spbDelay60,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay60(int)));
+        connect(ui->spbDelay61,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay61(int)));
+    } else {
+        disconnect(ui->spbDelay30,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay30(int)));
+        disconnect(ui->spbDelay31,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay31(int)));
+        disconnect(ui->spbDelay40,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay40(int)));
+        disconnect(ui->spbDelay41,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay41(int)));
+        disconnect(ui->spbDelay50,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay50(int)));
+        disconnect(ui->spbDelay51,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay51(int)));
+        disconnect(ui->spbDelay60,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay60(int)));
+        disconnect(ui->spbDelay61,SIGNAL(valueChanged(int)),this,SLOT(setFpgaStartDelay61(int)));
+    }
+}
+
+//-----------------------------------------------------------------------------

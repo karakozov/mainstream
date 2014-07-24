@@ -95,7 +95,7 @@ public:
     bool isFpgaDsp(U32 fpgaNum);
     bool isFpgaAdc(U32 fpgaNum);
 
-    bool getFpgaTemperature(U32 fpgaNum, float& t);
+    float getFpgaTemperature(U32 fpgaNum);
 
 #ifndef USE_GUI
     void start_local_pcie_test(struct app_params_t& params);
