@@ -16,6 +16,7 @@
 #endif
 #include <fcntl.h>
 #include <signal.h>
+#include <math.h>
 
 #include <vector>
 #include <string>
@@ -260,14 +261,14 @@ U32 acsync::gcd(U32 freqA, U32 freqB)
 
 //-----------------------------------------------------------------------------
 
-void acsync::calcADF4002(U32 FO, U32 Fvco, U32 variant)
+void acsync::calcADF4002(float FO, U32 Fvco, U32 variant)
 {
     if(FO) {
-        U32 Fd = gcd(FO, Fvco);
-        U32 R = FO/Fd;
-        U32 N = Fvco/Fd;
+        float Fd = gcd(U32(FO), Fvco);
+        U32 R = floor((FO/Fd)+0.5);
+        U32 N = floor((Fvco/Fd)+0.5);
 
-        fprintf(stderr, "Fd = %d\n", Fd);
+        fprintf(stderr, "Fd = %f\n", Fd);
         fprintf(stderr, "R = %d\n", R);
         fprintf(stderr, "N = %d\n", N);
 
@@ -296,7 +297,7 @@ void acsync::calcADF4002(U32 FO, U32 Fvco, U32 variant)
 
 //-----------------------------------------------------------------------------
 
-void acsync::progADF4002(U32 FO, U32 Fvco, U32 variant)
+void acsync::progADF4002(float FO, U32 Fvco, U32 variant)
 {
     U32 mode1 = RegPeekInd(0, m_sync_trd.number, 0x9);
     mode1 |= 0x2;
@@ -304,8 +305,8 @@ void acsync::progADF4002(U32 FO, U32 Fvco, U32 variant)
 
     calcADF4002(FO, Fvco, variant);
 
-    writeADF4002(3, m_adf_regs.reg3);
-    writeADF4002(2, m_adf_regs.reg2);
+    writeADF4002(3, m_adf_regs.reg3 | (0x4 << 4) );
+    writeADF4002(2, m_adf_regs.reg2 | (0x4 << 4));
     writeADF4002(0, m_adf_regs.reg0);
     writeADF4002(1, m_adf_regs.reg1);
 }
@@ -314,11 +315,13 @@ void acsync::progADF4002(U32 FO, U32 Fvco, U32 variant)
 
 void acsync::writeADF4002(U16 reg, U32 data)
 {
-    RegPokeInd(0, m_sync_trd.number, 0xA, 0x4);
-    RegPokeInd(0, m_sync_trd.number, 0xC, reg);
-    RegPokeInd(0, m_sync_trd.number, 0xD, (data & 0xffff));
-    RegPokeInd(0, m_sync_trd.number, 0xE, ((data >> 16) & 0xff));
-    RegPokeInd(0, m_sync_trd.number, 0xB, (m_adf_regs.addr << 4) |0x2);
+    IPC_delay(10);
+    RegPokeInd(0, m_sync_trd.number, 0xA, 0x4); IPC_delay(10);
+    RegPokeInd(0, m_sync_trd.number, 0xC, reg); IPC_delay(10);
+    RegPokeInd(0, m_sync_trd.number, 0xD, (data & 0xffff)); IPC_delay(10);
+    RegPokeInd(0, m_sync_trd.number, 0xE, ((data >> 16) & 0xff)); IPC_delay(10);
+    RegPokeInd(0, m_sync_trd.number, 0xB, (m_adf_regs.addr << 4) |0x2); IPC_delay(10);
+    IPC_delay(100);
 }
 
 //-----------------------------------------------------------------------------
