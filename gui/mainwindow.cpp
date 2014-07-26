@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pbStartAdcTest, SIGNAL(clicked()), this, SLOT(startAdcTest()));
     connect(ui->pbStopAdcTest, SIGNAL(clicked()), this, SLOT(stopAdcTest()));
     connect(m_timer, SIGNAL(timeout()), this, SLOT(timerIsr()));
-    connect(ui->pbSyncConfigure, SIGNAL(clicked()), this, SLOT(startSync()));
+    //connect(ui->pbSyncConfigure, SIGNAL(clicked()), this, SLOT(startSync()));
     connect(ui->cbSlot1, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot2, SIGNAL(clicked()), this, SLOT(setBoardMask()));
     connect(ui->cbSlot3, SIGNAL(clicked()), this, SLOT(setBoardMask()));
@@ -121,27 +121,17 @@ void MainWindow::updateSystemParams()
     m_params.dmaBuffersCount = ui->leDmaBuffersCount->text().toInt(&ok, 10);
     m_params.dmaBlockCount = ui->leDmaBlocksCount->text().toInt(&ok, 10);
 
-    m_params.syncMode = ui->cbSyncMode->currentText().toInt(&ok, 16);
-    m_params.syncSelClkOut = ui->cbSyncSelClkOut->currentText().toInt(&ok, 16);
-    m_params.syncFd = ui->cbSyncFD->currentText().toFloat(&ok);
-    m_params.syncFo = ui->cbSyncFO->currentText().toFloat(&ok);
+    m_params.syncMode = ui->cbSyncv11Mode->currentText().toInt(&ok, 16);
+    //m_params.syncSelClkOut = ui->cbSyncSelClkOut->currentText().toInt(&ok, 16);
+    m_params.syncFd = ui->cbSyncv11FD->currentText().toFloat(&ok);
+    m_params.syncFo = ui->cbSyncv11FO->currentText().toFloat(&ok);
 }
 
 //-----------------------------------------------------------------------------
 
 void MainWindow::startSync()
 {
-    updateSystemParams();
-
-    if(m_sync) {
-        if(!m_sync->checkFrequencyParam(m_params.syncMode, m_params.syncFd, m_params.syncFo)) {
-            statusBar()->showMessage("Error: Invalid AC_SYNC parameters!");
-            return;
-        }
-        m_sync->PowerON(true);
-        m_sync->progFD(m_params.syncMode, m_params.syncFd, m_params.syncFo);
-        m_sync->ResetSync(false);
-    }
+    SetSelectedMode();
 }
 
 //-----------------------------------------------------------------------------
@@ -303,7 +293,7 @@ void MainWindow::init_display_table(QTableWidget *table)
         hList1 << "TX_CHN" + QString::number(i);
     }
 
-#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 1))
+#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 6))
     table->setHorizontalHeaderLabels(hList1);
     table->verticalHeader()->setStretchLastSection(true);
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);

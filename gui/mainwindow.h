@@ -11,7 +11,7 @@
 #include "pcie_test_thread.h"
 #include "adc_test_thread.h"
 
-#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 1))
+#if (QT_VERSION > QT_VERSION_CHECK(4, 8, 6))
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QTableWidget>
 #else

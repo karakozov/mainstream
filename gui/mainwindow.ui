@@ -267,170 +267,17 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_4">
-            <property name="title">
-             <string>AC_SYNC configuration</string>
+           <spacer name="verticalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="0" column="0">
-              <layout class="QGridLayout" name="gridLayout_9">
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_5">
-                 <property name="text">
-                  <string>FD, MHz</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_12">
-                 <property name="text">
-                  <string>SEL_CLK_OUT</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_13">
-                 <property name="text">
-                  <string>Working mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QComboBox" name="cbSyncSelClkOut">
-                 <property name="currentIndex">
-                  <number>1</number>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>0x0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>0x1</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QComboBox" name="cbSyncMode">
-                 <property name="currentIndex">
-                  <number>2</number>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>0x0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>0x1</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>0x2</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>0x3</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="5" column="1">
-                <widget class="QPushButton" name="pbSyncConfigure">
-                 <property name="text">
-                  <string>Configure AC_SYNC</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>FO, MHz</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="cbSyncFO">
-                 <property name="currentIndex">
-                  <number>1</number>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>10.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>56.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>120.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>400.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>448.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>480.0</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QComboBox" name="cbSyncFD">
-                 <property name="currentIndex">
-                  <number>1</number>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>400.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>448.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>488.72</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>480</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QPushButton" name="pbResetSync">
-                 <property name="text">
-                  <string>Reset AC_SYNC</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QGroupBox" name="groupBox">
@@ -1382,7 +1229,344 @@
        <attribute name="title">
         <string>AC-SYNC v1.1</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_25">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBox_12">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>324</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>AC_SYNC v.1.1 configuration</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_21">
+           <item row="0" column="0">
+            <layout class="QGridLayout" name="gridLayout_221">
+             <item row="0" column="1">
+              <widget class="QComboBox" name="cbSyncv11Mode">
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>0x1</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0x2</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0x3</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0x4</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_261">
+               <property name="text">
+                <string>FD, MHz</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_281">
+               <property name="text">
+                <string>Working mode</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_291">
+               <property name="text">
+                <string>FO, MHz</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="cbSyncv11FO">
+               <property name="currentIndex">
+                <number>1</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>10.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>56.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>120.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>400.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>448.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>480.0</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="cbSyncv11FD">
+               <property name="currentIndex">
+                <number>1</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>400.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>448.0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>488.72</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>480</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="pbSyncv11CheckParams">
+               <property name="text">
+                <string>Check parameters</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QPushButton" name="pbSyncv11SetMode">
+               <property name="text">
+                <string>Set mode</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QGroupBox" name="groupBox_111">
+          <property name="title">
+           <string>MODE1</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_201">
+           <item row="0" column="0">
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Powpll">
+               <property name="text">
+                <string>ENPOW_PLL</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Powocxo">
+               <property name="text">
+                <string>ENPOW_OCXO</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Powclksm">
+               <property name="text">
+                <string>ENPOW_CLKSM</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Master">
+               <property name="text">
+                <string>PRESENCE_MASTER</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Rst">
+               <property name="text">
+                <string>ST_IN_RST</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11ENx5">
+               <property name="text">
+                <string>ENx5</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11ENx8">
+               <property name="text">
+                <string>ENx8</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>SELCLK</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_171">
+           <item row="0" column="0">
+            <layout class="QVBoxLayout" name="verticalLayout_2">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel0">
+               <property name="text">
+                <string>SELCLCK0</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel1">
+               <property name="text">
+                <string>SELCLCK1</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel2">
+               <property name="text">
+                <string>SELCLCK2</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel3">
+               <property name="text">
+                <string>SELCLCK3</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel4">
+               <property name="text">
+                <string>SELCLCK4</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel5">
+               <property name="text">
+                <string>SELCLCK5</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel6">
+               <property name="text">
+                <string>SELCLCK6</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11Sel7">
+               <property name="text">
+                <string>SELCLCK7</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pbSyncv11SelOut">
+               <property name="text">
+                <string>SELCLKOUT</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
         <item row="0" column="4">
          <widget class="QGroupBox" name="groupBox_13">
           <property name="title">
@@ -1526,242 +1710,11 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <spacer name="verticalSpacer_5">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QGroupBox" name="groupBox_111">
-          <property name="title">
-           <string>MODE1</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_201">
-           <item row="0" column="0">
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Powpll">
-               <property name="text">
-                <string>ENPOW_PLL</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Powocxo">
-               <property name="text">
-                <string>ENPOW_OCXO</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Powclksm">
-               <property name="text">
-                <string>ENPOW_CLKSM</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Master">
-               <property name="text">
-                <string>PRESENCE_MASTER</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Rst">
-               <property name="text">
-                <string>ST_IN_RST</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11ENx5">
-               <property name="text">
-                <string>ENx5</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11ENx8">
-               <property name="text">
-                <string>ENx8</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="0">
-            <spacer name="verticalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QGroupBox" name="groupBox_10">
-          <property name="title">
-           <string>SELCLK</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_171">
-           <item row="0" column="0">
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel0">
-               <property name="text">
-                <string>SELCLCK0</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel1">
-               <property name="text">
-                <string>SELCLCK1</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel2">
-               <property name="text">
-                <string>SELCLCK2</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel3">
-               <property name="text">
-                <string>SELCLCK3</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel4">
-               <property name="text">
-                <string>SELCLCK4</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel5">
-               <property name="text">
-                <string>SELCLCK5</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel6">
-               <property name="text">
-                <string>SELCLCK6</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11Sel7">
-               <property name="text">
-                <string>SELCLCK7</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSyncv11SelOut">
-               <property name="text">
-                <string>SELCLKOUT</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="0">
-            <spacer name="verticalSpacer_4">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <spacer name="verticalSpacer">
+        <item row="2" column="2">
+         <spacer name="verticalSpacer_3">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -1773,163 +1726,31 @@
           </property>
          </spacer>
         </item>
-        <item row="0" column="0">
-         <widget class="QGroupBox" name="groupBox_12">
-          <property name="maximumSize">
+        <item row="2" column="0">
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
            <size>
-            <width>16777215</width>
-            <height>324</height>
+            <width>20</width>
+            <height>40</height>
            </size>
           </property>
-          <property name="title">
-           <string>AC_SYNC v.1.1 configuration</string>
+         </spacer>
+        </item>
+        <item row="2" column="4">
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
-          <layout class="QGridLayout" name="gridLayout_21">
-           <item row="0" column="0">
-            <layout class="QGridLayout" name="gridLayout_221">
-             <item row="0" column="1">
-              <widget class="QComboBox" name="cbSyncv11Mode">
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>0x1</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>0x2</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>0x3</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>0x4</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_261">
-               <property name="text">
-                <string>FD, MHz</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_281">
-               <property name="text">
-                <string>Working mode</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_291">
-               <property name="text">
-                <string>FO, MHz</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QComboBox" name="cbSyncv11FO">
-               <property name="currentIndex">
-                <number>1</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>10.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>56.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>120.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>400.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>448.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>480.0</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QComboBox" name="cbSyncv11FD">
-               <property name="currentIndex">
-                <number>1</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>400.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>448.0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>488.72</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>480</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QPushButton" name="pbSyncv11CheckParams">
-               <property name="text">
-                <string>Check parameters</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QPushButton" name="pbSyncv11SetMode">
-               <property name="text">
-                <string>Set mode</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="0">
-            <spacer name="verticalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="pbSyncv11Configure">
@@ -1938,8 +1759,31 @@
           </property>
          </widget>
         </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="pbResetSync">
+          <property name="text">
+           <string>Reset AC_SYNC</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="0" column="1">
-         <spacer name="horizontalSpacer_42">
+         <spacer name="horizontalSpacer_4">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -1964,7 +1808,7 @@
      <x>0</x>
      <y>0</y>
      <width>1044</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
