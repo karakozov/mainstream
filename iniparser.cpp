@@ -105,11 +105,11 @@ bool getParams(int argc, char *argv[], struct app_params_t& param)
     }
     param.syncMode = strtol(Buffer,0,16);
 
-    res = IPC_getPrivateProfileString(SECTION_NAME, "syncSelClkOut", "0x1", Buffer, sizeof(Buffer), iniFilePath);
-    if(!res) {
-        fprintf(stderr, "Parameter: syncSelClkOut - not found. Use default value\n");
-    }
-    param.syncSelClkOut = strtol(Buffer,0,16);
+    //res = IPC_getPrivateProfileString(SECTION_NAME, "syncSelClkOut", "0x1", Buffer, sizeof(Buffer), iniFilePath);
+    //if(!res) {
+    //    fprintf(stderr, "Parameter: syncSelClkOut - not found. Use default value\n");
+    //}
+    //param.syncSelClkOut = strtol(Buffer,0,16);
 
     res = IPC_getPrivateProfileString(SECTION_NAME, "syncFd", "448000000", Buffer, sizeof(Buffer), iniFilePath);
     if(!res) {
@@ -142,7 +142,7 @@ void showParams(struct app_params_t& param)
     fprintf(stderr, "dmaBuffersCount:   0x%x\n", param.dmaBuffersCount);
     fprintf(stderr, "testMode:          0x%x\n", param.testMode);
     fprintf(stderr, "syncMode:          0x%x\n", param.syncMode);
-    fprintf(stderr, "syncSelClkOut:     0x%x\n", param.syncSelClkOut);
+    //fprintf(stderr, "syncSelClkOut:     0x%x\n", param.syncSelClkOut);
     fprintf(stderr, "syncFd:            %f\n",   param.syncFd);
     fprintf(stderr, "syncFo:            %f\n",   param.syncFo);
     fprintf(stderr, " \n");

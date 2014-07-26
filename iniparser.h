@@ -17,7 +17,7 @@ struct app_params_t {
     unsigned dmaBuffersCount;
     unsigned testMode;
     unsigned syncMode;
-    unsigned syncSelClkOut;
+    //unsigned syncSelClkOut;
     float syncFd;
     float syncFo;
 };
