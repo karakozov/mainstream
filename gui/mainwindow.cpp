@@ -141,8 +141,18 @@ void MainWindow::startSystemConfiguration()
     updateSystemParams();
 
     if(m_systemConfigured) {
-        statusBar()->showMessage("System already configured!");
-        return;
+
+        statusBar()->showMessage("System already configured! Start system reconfiguration.");
+
+        m_timer->stop();
+
+        delete m_pcie_thread;
+        delete m_adc_thread;
+
+        IPC_delay(100);
+
+        delete_board_list(m_boardList, m_sync);
+        delete_fpga_list(m_fpgaList);
     }
 
 
@@ -180,7 +190,7 @@ void MainWindow::startSystemConfiguration()
         connect(m_adc_thread, SIGNAL(updateInfo(QString)), this, SLOT(showAdcTrace(QString)));
 
         m_systemConfigured = true;
-        ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
+        //ui->pbStartConfiguration->setEnabled(!m_systemConfigured);
     }
 
     init_display_table(m_tableError);
@@ -414,22 +424,26 @@ void MainWindow::updateFpgaTemperature()
         if(brd->slotNumber() == 3) {
             ui->lb_fpgaT30->setText(QString::number(brd->getFpgaTemperature(0)));
             ui->lb_fpgaT31->setText(QString::number(brd->getFpgaTemperature(1)));
-            ui->lb_fpgaT32->setText(QString::number(brd->getFpgaTemperature(2)));
+            //ui->lb_fpgaT32->setText(QString::number(brd->getFpgaTemperature(2)));
+            ui->lb_fpgaT32->setText("---");
         }
         if(brd->slotNumber() == 4) {
             ui->lb_fpgaT40->setText(QString::number(brd->getFpgaTemperature(0)));
             ui->lb_fpgaT41->setText(QString::number(brd->getFpgaTemperature(1)));
-            ui->lb_fpgaT42->setText(QString::number(brd->getFpgaTemperature(2)));
+            //ui->lb_fpgaT42->setText(QString::number(brd->getFpgaTemperature(2)));
+            ui->lb_fpgaT42->setText("---");
         }
         if(brd->slotNumber() == 5) {
             ui->lb_fpgaT50->setText(QString::number(brd->getFpgaTemperature(0)));
             ui->lb_fpgaT51->setText(QString::number(brd->getFpgaTemperature(1)));
-            ui->lb_fpgaT52->setText(QString::number(brd->getFpgaTemperature(2)));
+            //ui->lb_fpgaT52->setText(QString::number(brd->getFpgaTemperature(2)));
+            ui->lb_fpgaT52->setText("---");
         }
         if(brd->slotNumber() == 6) {
             ui->lb_fpgaT60->setText(QString::number(brd->getFpgaTemperature(0)));
             ui->lb_fpgaT61->setText(QString::number(brd->getFpgaTemperature(1)));
-            ui->lb_fpgaT62->setText(QString::number(brd->getFpgaTemperature(2)));
+            //ui->lb_fpgaT62->setText(QString::number(brd->getFpgaTemperature(2)));
+            ui->lb_fpgaT62->setText("---");
         }
     }
 }
