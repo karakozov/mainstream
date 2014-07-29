@@ -35,7 +35,7 @@ unsigned create_fpga_list(std::vector<Fpga*>& fpgaList, unsigned fpgaNumber, uns
         }
     }
 
-    fprintf(stderr, "Found %ld FPGA\n", fpgaList.size());
+    fprintf(stderr, "Found %d FPGA\n", fpgaList.size());
 
     for(unsigned i=0; i<fpgaList.size(); i++) {
         U16 ID = 0;

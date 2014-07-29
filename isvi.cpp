@@ -95,9 +95,11 @@ bool lockDataFile(const char* fname, int counter)
             break;
         }
         if(rr==0) {
+            fprintf(stderr, "%s(): rr = 0x%x -- ii = 0x%x\n", __FUNCTION__, rr, ii);
             break;
         }
         if((rr==(int)0xffffffff) && (ii>0x10000)) {
+            fprintf(stderr, "%s(): rr = 0x%x -- ii = 0x%x\n", __FUNCTION__, rr, ii);
             break;
         }
     }
