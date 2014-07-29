@@ -95,9 +95,11 @@ bool lockDataFile(const char* fname, int counter)
             break;
         }
         if(rr==0) {
-        } break;
+            break;
+        }
         if((rr==(int)0xffffffff) && (ii>0x10000)) {
-        } break;
+            break;
+        }
     }
 
     return true;

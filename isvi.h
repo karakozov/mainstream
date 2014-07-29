@@ -6,6 +6,8 @@
 
 #include <string>
 
+void WriteFlagSinc(const char *fileName, int newData, int newHeader);
+int  ReadFlagSinc(const char *fileName);
 IPC_handle createDataFile(const char *fname);
 bool createFlagFile(const char *fname);
 bool createIsviHeader(std::string& hdr,
