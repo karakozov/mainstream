@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 //-----------------------------------------------------------------------------
 
@@ -489,6 +490,7 @@ void program_tx(vector<acdsp*>& boardList, string fileName)
 
 void start_all_fpga(vector<acdsp*>& boardList)
 {
+    reverse(boardList.begin(),boardList.end());
     program_rx(boardList);
     program_tx(boardList, "tx.channels");
 }
@@ -518,6 +520,7 @@ void stop_all_fpga(vector<acdsp*>& boardList)
         RXi->start_rx(false);
         CHECKi->start_check(false);
     }
+    reverse(boardList.begin(),boardList.end());
 }
 
 //-----------------------------------------------------------------------------
