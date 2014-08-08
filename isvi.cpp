@@ -175,7 +175,7 @@ bool createIsviHeader(std::string& hdr, unsigned char hwAddr, unsigned char hwFp
     snprintf(str, sizeof(str), "DEVICE_NAME_________ AC_ADC_%d%d\r\n", hwAddr, hwFpgaNum);      hdr += str;
     snprintf(str, sizeof(str), "NUMBER_OF_CHANNELS__ %d\r\n", NumOfChannel);                    hdr += str;
     snprintf(str, sizeof(str), "NUMBERS_OF_CHANNELS_ 0,1,2,3\r\n");                             hdr += str;
-    snprintf(str, sizeof(str), "NUMBER_OF_SAMPLES___ %d\r\n", BufSize / 4 / 2);                 hdr += str;
+    snprintf(str, sizeof(str), "NUMBER_OF_SAMPLES___ %d\r\n", BufSize / NumOfChannel / 2);      hdr += str;
     snprintf(str, sizeof(str), "SAMPLING_RATE_______ %d\r\n", (int)((1.0e+6)*params.syncFd));   hdr += str;
     snprintf(str, sizeof(str), "BYTES_PER_SAMPLES___ 2\r\n");                                   hdr += str;
     snprintf(str, sizeof(str), "SAMPLES_PER_BYTES___ 1\r\n");                                   hdr += str;
